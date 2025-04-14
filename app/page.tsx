@@ -1,18 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
 export default function HomePage() {
-  const router = useRouter()
-
-  useEffect(() => {
-    // Redirect to life insurance quote form
-    router.push('/quote/life')
-  }, [router])
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
