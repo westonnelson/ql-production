@@ -199,50 +199,50 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                   )}
                 </div>
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-300">
                     Last Name
                   </label>
                   <input
                     type="text"
                     id="lastName"
                     {...register('lastName')}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                   />
                   {errors.lastName && (
-                    <p className="mt-1 text-sm text-red-600">{errors.lastName.message?.toString()}</p>
+                    <p className="mt-1 text-sm text-red-400">{errors.lastName.message?.toString()}</p>
                   )}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="age" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="age" className="block text-sm font-medium text-gray-300">
                     Age
                   </label>
                   <input
                     type="number"
                     id="age"
                     {...register('age', { valueAsNumber: true })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                   />
                   {errors.age && (
-                    <p className="mt-1 text-sm text-red-600">{errors.age.message?.toString()}</p>
+                    <p className="mt-1 text-sm text-red-400">{errors.age.message?.toString()}</p>
                   )}
                 </div>
                 <div>
-                  <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="gender" className="block text-sm font-medium text-gray-300">
                     Gender
                   </label>
                   <select
                     id="gender"
                     {...register('gender')}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                   >
                     <option value="">Select gender</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                   </select>
                   {errors.gender && (
-                    <p className="mt-1 text-sm text-red-600">{errors.gender.message?.toString()}</p>
+                    <p className="mt-1 text-sm text-red-400">{errors.gender.message?.toString()}</p>
                   )}
                 </div>
               </div>
@@ -252,31 +252,31 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
           {currentStep === 2 && (
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-300">
                   Email
                 </label>
                 <input
                   type="email"
                   id="email"
                   {...register('email')}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                 />
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email.message?.toString()}</p>
+                  <p className="mt-1 text-sm text-red-400">{errors.email.message?.toString()}</p>
                 )}
               </div>
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-300">
                   Phone
                 </label>
                 <input
                   type="tel"
                   id="phone"
                   {...register('phone')}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                 />
                 {errors.phone && (
-                  <p className="mt-1 text-sm text-red-600">{errors.phone.message?.toString()}</p>
+                  <p className="mt-1 text-sm text-red-400">{errors.phone.message?.toString()}</p>
                 )}
               </div>
             </div>
@@ -285,7 +285,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
           {currentStep === 3 && (
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
                   Coverage Amount
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -300,7 +300,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                       />
                       <label
                         htmlFor={`coverage-${amount}`}
-                        className="flex items-center justify-center p-4 bg-white border rounded-lg cursor-pointer hover:bg-gray-50 peer-checked:border-primary peer-checked:text-primary"
+                        className="flex items-center justify-center p-4 bg-gray-800 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-700 peer-checked:border-primary peer-checked:text-primary text-white"
                       >
                         ${amount.toLocaleString()}
                       </label>
@@ -308,12 +308,12 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                   ))}
                 </div>
                 {errors.coverageAmount && (
-                  <p className="mt-1 text-sm text-red-600">{errors.coverageAmount.message?.toString()}</p>
+                  <p className="mt-1 text-sm text-red-400">{errors.coverageAmount.message?.toString()}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
                   Term Length
                 </label>
                 <div className="grid grid-cols-3 gap-4">
@@ -328,7 +328,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                       />
                       <label
                         htmlFor={`term-${years}`}
-                        className="flex items-center justify-center p-4 bg-white border rounded-lg cursor-pointer hover:bg-gray-50 peer-checked:border-primary peer-checked:text-primary"
+                        className="flex items-center justify-center p-4 bg-gray-800 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-700 peer-checked:border-primary peer-checked:text-primary text-white"
                       >
                         {years} Years
                       </label>
@@ -336,12 +336,12 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                   ))}
                 </div>
                 {errors.termLength && (
-                  <p className="mt-1 text-sm text-red-600">{errors.termLength.message?.toString()}</p>
+                  <p className="mt-1 text-sm text-red-400">{errors.termLength.message?.toString()}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
                   Do you use tobacco products?
                 </label>
                 <div className="grid grid-cols-2 gap-4">
@@ -356,7 +356,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                       />
                       <label
                         htmlFor={`tobacco-${option}`}
-                        className="flex items-center justify-center p-4 bg-white border rounded-lg cursor-pointer hover:bg-gray-50 peer-checked:border-primary peer-checked:text-primary capitalize"
+                        className="flex items-center justify-center p-4 bg-gray-800 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-700 peer-checked:border-primary peer-checked:text-primary text-white capitalize"
                       >
                         {option}
                       </label>
@@ -364,7 +364,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                   ))}
                 </div>
                 {errors.tobaccoUse && (
-                  <p className="mt-1 text-sm text-red-600">{errors.tobaccoUse.message?.toString()}</p>
+                  <p className="mt-1 text-sm text-red-400">{errors.tobaccoUse.message?.toString()}</p>
                 )}
               </div>
             </div>
@@ -375,7 +375,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
               <button
                 type="button"
                 onClick={prevStep}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                className="inline-flex justify-center py-2 px-4 border border-gray-700 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               >
                 Previous
               </button>
