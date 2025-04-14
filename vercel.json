@@ -2,9 +2,7 @@
   "version": 2,
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["sfo1"],
   "headers": [
     {
       "source": "/(.*)",
@@ -22,16 +20,6 @@
           "value": "1; mode=block"
         }
       ]
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "headers": {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization"
-      }
     }
   ]
 } 

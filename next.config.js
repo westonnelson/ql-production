@@ -25,18 +25,29 @@ const nextConfig = {
       ? 'https://www.quotelinker.com'
       : 'http://localhost:3000',
   },
-  // Handle redirects and API routes
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,POST,PUT,DELETE,OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
+        ],
+      },
+    ]
+  },
   async redirects() {
     return [
       {
-        source: '/:path*',
+        source: '/',
         has: [
           {
             type: 'host',
             value: 'quotelinker.com',
           },
         ],
-        destination: 'https://www.quotelinker.com/:path*',
+        destination: 'https://www.quotelinker.com',
         permanent: true,
       },
     ]
