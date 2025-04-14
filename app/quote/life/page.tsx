@@ -16,13 +16,13 @@ const formSchema = z.object({
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-  age: z.number().min(18, 'Must be at least 18 years old').max(85, 'Must be under 85 years old'),
+  age: z.coerce.number().min(18, 'Must be at least 18 years old').max(85, 'Must be under 85 years old'),
   gender: z.enum(['male', 'female']),
-  coverageAmount: z.number(),
-  termLength: z.number(),
+  coverageAmount: z.coerce.number(),
+  termLength: z.coerce.number(),
   tobaccoUse: z.enum(['yes', 'no']),
   utmSource: z.string().optional(),
-}) as any // temporary fix for type issues
+})
 
 type FormData = z.infer<typeof formSchema>
 
@@ -53,16 +53,17 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitted },
     watch,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       utmSource: utmSource || undefined,
     },
+    mode: 'onSubmit',
   })
 
-  const onSubmit = async (data: LifeQuoteFormData) => {
+  const onSubmit = async (data: FormData) => {
     setIsSubmitting(true)
     setError(null)
 
@@ -194,7 +195,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                     {...register('firstName')}
                     className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                   />
-                  {errors.firstName && (
+                  {errors.firstName && isSubmitted && (
                     <p className="mt-1 text-sm text-red-400">{errors.firstName.message?.toString()}</p>
                   )}
                 </div>
@@ -208,7 +209,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                     {...register('lastName')}
                     className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                   />
-                  {errors.lastName && (
+                  {errors.lastName && isSubmitted && (
                     <p className="mt-1 text-sm text-red-400">{errors.lastName.message?.toString()}</p>
                   )}
                 </div>
@@ -224,7 +225,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                     {...register('age', { valueAsNumber: true })}
                     className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                   />
-                  {errors.age && (
+                  {errors.age && isSubmitted && (
                     <p className="mt-1 text-sm text-red-400">{errors.age.message?.toString()}</p>
                   )}
                 </div>
@@ -241,7 +242,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                   </select>
-                  {errors.gender && (
+                  {errors.gender && isSubmitted && (
                     <p className="mt-1 text-sm text-red-400">{errors.gender.message?.toString()}</p>
                   )}
                 </div>
@@ -261,7 +262,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                   {...register('email')}
                   className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                 />
-                {errors.email && (
+                {errors.email && isSubmitted && (
                   <p className="mt-1 text-sm text-red-400">{errors.email.message?.toString()}</p>
                 )}
               </div>
@@ -275,7 +276,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                   {...register('phone')}
                   className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                 />
-                {errors.phone && (
+                {errors.phone && isSubmitted && (
                   <p className="mt-1 text-sm text-red-400">{errors.phone.message?.toString()}</p>
                 )}
               </div>
@@ -307,7 +308,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                     </div>
                   ))}
                 </div>
-                {errors.coverageAmount && (
+                {errors.coverageAmount && isSubmitted && (
                   <p className="mt-1 text-sm text-red-400">{errors.coverageAmount.message?.toString()}</p>
                 )}
               </div>
@@ -335,7 +336,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                     </div>
                   ))}
                 </div>
-                {errors.termLength && (
+                {errors.termLength && isSubmitted && (
                   <p className="mt-1 text-sm text-red-400">{errors.termLength.message?.toString()}</p>
                 )}
               </div>
@@ -363,7 +364,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                     </div>
                   ))}
                 </div>
-                {errors.tobaccoUse && (
+                {errors.tobaccoUse && isSubmitted && (
                   <p className="mt-1 text-sm text-red-400">{errors.tobaccoUse.message?.toString()}</p>
                 )}
               </div>
