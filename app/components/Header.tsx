@@ -9,11 +9,11 @@ export default function Header() {
         <div className="flex justify-between items-center py-4">
           <Link href="/" className="flex items-center space-x-2">
             <Image
-              src="/apple-touch-icon.png"
+              src="/favicon-32x32.png"
               alt="QuoteLinker"
-              width={40}
-              height={40}
-              className="w-10 h-10"
+              width={32}
+              height={32}
+              className="w-8 h-8"
               priority
             />
             <span className="text-2xl font-bold text-white">QuoteLinker</span>

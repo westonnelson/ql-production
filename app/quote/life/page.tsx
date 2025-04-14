@@ -94,25 +94,34 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit form')
+        throw new Error(result.error || 'Failed to submit form. Please try again.')
       }
 
       router.push('/thank-you/life')
     } catch (err) {
-      console.error('Error submitting form:', err)
-      setError('An error occurred while submitting your request. Please try again.')
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.')
+      console.error('Form submission error:', err)
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const nextStep = async () => {
-    const fieldsToValidate = stepFields[currentStep]
-    const isStepValid = await trigger(fieldsToValidate)
-
-    if (isStepValid && currentStep < steps.length) {
-      setCurrentStep(currentStep + 1)
-      setError(null)
+    const fields = stepFields[currentStep]
+    const isValid = await trigger(fields)
+    
+    if (isValid) {
+      setCurrentStep((prev) => Math.min(prev + 1, steps.length))
+    } else {
+      // Show validation errors for the current step
+      const currentErrors = Object.entries(errors)
+        .filter(([key]) => fields.includes(key as FormFields))
+        .map(([_, value]) => value.message)
+        .filter(Boolean)
+      
+      if (currentErrors.length > 0) {
+        setError(currentErrors[0] || null)
+      }
     }
   }
 
