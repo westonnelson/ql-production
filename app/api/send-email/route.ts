@@ -7,6 +7,18 @@ if (!process.env.RESEND_API_KEY) {
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+// Add CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+// Handle OPTIONS request for CORS
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders })
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -31,10 +43,13 @@ export async function POST(request: Request) {
       })
 
       if (error) {
-        return NextResponse.json({ success: false, error }, { status: 500 })
+        return NextResponse.json({ success: false, error }, { 
+          status: 500,
+          headers: corsHeaders
+        })
       }
 
-      return NextResponse.json({ success: true, data: emailData })
+      return NextResponse.json({ success: true, data: emailData }, { headers: corsHeaders })
     } else if (type === 'lead') {
       const { firstName, lastName, email, phone, age, gender, coverageAmount, termLength, tobaccoUse, utmSource } = data
       
@@ -60,15 +75,24 @@ export async function POST(request: Request) {
       })
 
       if (error) {
-        return NextResponse.json({ success: false, error }, { status: 500 })
+        return NextResponse.json({ success: false, error }, { 
+          status: 500,
+          headers: corsHeaders
+        })
       }
 
-      return NextResponse.json({ success: true, data: emailData })
+      return NextResponse.json({ success: true, data: emailData }, { headers: corsHeaders })
     } else {
-      return NextResponse.json({ success: false, error: 'Invalid email type' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Invalid email type' }, { 
+        status: 400,
+        headers: corsHeaders
+      })
     }
   } catch (error) {
     console.error('Error sending email:', error)
-    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { 
+      status: 500,
+      headers: corsHeaders
+    })
   }
 } 
