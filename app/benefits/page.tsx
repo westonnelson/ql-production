@@ -13,7 +13,7 @@ const insuranceTypes = [
       },
       {
         title: 'Debt Coverage',
-        description: 'Ensure your debts don't become a burden for your family'
+        description: 'Ensure your debts don\'t become a burden for your family'
       },
       {
         title: 'Estate Planning',
@@ -31,11 +31,11 @@ const insuranceTypes = [
   },
   {
     title: 'Disability Insurance',
-    description: 'Protect your income and maintain your lifestyle if you're unable to work',
+    description: 'Protect your income and maintain your lifestyle if you\'re unable to work',
     benefits: [
       {
         title: 'Income Protection',
-        description: 'Replace up to 70% of your income if you can't work due to illness or injury'
+        description: 'Replace up to 70% of your income if you can\'t work due to illness or injury'
       },
       {
         title: 'Customizable Coverage',
@@ -100,27 +100,23 @@ export default function BenefitsPage() {
           {insuranceTypes.map((type) => (
             <div key={type.title} className="bg-white/5 backdrop-blur-sm p-8 rounded-xl border border-gray-800">
               <h2 className="text-2xl font-bold text-white mb-4">{type.title}</h2>
-              <p className="text-gray-300 mb-8">{type.description}</p>
-              
-              <div className="space-y-6 mb-8">
+              <p className="text-gray-300 mb-6">{type.description}</p>
+              <ul className="space-y-4 mb-8">
                 {type.benefits.map((benefit) => (
-                  <div key={benefit.title} className="flex items-start space-x-4">
-                    <div className="flex-shrink-0">
-                      <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
+                  <li key={benefit.title} className="flex items-start">
+                    <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
                     <div>
                       <h3 className="text-lg font-medium text-white">{benefit.title}</h3>
-                      <p className="mt-2 text-gray-300">{benefit.description}</p>
+                      <p className="text-gray-300">{benefit.description}</p>
                     </div>
-                  </div>
+                  </li>
                 ))}
-              </div>
-
+              </ul>
               <Link
                 href={type.cta.link}
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 w-full justify-center"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200"
               >
                 {type.cta.text}
               </Link>
@@ -129,31 +125,59 @@ export default function BenefitsPage() {
         </div>
 
         <div className="bg-white/5 backdrop-blur-sm p-8 rounded-xl border border-gray-800 mb-16">
-          <h2 className="text-3xl font-bold text-white text-center mb-8">Why Choose QuoteLinker?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="text-primary text-4xl font-bold mb-2">100%</div>
-              <h3 className="text-lg font-medium text-white mb-2">Free Service</h3>
-              <p className="text-gray-300">No cost to you - we're paid by our network of qualified agents</p>
+          <h2 className="text-3xl font-bold text-white text-center mb-8">Why Choose Our Platform?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-xl font-semibold text-white mb-4">For Consumers</h3>
+              <ul className="space-y-3 text-gray-300">
+                <li className="flex items-start">
+                  <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Work with a single dedicated agent instead of multiple salespeople</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Get personalized attention and expert guidance</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Save time with our streamlined process</span>
+                </li>
+              </ul>
             </div>
-            <div className="text-center">
-              <div className="text-primary text-4xl font-bold mb-2">24/7</div>
-              <h3 className="text-lg font-medium text-white mb-2">AI-Powered Matching</h3>
-              <p className="text-gray-300">Get matched with the perfect agent for your needs anytime</p>
-            </div>
-            <div className="text-center">
-              <div className="text-primary text-4xl font-bold mb-2">5★</div>
-              <h3 className="text-lg font-medium text-white mb-2">Customer Satisfaction</h3>
-              <p className="text-gray-300">Consistently high ratings from satisfied customers</p>
+            <div>
+              <h3 className="text-xl font-semibold text-white mb-4">Our Commitment</h3>
+              <ul className="space-y-3 text-gray-300">
+                <li className="flex items-start">
+                  <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Your data is protected with industry-standard security</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>No obligation to purchase any insurance</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Our service is completely free for consumers</span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
 
         <div className="text-center">
           <h2 className="text-3xl font-bold text-white mb-6">Ready to Get Started?</h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Find the perfect insurance coverage with our AI-powered matching service
-          </p>
           <div className="space-x-4">
             <Link
               href="/quote/life"

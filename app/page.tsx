@@ -68,7 +68,10 @@ export default function HomePage() {
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-base font-semibold leading-7 text-primary">How It Works</h2>
             <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Simple Steps to Get Your Life Insurance Coverage
+              Simple Steps to Get Your Insurance Coverage
+            </p>
+            <p className="mt-4 text-lg text-gray-300">
+              Our AI-powered platform connects you with a single licensed agent who specializes in your specific needs
             </p>
           </div>
           <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
@@ -76,15 +79,15 @@ export default function HomePage() {
               {[
                 {
                   title: '1. Quick Information',
-                  description: 'Fill out our simple form with basic details about your insurance needs.',
+                  description: 'Fill out our simple 3-minute form with basic details about your insurance needs. Your data is protected with industry-standard encryption.',
                 },
                 {
-                  title: '2. Compare Quotes',
-                  description: 'Get matched with the best insurance providers based on your profile.',
+                  title: '2. AI Matching',
+                  description: 'Our advanced AI analyzes your profile and matches you with a licensed agent who specializes in your specific situation and requirements.',
                 },
                 {
-                  title: '3. Get Coverage',
-                  description: 'Choose your preferred plan and get covered in minutes.',
+                  title: '3. Personalized Service',
+                  description: 'Work with your dedicated agent to get personalized quotes and expert guidance without the pressure of multiple competing offers.',
                 },
               ].map((step) => (
                 <div key={step.title} className="flex flex-col items-start">
@@ -98,6 +101,58 @@ export default function HomePage() {
               ))}
             </dl>
           </div>
+          
+          <div className="mt-16 bg-white/5 backdrop-blur-sm p-8 rounded-xl border border-gray-800">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-4">Why Choose Our Platform?</h3>
+                <ul className="space-y-3 text-gray-300">
+                  <li className="flex items-start">
+                    <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Work with a single dedicated agent instead of multiple salespeople</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Get personalized attention and expert guidance</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Save time with our streamlined process</span>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-4">Our Commitment to You</h3>
+                <ul className="space-y-3 text-gray-300">
+                  <li className="flex items-start">
+                    <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Your data is protected with industry-standard security</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>No obligation to purchase any insurance</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Our service is completely free for consumers</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
           <div className="mt-16 flex justify-center">
             <Link
               href="/quote/life"
@@ -117,9 +172,49 @@ export default function HomePage() {
               Frequently Asked Questions
             </h2>
             <p className="mt-4 text-lg text-gray-400">
-              Find answers to common questions about life insurance and our quote process.
+              Find answers to common questions about our insurance matching service.
             </p>
           </div>
+          
+          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div className="bg-white/5 backdrop-blur-sm p-8 rounded-xl border border-gray-800">
+              <h3 className="text-xl font-semibold text-white mb-4">How do you protect my personal information?</h3>
+              <p className="text-gray-300">
+                We implement industry-standard encryption and security measures to protect your data. Your information is only shared with your matched agent, and we never sell your data to third parties. Our platform is compliant with all relevant data protection regulations.
+              </p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-sm p-8 rounded-xl border border-gray-800">
+              <h3 className="text-xl font-semibold text-white mb-4">Why work with a single licensed agent?</h3>
+              <p className="text-gray-300">
+                Working with one dedicated agent provides personalized attention and eliminates the hassle of dealing with multiple salespeople. Our AI matches you with an agent who specializes in your specific needs, ensuring you get expert guidance without the pressure of multiple competing offers.
+              </p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-sm p-8 rounded-xl border border-gray-800">
+              <h3 className="text-xl font-semibold text-white mb-4">How quickly can I get coverage?</h3>
+              <p className="text-gray-300">
+                After completing our 3-minute form, you'll be connected with an agent who can often provide same-day quotes. The actual policy can be approved in as little as 24-48 hours with some carriers, depending on your specific situation.
+              </p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-sm p-8 rounded-xl border border-gray-800">
+              <h3 className="text-xl font-semibold text-white mb-4">Is your service really free?</h3>
+              <p className="text-gray-300">
+                Yes! Our service is completely free for consumers. We're paid by our network of qualified agents, so you can benefit from our AI matching service at no cost. There's no obligation to purchase any insurance.
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-16 text-center">
+            <Link
+              href="/faq"
+              className="inline-flex items-center px-6 py-3 border border-gray-700 text-base font-medium rounded-lg text-gray-300 bg-transparent hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200"
+            >
+              View All FAQs
+            </Link>
+          </div>
+          
           <div className="mt-16">
             <Link
               href="/quote/life"
