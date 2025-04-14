@@ -9,7 +9,7 @@ export default function Header() {
         <div className="flex justify-between items-center py-4">
           <Link href="/" className="flex items-center space-x-2">
             <Image
-              src="/icon.png"
+              src="/apple-touch-icon.png"
               alt="QuoteLinker"
               width={40}
               height={40}
@@ -21,22 +21,22 @@ export default function Header() {
           
           <nav className="hidden md:flex items-center space-x-8">
             <Link 
-              href="/quote/life"
+              href="/#how-it-works"
               className="text-gray-300 hover:text-white transition-colors"
             >
               How it Works
             </Link>
             <Link 
-              href="/quote/life"
+              href="/privacy"
               className="text-gray-300 hover:text-white transition-colors"
             >
-              Benefits
+              Privacy
             </Link>
             <Link 
-              href="/quote/life"
+              href="/terms"
               className="text-gray-300 hover:text-white transition-colors"
             >
-              FAQ
+              Terms
             </Link>
             <Link
               href="/quote/life"

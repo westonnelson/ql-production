@@ -63,7 +63,7 @@ export default function HomePage() {
       </div>
 
       {/* How it Works Section */}
-      <div className="bg-[#1D2432] py-24 sm:py-32">
+      <div id="how-it-works" className="bg-[#1D2432] py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-base font-semibold leading-7 text-primary">How QuoteLinker Works</h2>
