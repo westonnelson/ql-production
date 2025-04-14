@@ -49,7 +49,7 @@ export default function HomePage() {
             <div className="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
               <div className="rounded-2xl bg-[#1D2432] p-8 ring-1 ring-white/10">
                 <Image
-                  src="/icon.png"
+                  src="/apple-touch-icon.png"
                   alt="Security Shield"
                   width={300}
                   height={300}
