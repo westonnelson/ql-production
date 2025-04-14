@@ -47,14 +47,16 @@ export default function HomePage() {
           </div>
           <div className="mx-auto mt-16 flex max-w-2xl sm:mt-24 lg:ml-10 lg:mt-0 lg:mr-0 lg:max-w-none xl:ml-32">
             <div className="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
-              <Image
-                src="/logo.png"
-                alt="QuoteLinker"
-                width={500}
-                height={500}
-                className="w-[500px] h-[500px] object-contain rounded-2xl bg-[#1D2432] p-8"
-                priority
-              />
+              <div className="w-[500px] h-[500px] flex items-center justify-center rounded-2xl bg-[#1D2432] p-8">
+                <svg
+                  className="w-64 h-64 text-primary"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.67-3.13 8.96-7 10.12-3.87-1.16-7-5.45-7-10.12V6.3l7-3.12zm-2 9.57L8.12 11l-1.42 1.42L12 17.71l8.3-8.3-1.41-1.42-6.89 6.89-2-2.13z"/>
+                </svg>
+              </div>
             </div>
           </div>
         </div>
