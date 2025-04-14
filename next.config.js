@@ -4,10 +4,7 @@ const nextConfig = {
   swcMinify: true,
   images: {
     unoptimized: true,
-    domains: ['quotelinker.vercel.app'],
-  },
-  experimental: {
-    optimizeCss: true,
+    domains: ['quotelinker.com'],
   },
 }
 
