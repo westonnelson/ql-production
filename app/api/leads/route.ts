@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     // Validate required fields
     const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'age', 'gender', 'coverageAmount', 'termLength', 'tobaccoUse']
     for (const field of requiredFields) {
-      if (body[field] === undefined || body[field] === null) {
+      if (body[field] === undefined || body[field] === null || body[field] === '') {
         return NextResponse.json(
           { error: `Missing required field: ${field}` }, 
           { 
@@ -44,11 +44,11 @@ export async function POST(request: Request) {
       last_name: body.lastName,
       email: body.email,
       phone: body.phone,
-      age: parseInt(body.age),
+      age: Number(body.age),
       gender: body.gender,
-      coverage_amount: parseInt(body.coverageAmount),
-      term_length: parseInt(body.termLength),
-      tobacco_use: Boolean(body.tobaccoUse),
+      coverage_amount: Number(body.coverageAmount),
+      term_length: Number(body.termLength),
+      tobacco_use: body.tobaccoUse,
       utm_source: body.utmSource || null,
       created_at: new Date().toISOString()
     }
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     if (supabaseError) {
       console.error('Supabase error:', supabaseError)
       return NextResponse.json(
-        { error: 'Database error' }, 
+        { error: supabaseError.message || 'Database error' }, 
         { 
           status: 500,
           headers
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
       { 
         success: true, 
         message: 'Lead submitted successfully',
-        data: body
+        data: leadData
       },
       { headers }
     )

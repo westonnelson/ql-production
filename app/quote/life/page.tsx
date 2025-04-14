@@ -61,7 +61,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting: isFormSubmitting },
+    formState: { errors },
     trigger,
     watch,
   } = useForm<FormData>({
@@ -73,24 +73,30 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
   })
 
   const onSubmit = async (data: FormData) => {
-    setIsSubmitting(true)
-    setError(null)
-
     try {
+      setIsSubmitting(true)
+      setError(null)
+
       const response = await fetch('/api/leads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          coverageAmount: Number(data.coverageAmount),
+          termLength: Number(data.termLength),
+          age: Number(data.age),
+          tobaccoUse: data.tobaccoUse === 'yes',
+        }),
       })
 
+      const result = await response.json()
+
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to submit form')
+        throw new Error(result.error || 'Failed to submit form')
       }
 
-      // Redirect to thank you page
       router.push('/thank-you/life')
     } catch (err) {
       console.error('Error submitting form:', err)
@@ -106,12 +112,14 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
 
     if (isStepValid && currentStep < steps.length) {
       setCurrentStep(currentStep + 1)
+      setError(null)
     }
   }
 
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1)
+      setError(null)
     }
   }
 
