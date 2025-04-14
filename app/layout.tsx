@@ -18,19 +18,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icon.png', type: 'image/png', sizes: '32x32' }
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
     ],
-    shortcut: ['/favicon.ico'],
     apple: [
-      { url: '/icon.png', sizes: '180x180', type: 'image/png' }
-    ],
-    other: [
-      {
-        rel: 'mask-icon',
-        url: '/icon.png',
-      },
-    ],
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ]
   },
 }
 
@@ -42,9 +34,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-[#0F1218]">
       <head>
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icon.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
       </head>
       <body className={`${inter.className} bg-[#0F1218]`}>
         {/* Google Tag Manager */}
