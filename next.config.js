@@ -7,9 +7,10 @@ const nextConfig = {
     domains: ['quotelinker.com'],
   },
   trailingSlash: true,
-  assetPrefix: '/',
-  basePath: '',
   output: 'standalone',
+  env: {
+    NEXT_PUBLIC_SITE_URL: 'https://quotelinker.com',
+  },
 }
 
 module.exports = nextConfig 
