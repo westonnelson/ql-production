@@ -22,7 +22,7 @@ const nextConfig = {
   },
   env: {
     NEXT_PUBLIC_SITE_URL: process.env.NODE_ENV === 'production' 
-      ? 'https://quotelinker.com'
+      ? 'https://www.quotelinker.com'
       : 'http://localhost:3000',
   },
   async headers() {
@@ -34,6 +34,21 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Methods', value: 'GET,POST,PUT,DELETE,OPTIONS' },
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
         ],
+      },
+    ]
+  },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        has: [
+          {
+            type: 'host',
+            value: 'quotelinker.com',
+          },
+        ],
+        destination: 'https://www.quotelinker.com',
+        permanent: true,
       },
     ]
   }
