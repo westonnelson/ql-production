@@ -40,13 +40,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="bg-[#0F1218]">
       <head>
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/icon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/icon.png" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-[#0F1218]`}>
         {/* Google Tag Manager */}
         <Script id="gtm" strategy="afterInteractive">
           {`
@@ -71,7 +71,7 @@ export default function RootLayout({
           `}
         </Script>
         <Header />
-        <main>{children}</main>
+        <main className="bg-[#0F1218]">{children}</main>
         <Footer />
         {/* Google Tag Manager (noscript) */}
         <noscript>
