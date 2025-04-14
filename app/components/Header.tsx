@@ -8,14 +8,16 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <Link href="/" className="flex items-center space-x-2">
-            <Image
-              src="/favicon-32x32.png"
-              alt="QuoteLinker"
-              width={32}
-              height={32}
-              className="w-8 h-8"
-              priority
-            />
+            <div className="relative w-8 h-8">
+              <Image
+                src="/apple-touch-icon.png"
+                alt="QuoteLinker"
+                fill
+                sizes="(max-width: 32px) 100vw"
+                className="object-contain"
+                priority
+              />
+            </div>
             <span className="text-2xl font-bold text-white">QuoteLinker</span>
           </Link>
           
@@ -25,18 +27,6 @@ export default function Header() {
               className="text-gray-300 hover:text-white transition-colors"
             >
               How it Works
-            </Link>
-            <Link 
-              href="/privacy"
-              className="text-gray-300 hover:text-white transition-colors"
-            >
-              Privacy
-            </Link>
-            <Link 
-              href="/terms"
-              className="text-gray-300 hover:text-white transition-colors"
-            >
-              Terms
             </Link>
             <Link
               href="/quote/life"

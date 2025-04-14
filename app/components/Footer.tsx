@@ -21,38 +21,51 @@ export default function Footer() {
             <span className="text-xl font-semibold text-white">QuoteLinker</span>
           </div>
           
-          <nav className="flex flex-wrap justify-center gap-6">
-            <Link 
-              href="/quote/life"
+          <div className="flex flex-col items-center space-y-6">
+            <nav className="flex flex-wrap justify-center gap-6">
+              <Link 
+                href="/#how-it-works"
+                className="text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                How it Works
+              </Link>
+              <Link 
+                href="/quote/life"
+                className="text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                Benefits
+              </Link>
+              <Link 
+                href="/quote/life"
+                className="text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                FAQ
+              </Link>
+            </nav>
+
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link 
+                href="/privacy"
+                className="text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                Privacy Policy
+              </Link>
+              <span className="text-gray-600">•</span>
+              <Link 
+                href="/terms"
+                className="text-gray-400 hover:text-white transition-colors text-sm"
+              >
+                Terms of Service
+              </Link>
+            </div>
+
+            <a 
+              href="mailto:support@quotelinker.com"
               className="text-gray-400 hover:text-white transition-colors text-sm"
             >
-              How it Works
-            </Link>
-            <Link 
-              href="/quote/life"
-              className="text-gray-400 hover:text-white transition-colors text-sm"
-            >
-              Benefits
-            </Link>
-            <Link 
-              href="/quote/life"
-              className="text-gray-400 hover:text-white transition-colors text-sm"
-            >
-              FAQ
-            </Link>
-            <Link 
-              href="/privacy"
-              className="text-gray-400 hover:text-white transition-colors text-sm"
-            >
-              Privacy Policy
-            </Link>
-            <Link 
-              href="/terms"
-              className="text-gray-400 hover:text-white transition-colors text-sm"
-            >
-              Terms of Service
-            </Link>
-          </nav>
+              support@quotelinker.com
+            </a>
+          </div>
           
           <div className="text-center text-sm text-gray-400">
             <p>&copy; {new Date().getFullYear()} QuoteLinker. All rights reserved.</p>
