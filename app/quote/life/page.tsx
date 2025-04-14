@@ -140,20 +140,20 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#0F1218] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <div className="text-center">
-          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+          <h1 className="text-3xl font-extrabold text-white sm:text-4xl">
             Life Insurance Quote
           </h1>
-          <p className="mt-3 text-xl text-gray-500">
+          <p className="mt-3 text-xl text-gray-300">
             Get your personalized life insurance quote in minutes
           </p>
         </div>
 
         {error && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="mt-4 p-4 bg-red-900/20 border border-red-500/20 rounded-md">
+            <p className="text-sm text-red-400">{error}</p>
           </div>
         )}
 
@@ -165,7 +165,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                 <div
                   key={step.id}
                   className={`flex-1 text-center ${
-                    step.id <= currentStep ? 'text-primary' : 'text-gray-400'
+                    step.id <= currentStep ? 'text-primary' : 'text-gray-500'
                   }`}
                 >
                   {step.title}
@@ -173,7 +173,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
               ))}
             </div>
             <div className="relative">
-              <div className="absolute top-0 h-1 bg-gray-200 w-full rounded"></div>
+              <div className="absolute top-0 h-1 bg-gray-800 w-full rounded"></div>
               <div
                 className="absolute top-0 h-1 bg-primary rounded transition-all duration-300"
                 style={{ width: `${(currentStep / steps.length) * 100}%` }}
@@ -185,17 +185,17 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-300">
                     First Name
                   </label>
                   <input
                     type="text"
                     id="firstName"
                     {...register('firstName')}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                   />
                   {errors.firstName && (
-                    <p className="mt-1 text-sm text-red-600">{errors.firstName.message?.toString()}</p>
+                    <p className="mt-1 text-sm text-red-400">{errors.firstName.message?.toString()}</p>
                   )}
                 </div>
                 <div>
