@@ -6,6 +6,10 @@ const nextConfig = {
     unoptimized: true,
     domains: ['quotelinker.com'],
   },
+  trailingSlash: true,
+  assetPrefix: '/',
+  basePath: '',
+  output: 'standalone',
 }
 
 module.exports = nextConfig 

@@ -10,11 +10,12 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'QuoteLinker - Insurance Quotes Made Easy',
   description: 'Get instant insurance quotes tailored to your needs',
-  metadataBase: new URL('https://quotelinker.vercel.app'),
+  metadataBase: new URL('https://quotelinker.com'),
   openGraph: {
     title: 'QuoteLinker - Insurance Quote Capture',
     description: 'Get your personalized insurance quotes quickly and easily.',
     type: 'website',
+    url: 'https://quotelinker.com',
   },
   icons: {
     icon: [
@@ -26,6 +27,9 @@ export const metadata: Metadata = {
     ]
   },
 }
+
+export const dynamic = 'force-static'
+export const preferredRegion = 'auto'
 
 export default function RootLayout({
   children,

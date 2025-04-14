@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
+export const dynamic = 'force-static'
+export const preferredRegion = 'auto'
+export const runtime = 'nodejs'
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#0F1218] text-white">
