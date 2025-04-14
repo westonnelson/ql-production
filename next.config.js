@@ -22,7 +22,7 @@ const nextConfig = {
   },
   env: {
     NEXT_PUBLIC_SITE_URL: process.env.NODE_ENV === 'production' 
-      ? 'https://www.quotelinker.com'
+      ? 'https://quotelinker.com'
       : 'http://localhost:3000',
   },
   async headers() {
@@ -36,22 +36,7 @@ const nextConfig = {
         ],
       },
     ]
-  },
-  async redirects() {
-    return [
-      {
-        source: '/',
-        has: [
-          {
-            type: 'host',
-            value: 'quotelinker.com',
-          },
-        ],
-        destination: 'https://www.quotelinker.com',
-        permanent: true,
-      },
-    ]
-  },
+  }
 }
 
 module.exports = nextConfig 
