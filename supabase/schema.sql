@@ -10,8 +10,10 @@ create table public.leads (
   gender text,
   coverage_amount int4,
   term_length int4,
-  tobacco_use text,
-  utm_source text
+  tobacco_use boolean,
+  utm_source text,
+  source text,
+  status text
 );
 
 -- Enable Row Level Security

@@ -44,6 +44,14 @@ const steps: QuoteStep[] = [
   },
 ]
 
+type FormFields = keyof FormData
+
+const stepFields: Record<number, FormFields[]> = {
+  1: ['firstName', 'lastName', 'age', 'gender'],
+  2: ['email', 'phone'],
+  3: ['coverageAmount', 'termLength', 'tobaccoUse'],
+}
+
 function QuoteForm({ utmSource }: { utmSource: string | null }) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
@@ -53,14 +61,15 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitted },
+    formState: { errors, isSubmitting: isFormSubmitting },
+    trigger,
     watch,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       utmSource: utmSource || undefined,
     },
-    mode: 'onSubmit',
+    mode: 'onChange',
   })
 
   const onSubmit = async (data: FormData) => {
@@ -68,54 +77,17 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
     setError(null)
 
     try {
-      // Insert into Supabase
-      const { error: supabaseError } = await supabase
-        .from('leads')
-        .insert([data])
-
-      if (supabaseError) throw supabaseError
-
-      const emailData: EmailData = {
-        firstName: data.firstName,
-        email: data.email,
-        coverageAmount: data.coverageAmount.toString(),
-        termLength: data.termLength.toString(),
-      }
-
-      // Send confirmation email
-      const confirmationResponse = await fetch('/api/send-email', {
+      const response = await fetch('/api/leads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          type: 'confirmation',
-          data: emailData,
-        }),
+        body: JSON.stringify(data),
       })
 
-      if (!confirmationResponse.ok) {
-        throw new Error('Failed to send confirmation email')
-      }
-
-      // Send lead notification email
-      const leadResponse = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'lead',
-          data: {
-            ...data,
-            coverageAmount: data.coverageAmount.toString(),
-            termLength: data.termLength.toString(),
-          },
-        }),
-      })
-
-      if (!leadResponse.ok) {
-        throw new Error('Failed to send lead notification email')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to submit form')
       }
 
       // Redirect to thank you page
@@ -128,8 +100,11 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
     }
   }
 
-  const nextStep = () => {
-    if (currentStep < steps.length) {
+  const nextStep = async () => {
+    const fieldsToValidate = stepFields[currentStep]
+    const isStepValid = await trigger(fieldsToValidate)
+
+    if (isStepValid && currentStep < steps.length) {
       setCurrentStep(currentStep + 1)
     }
   }
@@ -195,8 +170,8 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                     {...register('firstName')}
                     className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                   />
-                  {errors.firstName && isSubmitted && (
-                    <p className="mt-1 text-sm text-red-400">{errors.firstName.message?.toString()}</p>
+                  {errors.firstName && (
+                    <p className="mt-1 text-sm text-red-400">{errors.firstName.message}</p>
                   )}
                 </div>
                 <div>
@@ -209,8 +184,8 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                     {...register('lastName')}
                     className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                   />
-                  {errors.lastName && isSubmitted && (
-                    <p className="mt-1 text-sm text-red-400">{errors.lastName.message?.toString()}</p>
+                  {errors.lastName && (
+                    <p className="mt-1 text-sm text-red-400">{errors.lastName.message}</p>
                   )}
                 </div>
               </div>
@@ -222,11 +197,11 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                   <input
                     type="number"
                     id="age"
-                    {...register('age', { valueAsNumber: true })}
+                    {...register('age')}
                     className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                   />
-                  {errors.age && isSubmitted && (
-                    <p className="mt-1 text-sm text-red-400">{errors.age.message?.toString()}</p>
+                  {errors.age && (
+                    <p className="mt-1 text-sm text-red-400">{errors.age.message}</p>
                   )}
                 </div>
                 <div>
@@ -242,8 +217,8 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                   </select>
-                  {errors.gender && isSubmitted && (
-                    <p className="mt-1 text-sm text-red-400">{errors.gender.message?.toString()}</p>
+                  {errors.gender && (
+                    <p className="mt-1 text-sm text-red-400">{errors.gender.message}</p>
                   )}
                 </div>
               </div>
@@ -262,8 +237,8 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                   {...register('email')}
                   className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                 />
-                {errors.email && isSubmitted && (
-                  <p className="mt-1 text-sm text-red-400">{errors.email.message?.toString()}</p>
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
                 )}
               </div>
               <div>
@@ -276,107 +251,81 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                   {...register('phone')}
                   className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                 />
-                {errors.phone && isSubmitted && (
-                  <p className="mt-1 text-sm text-red-400">{errors.phone.message?.toString()}</p>
+                {errors.phone && (
+                  <p className="mt-1 text-sm text-red-400">{errors.phone.message}</p>
                 )}
               </div>
             </div>
           )}
 
           {currentStep === 3 && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">
+                <label htmlFor="coverageAmount" className="block text-sm font-medium text-gray-300">
                   Coverage Amount
                 </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <select
+                  id="coverageAmount"
+                  {...register('coverageAmount')}
+                  className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                >
+                  <option value="">Select coverage amount</option>
                   {coverageAmounts.map((amount) => (
-                    <div key={amount} className="relative">
-                      <input
-                        type="radio"
-                        id={`coverage-${amount}`}
-                        value={amount}
-                        {...register('coverageAmount', { valueAsNumber: true })}
-                        className="peer sr-only"
-                      />
-                      <label
-                        htmlFor={`coverage-${amount}`}
-                        className="flex items-center justify-center p-4 bg-gray-800 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-700 peer-checked:border-primary peer-checked:text-primary text-white"
-                      >
-                        ${amount.toLocaleString()}
-                      </label>
-                    </div>
+                    <option key={amount} value={amount}>
+                      ${amount.toLocaleString()}
+                    </option>
                   ))}
-                </div>
-                {errors.coverageAmount && isSubmitted && (
-                  <p className="mt-1 text-sm text-red-400">{errors.coverageAmount.message?.toString()}</p>
+                </select>
+                {errors.coverageAmount && (
+                  <p className="mt-1 text-sm text-red-400">{errors.coverageAmount.message}</p>
                 )}
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">
+                <label htmlFor="termLength" className="block text-sm font-medium text-gray-300">
                   Term Length
                 </label>
-                <div className="grid grid-cols-3 gap-4">
-                  {termLengths.map((years) => (
-                    <div key={years} className="relative">
-                      <input
-                        type="radio"
-                        id={`term-${years}`}
-                        value={years}
-                        {...register('termLength', { valueAsNumber: true })}
-                        className="peer sr-only"
-                      />
-                      <label
-                        htmlFor={`term-${years}`}
-                        className="flex items-center justify-center p-4 bg-gray-800 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-700 peer-checked:border-primary peer-checked:text-primary text-white"
-                      >
-                        {years} Years
-                      </label>
-                    </div>
+                <select
+                  id="termLength"
+                  {...register('termLength')}
+                  className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                >
+                  <option value="">Select term length</option>
+                  {termLengths.map((term) => (
+                    <option key={term} value={term}>
+                      {term} Years
+                    </option>
                   ))}
-                </div>
-                {errors.termLength && isSubmitted && (
-                  <p className="mt-1 text-sm text-red-400">{errors.termLength.message?.toString()}</p>
+                </select>
+                {errors.termLength && (
+                  <p className="mt-1 text-sm text-red-400">{errors.termLength.message}</p>
                 )}
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">
+                <label htmlFor="tobaccoUse" className="block text-sm font-medium text-gray-300">
                   Do you use tobacco products?
                 </label>
-                <div className="grid grid-cols-2 gap-4">
-                  {['no', 'yes'].map((option) => (
-                    <div key={option} className="relative">
-                      <input
-                        type="radio"
-                        id={`tobacco-${option}`}
-                        value={option}
-                        {...register('tobaccoUse')}
-                        className="peer sr-only"
-                      />
-                      <label
-                        htmlFor={`tobacco-${option}`}
-                        className="flex items-center justify-center p-4 bg-gray-800 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-700 peer-checked:border-primary peer-checked:text-primary text-white capitalize"
-                      >
-                        {option}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                {errors.tobaccoUse && isSubmitted && (
-                  <p className="mt-1 text-sm text-red-400">{errors.tobaccoUse.message?.toString()}</p>
+                <select
+                  id="tobaccoUse"
+                  {...register('tobaccoUse')}
+                  className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                >
+                  <option value="">Select tobacco use</option>
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+                {errors.tobaccoUse && (
+                  <p className="mt-1 text-sm text-red-400">{errors.tobaccoUse.message}</p>
                 )}
               </div>
             </div>
           )}
 
-          <div className="flex justify-between pt-5">
+          <div className="flex justify-between mt-8">
             {currentStep > 1 && (
               <button
                 type="button"
                 onClick={prevStep}
-                className="inline-flex justify-center py-2 px-4 border border-gray-700 shadow-sm text-sm font-medium rounded-md text-gray-300 bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                className="inline-flex items-center px-4 py-2 border border-gray-700 text-sm font-medium rounded-md text-gray-300 bg-transparent hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               >
                 Previous
               </button>
@@ -385,7 +334,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
               <button
                 type="button"
                 onClick={nextStep}
-                className="ml-auto inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               >
                 Next
               </button>
@@ -393,11 +342,9 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
-                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Submitting...' : 'Get Your Quote'}
+                {isSubmitting ? 'Submitting...' : 'Submit'}
               </button>
             )}
           </div>
@@ -408,16 +355,12 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
 }
 
 export default function LifeInsuranceQuote() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <LifeQuoteContent />
-    </Suspense>
-  )
-}
-
-function LifeQuoteContent() {
   const searchParams = useSearchParams()
   const utmSource = searchParams.get('utm_source')
 
-  return <QuoteForm utmSource={utmSource} />
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <QuoteForm utmSource={utmSource} />
+    </Suspense>
+  )
 } 

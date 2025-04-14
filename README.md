@@ -1,103 +1,70 @@
-# QuoteLinker - Insurance Quote Capture App
+# QuoteLinker
 
-A production-ready, scalable insurance quote capture application built with Next.js 14, TypeScript, and Tailwind CSS.
+A modern life insurance quote platform built with Next.js and Supabase.
 
 ## Features
 
-- Streamlined 3-step life insurance quote form
-- Modern, user-friendly UI with brand consistency
-- Form validation with Zod
-- Supabase integration for data storage
-- Google Analytics 4 and Google Tag Manager integration
-- Responsive design with Tailwind CSS
-- TypeScript for type safety
-- SEO optimized
-- UTM tracking support
-- Privacy Policy and Terms of Service pages
-- Email notifications via Resend
+- Multi-step quote form with validation
+- Real-time form validation
+- Mobile-responsive design
+- Lead tracking and management
+- Email notifications
+- UTM parameter tracking
+
+## Tech Stack
+
+- Next.js 14
+- TypeScript
+- Tailwind CSS
+- Supabase
+- React Hook Form
+- Zod
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 18.x or later
-- npm or yarn
-- Supabase account
-- Google Analytics 4 account
-- Google Tag Manager account
-- Resend account for email notifications
-
-### Installation
-
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/quotelinker.git
-   cd quotelinker
-   ```
+```bash
+git clone https://github.com/yourusername/quotelinker.git
+cd quotelinker
+```
 
 2. Install dependencies:
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-
-3. Create a `.env.local` file in the root directory with the following variables:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-   NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXX
-   NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX
-   RESEND_API_KEY=your-resend-key
-   SALESFORCE_WEBHOOK_URL=your-salesforce-url
-   ```
-
-4. Set up the Supabase database:
-   - Create a new Supabase project
-   - Run the SQL schema provided in the project documentation
-   - Enable Row Level Security (RLS) policies
-
-5. Run the development server:
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
-
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Project Structure
-
+```bash
+npm install
 ```
-quotelinker/
-├── app/
-│   ├── components/
-│   │   ├── Header.tsx
-│   │   └── Footer.tsx
-│   │   ├── quote/
-│   │   │   └── life/
-│   │   │       └── page.tsx
-│   │   ├── privacy/
-│   │   │   └── page.tsx
-│   │   ├── terms/
-│   │   │   └── page.tsx
-│   │   ├── thank-you/
-│   │   │   └── life/
-│   │   │       └── page.tsx
-│   │   ├── layout.tsx
-│   │   └── globals.css
-│   ├── lib/
-│   │   ├── supabaseClient.ts
-│   │   └── email.ts
-│   ├── types/
-│   │   └── quote.ts
-│   └── public/
-└── ...
+
+3. Create a `.env.local` file with the following variables:
 ```
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_GA_MEASUREMENT_ID=your_ga_id
+NEXT_PUBLIC_GTM_ID=your_gtm_id
+NEXT_PUBLIC_CALENDLY_URL=your_calendly_url
+RESEND_API_KEY=your_resend_api_key
+```
+
+4. Run the development server:
+```bash
+npm run dev
+```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Database Setup
+
+1. Create a new Supabase project
+2. Run the schema migration in `supabase/schema.sql`
+3. Update your environment variables with the Supabase credentials
 
 ## Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions and checklist.
+The project is set up for deployment on Vercel:
+
+1. Push your code to GitHub
+2. Import the repository in Vercel
+3. Add the environment variables
+4. Deploy
 
 ## Contributing
 
@@ -109,8 +76,4 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions and chec
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For support, email support@quotelinker.com or join our Slack channel. 
+This project is licensed under the MIT License - see the LICENSE file for details. 

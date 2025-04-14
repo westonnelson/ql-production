@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
 }
 
-export const dynamic = 'force-static'
+export const dynamic = 'force-dynamic'
 export const preferredRegion = 'auto'
 
 export default function RootLayout({
@@ -38,11 +38,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="bg-[#0F1218]">
-      <head>
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="shortcut icon" type="image/png" href="/favicon-32x32.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-      </head>
       <body className={`${inter.className} bg-[#0F1218]`}>
         {/* Google Tag Manager */}
         <Script id="gtm" strategy="afterInteractive">

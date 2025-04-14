@@ -9,6 +9,7 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
 }
 
 // Handle OPTIONS request for CORS
@@ -18,17 +19,20 @@ export async function OPTIONS() {
 
 export async function POST(request: Request) {
   try {
+    // Add CORS headers to all responses
+    const headers = { ...corsHeaders }
+    
     const body = await request.json()
     
     // Validate required fields
     const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'age', 'gender', 'coverageAmount', 'termLength', 'tobaccoUse']
     for (const field of requiredFields) {
-      if (!body[field]) {
+      if (body[field] === undefined || body[field] === null) {
         return NextResponse.json(
           { error: `Missing required field: ${field}` }, 
           { 
             status: 400,
-            headers: corsHeaders
+            headers
           }
         )
       }
@@ -40,15 +44,13 @@ export async function POST(request: Request) {
       last_name: body.lastName,
       email: body.email,
       phone: body.phone,
-      age: body.age,
+      age: parseInt(body.age),
       gender: body.gender,
-      coverage_amount: body.coverageAmount,
-      term_length: body.termLength,
-      tobacco_use: body.tobaccoUse,
-      utm_source: body.utmSource,
-      created_at: new Date().toISOString(),
-      source: 'website',
-      status: 'new'
+      coverage_amount: parseInt(body.coverageAmount),
+      term_length: parseInt(body.termLength),
+      tobacco_use: Boolean(body.tobaccoUse),
+      utm_source: body.utmSource || null,
+      created_at: new Date().toISOString()
     }
 
     // Insert into Supabase
@@ -62,13 +64,13 @@ export async function POST(request: Request) {
         { error: 'Database error' }, 
         { 
           status: 500,
-          headers: corsHeaders
+          headers
         }
       )
     }
 
     // Send email notification
-    const emailResponse = await fetch('/api/send-email', {
+    const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/send-email`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -89,7 +91,7 @@ export async function POST(request: Request) {
         message: 'Lead submitted successfully',
         data: body
       },
-      { headers: corsHeaders }
+      { headers }
     )
   } catch (error) {
     console.error('Error processing lead:', error)

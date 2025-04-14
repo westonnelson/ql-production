@@ -4,25 +4,40 @@ const nextConfig = {
   swcMinify: true,
   images: {
     unoptimized: true,
-    domains: ['quotelinker.com'],
+    domains: ['quotelinker.com', 'www.quotelinker.com', 'ql-production-4fk90gsvw-yield.vercel.app'],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'quotelinker.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.quotelinker.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ql-production-4fk90gsvw-yield.vercel.app',
+      },
     ],
   },
-  trailingSlash: true,
-  output: 'standalone',
   env: {
-    NEXT_PUBLIC_SITE_URL: 'https://quotelinker.com',
+    NEXT_PUBLIC_SITE_URL: process.env.NODE_ENV === 'production' 
+      ? 'https://www.quotelinker.com'
+      : 'http://localhost:3000',
   },
-  // Ensure proper handling of API routes
-  rewrites: async () => {
+  // Handle redirects and API routes
+  async redirects() {
     return [
       {
-        source: '/api/:path*',
-        destination: '/api/:path*',
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'quotelinker.com',
+          },
+        ],
+        destination: 'https://www.quotelinker.com/:path*',
+        permanent: true,
       },
     ]
   },
