@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       coverage_amount: Number(body.coverageAmount),
       term_length: Number(body.termLength),
       tobacco_use: body.tobaccoUse,
-      utm_source: body.utmSource || null,
+      utm_source: body.utmSource || 'direct',
       created_at: new Date().toISOString()
     }
 

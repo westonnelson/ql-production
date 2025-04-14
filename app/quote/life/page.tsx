@@ -67,7 +67,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      utmSource: utmSource || undefined,
+      utmSource: utmSource || 'direct',
     },
     mode: 'onChange',
   })
@@ -112,14 +112,15 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
     
     if (isValid) {
       setCurrentStep((prev) => Math.min(prev + 1, steps.length))
+      setError(null)
     } else {
-      // Show validation errors for the current step
+      // Only show validation errors if user has interacted with the form
       const currentErrors = Object.entries(errors)
         .filter(([key]) => fields.includes(key as FormFields))
         .map(([_, value]) => value.message)
         .filter(Boolean)
       
-      if (currentErrors.length > 0) {
+      if (currentErrors.length > 0 && Object.keys(errors).some(field => fields.includes(field as FormFields))) {
         setError(currentErrors[0] || null)
       }
     }
@@ -144,7 +145,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
           </p>
         </div>
 
-        {error && (
+        {error && !isSubmitting && (
           <div className="mt-4 p-4 bg-red-900/20 border border-red-500/20 rounded-md">
             <p className="text-sm text-red-400">{error}</p>
           </div>
