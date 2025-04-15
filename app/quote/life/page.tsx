@@ -89,19 +89,17 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
 
       // Format and sanitize the data
       const formData = {
-        ...data,
-        // Convert coverage amount to number (remove $ and commas)
-        coverageAmount: Number(data.coverageAmount.toString().replace(/[$,]/g, '')),
-        // Convert term length to number
-        termLength: Number(data.termLength),
-        // Convert age to number
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        phone: data.phone,
         age: Number(data.age),
-        // Convert tobacco use to boolean
-        tobaccoUse: data.tobaccoUse === 'yes',
-        // Add product type explicitly
-        productType: 'life' as const,
-        // Add gender
         gender: data.gender,
+        product_type: 'life' as const,
+        coverage_amount: Number(data.coverageAmount.toString().replace(/[$,]/g, '')),
+        term_length: Number(data.termLength),
+        tobacco_use: data.tobaccoUse === 'yes',
+        utm_source: data.utmSource
       };
 
       console.log('Submitting form data:', JSON.stringify(formData, null, 2));
