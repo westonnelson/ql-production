@@ -1,134 +1,102 @@
 import React, { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { logFunnelStep, logFormSubmission } from '../lib/analytics';
 import { useUtmParams, getFunnelConfig, getFunnelStep } from '@/lib/utm';
 
-// Define the form schema based on insurance type
-const createFormSchema = (insuranceType: string) => {
-  const baseSchema = {
-    firstName: z.string().min(1, 'First name is required'),
-    lastName: z.string().min(1, 'Last name is required'),
-    email: z.string().email('Invalid email address'),
-    phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-    age: z.number().int().min(18).max(100),
-    gender: z.enum(['male', 'female', 'other']),
-    utmSource: z.string().optional(),
-    utmMedium: z.string().optional(),
-    utmCampaign: z.string().optional(),
-    utmContent: z.string().optional(),
-    utmTerm: z.string().optional(),
-  };
+// Base schema for all insurance types
+const baseSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
+  age: z.number().int().min(18).max(100),
+  gender: z.enum(['male', 'female', 'other']),
+  insuranceType: z.enum(['life', 'disability', 'auto', 'supplemental']),
+  funnelName: z.string().optional(),
+  funnelStep: z.string().optional(),
+  funnelVariant: z.string().optional(),
+  abTestId: z.string().optional(),
+  abTestVariant: z.string().optional(),
+  utmSource: z.string().optional(),
+  utmMedium: z.string().optional(),
+  utmCampaign: z.string().optional(),
+  utmContent: z.string().optional(),
+  utmTerm: z.string().optional(),
+});
 
-  // Add insurance-specific fields
-  switch (insuranceType) {
-    case 'auto':
-      return z.object({
-        ...baseSchema,
-        vehicleYear: z.number().int().min(1900).max(new Date().getFullYear() + 1),
-        vehicleMake: z.string().min(1, 'Vehicle make is required'),
-        vehicleModel: z.string().min(1, 'Vehicle model is required'),
-      });
-    case 'life':
-      return z.object({
-        ...baseSchema,
-        coverageAmount: z.number().int().min(10000),
-        termLength: z.number().int().min(5).max(30),
-        tobaccoUse: z.boolean(),
-      });
-    case 'disability':
-      return z.object({
-        ...baseSchema,
-        occupation: z.string().min(1, 'Occupation is required'),
-        employmentStatus: z.enum(['full-time', 'part-time', 'self-employed']),
-        incomeRange: z.string().min(1, 'Income range is required'),
-      });
-    default:
-      return z.object(baseSchema);
-  }
-};
+// Insurance-specific schemas
+const lifeSchema = baseSchema.extend({
+  insuranceType: z.literal('life'),
+  coverageAmount: z.number().int().min(10000),
+  termLength: z.number().int().min(5).max(30),
+  tobaccoUse: z.boolean(),
+});
+
+const disabilitySchema = baseSchema.extend({
+  insuranceType: z.literal('disability'),
+  occupation: z.string().min(1, 'Occupation is required'),
+  employmentStatus: z.enum(['full-time', 'part-time', 'self-employed']),
+  incomeRange: z.string().min(1, 'Income range is required'),
+});
+
+const autoSchema = baseSchema.extend({
+  insuranceType: z.literal('auto'),
+  vehicleYear: z.number().int().min(1900).max(new Date().getFullYear() + 1),
+  vehicleMake: z.string().min(1, 'Vehicle make is required'),
+  vehicleModel: z.string().min(1, 'Vehicle model is required'),
+});
+
+const supplementalSchema = baseSchema.extend({
+  insuranceType: z.literal('supplemental'),
+  healthStatus: z.enum(['excellent', 'good', 'fair', 'poor']),
+  preExistingConditions: z.boolean(),
+});
+
+// Combined schema
+const formSchema = z.discriminatedUnion('insuranceType', [
+  lifeSchema,
+  disabilitySchema,
+  autoSchema,
+  supplementalSchema,
+]);
+
+type FormData = z.infer<typeof formSchema>;
 
 interface QuoteFormProps {
-  insuranceType?: string;
-  funnelName?: string;
-  funnelVariant?: string;
-  abTestId?: string;
-  abTestVariant?: string;
-  initialData?: any;
-  onSuccess?: (data: any) => void;
+  insuranceType: string;
+  initialData?: Partial<FormData>;
+  onSuccess?: (data: FormData) => void;
 }
 
-const QuoteForm: React.FC<QuoteFormProps> = ({
-  insuranceType = 'general',
-  funnelName = 'default',
-  funnelVariant = 'control',
-  abTestId,
-  abTestVariant,
-  initialData,
-  onSuccess,
-}) => {
+const QuoteForm: React.FC<QuoteFormProps> = ({ insuranceType, initialData, onSuccess }) => {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const utmParams = useUtmParams();
   const funnelConfig = getFunnelConfig(pathname);
   const currentStep = getFunnelStep(pathname);
   
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const formSchema = createFormSchema(insuranceType);
-  type FormData = z.infer<typeof formSchema>;
-
   const {
     register,
     handleSubmit,
-    formState: { errors, touchedFields },
-    trigger,
+    formState: { errors, isSubmitting },
     watch,
+    setValue,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       ...initialData,
-      utmSource: (router.query.utm_source as string) || '',
-      utmMedium: (router.query.utm_medium as string) || '',
-      utmCampaign: (router.query.utm_campaign as string) || '',
-      utmContent: (router.query.utm_content as string) || '',
-      utmTerm: (router.query.utm_term as string) || '',
+      insuranceType: insuranceType as FormData['insuranceType'],
+      utmSource: searchParams.get('utm_source') || undefined,
+      utmMedium: searchParams.get('utm_medium') || undefined,
+      utmCampaign: searchParams.get('utm_campaign') || undefined,
+      utmContent: searchParams.get('utm_content') || undefined,
+      utmTerm: searchParams.get('utm_term') || undefined,
     },
   });
-
-  // Define steps based on insurance type
-  const steps = [
-    {
-      id: 1,
-      title: 'Personal Information',
-      description: 'Tell us about yourself',
-      fields: ['firstName', 'lastName', 'age', 'gender'],
-    },
-    {
-      id: 2,
-      title: 'Contact Details',
-      description: 'How can we reach you?',
-      fields: ['email', 'phone'],
-    },
-    {
-      id: 3,
-      title: insuranceType === 'auto' ? 'Vehicle Information' :
-             insuranceType === 'life' ? 'Coverage Details' :
-             insuranceType === 'disability' ? 'Employment Details' :
-             'Additional Information',
-      description: insuranceType === 'auto' ? 'Tell us about your vehicle' :
-                   insuranceType === 'life' ? 'Choose your coverage options' :
-                   insuranceType === 'disability' ? 'Tell us about your employment' :
-                   'Additional details',
-      fields: insuranceType === 'auto' ? ['vehicleYear', 'vehicleMake', 'vehicleModel'] :
-              insuranceType === 'life' ? ['coverageAmount', 'termLength', 'tobaccoUse'] :
-              insuranceType === 'disability' ? ['occupation', 'employmentStatus', 'incomeRange'] :
-              [],
-    },
-  ];
 
   useEffect(() => {
     // Log funnel step view
@@ -142,47 +110,10 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
     });
   }, [currentStep, insuranceType, funnelConfig]);
 
-  const nextStep = async () => {
-    const currentStepData = steps[currentStep - 1];
-    const isValid = await trigger(currentStepData.fields as any);
-    
-    if (isValid) {
-      setError(null);
-      
-      // Log funnel step
-      await logFunnelStep({
-        step: currentStep + 1,
-        insuranceType,
-        funnelName: funnelConfig.name,
-        funnelVariant: funnelConfig.variant,
-        abTestId: funnelConfig.abTestId,
-        abTestVariant: funnelConfig.abTestVariant,
-      });
-    } else {
-      const currentErrors = Object.entries(errors)
-        .filter(([key]) => currentStepData.fields.includes(key))
-        .map(([_, value]) => value.message)
-        .filter(Boolean);
-      
-      if (currentErrors.length > 0) {
-        setError(currentErrors[0] || null);
-      }
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setError(null);
-    }
-  };
-
   const onSubmit = async (data: FormData) => {
-    setIsSubmitting(true);
-    setError(null);
-
     try {
       // Log form submission
-      await logFormSubmission({
+      logFormSubmission({
         insuranceType,
         formData: data,
         utmParams,
@@ -190,22 +121,16 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
         funnelStep: currentStep,
         funnelVariant: funnelConfig.variant,
         abTestId: funnelConfig.abTestId,
-        abTestVariant: funnelConfig.abTestVariant,
+        abTestVariant: funnelConfig.abTestVariant
       });
 
-      // Submit form data to API
+      // Submit form data
       const response = await fetch('/api/submit-quote', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          insuranceType,
-          funnelName: funnelConfig.name,
-          funnelStep: currentStep,
-          funnelVariant: funnelConfig.variant,
-          abTestId: funnelConfig.abTestId,
-          abTestVariant: funnelConfig.abTestVariant,
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
@@ -216,17 +141,10 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
         onSuccess(data);
       }
 
-      // Redirect to thank you page
-      router.push(`/thank-you/${insuranceType}`);
-    } catch (err) {
-      console.error('Form submission error:', err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'An unexpected error occurred. Please try again.'
-      );
-    } finally {
-      setIsSubmitting(false);
+      // Navigate to success page
+      router.push(`/quote/${insuranceType}/success`);
+    } catch (error) {
+      console.error('Error submitting form:', error);
     }
   };
 

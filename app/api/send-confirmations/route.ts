@@ -57,37 +57,8 @@ export async function POST(request: Request) {
       preExistingConditions,
     } = body
 
-    // Send confirmation email to customer
-    const customerEmailResponse = await resend.emails.send({
-      from: 'quotes@yourdomain.com',
-      to: email,
-      subject: `Thank you for your ${insuranceType} insurance quote request`,
-      html: `
-        <h1>Thank you for your quote request!</h1>
-        <p>Dear ${firstName},</p>
-        <p>We've received your request for a ${insuranceType} insurance quote. Our team will review your information and contact you shortly.</p>
-        <h2>Your Quote Details:</h2>
-        <ul>
-          <li>Insurance Type: ${insuranceType}</li>
-          ${coverageAmount ? `<li>Coverage Amount: $${coverageAmount.toLocaleString()}</li>` : ''}
-          ${termLength ? `<li>Term Length: ${termLength} years</li>` : ''}
-          ${tobaccoUse !== undefined ? `<li>Tobacco Use: ${tobaccoUse ? 'Yes' : 'No'}</li>` : ''}
-          ${occupation ? `<li>Occupation: ${occupation}</li>` : ''}
-          ${employmentStatus ? `<li>Employment Status: ${employmentStatus}</li>` : ''}
-          ${incomeRange ? `<li>Income Range: ${incomeRange}</li>` : ''}
-          ${vehicleYear ? `<li>Vehicle Year: ${vehicleYear}</li>` : ''}
-          ${vehicleMake ? `<li>Vehicle Make: ${vehicleMake}</li>` : ''}
-          ${vehicleModel ? `<li>Vehicle Model: ${vehicleModel}</li>` : ''}
-          ${healthStatus ? `<li>Health Status: ${healthStatus}</li>` : ''}
-          ${preExistingConditions !== undefined ? `<li>Pre-existing Conditions: ${preExistingConditions ? 'Yes' : 'No'}</li>` : ''}
-        </ul>
-        <p>If you have any questions, please don't hesitate to contact us.</p>
-        <p>Best regards,<br>Your Insurance Team</p>
-      `,
-    })
-
     // Send notification email to sales team
-    const salesEmailResponse = await resend.emails.send({
+    const { data: salesEmail, error: salesError } = await resend.emails.send({
       from: 'quotes@yourdomain.com',
       to: 'sales@yourdomain.com',
       subject: `New ${insuranceType} Insurance Quote Request - ${firstName} ${lastName}`,
@@ -117,12 +88,75 @@ export async function POST(request: Request) {
       `,
     })
 
-    if (!customerEmailResponse.id || !salesEmailResponse.id) {
-      throw new Error('Failed to send one or more emails')
+    if (salesError) {
+      console.error('Error sending sales email:', salesError)
+      return NextResponse.json(
+        { error: 'Failed to send notification email' },
+        { status: 500, headers: corsHeaders }
+      )
+    }
+
+    // Send notification email to support team
+    const { data: supportEmail, error: supportError } = await resend.emails.send({
+      from: 'no-reply@quotelinker.com',
+      to: ['support@quotelinker.com'],
+      subject: `New ${insuranceType} Quote Request`,
+      html: `<p>A new quote request for <strong>${insuranceType}</strong> insurance was received. Consumer email: ${email}.</p>`,
+    })
+
+    if (supportError) {
+      console.error('Error sending support email:', supportError)
+      return NextResponse.json(
+        { error: 'Failed to send support email' },
+        { status: 500, headers: corsHeaders }
+      )
+    }
+
+    // Send confirmation email to consumer
+    const { data: consumerEmail, error: consumerError } = await resend.emails.send({
+      from: 'no-reply@quotelinker.com',
+      to: [email],
+      subject: `Your ${insuranceType} Insurance Quote Request`,
+      html: `
+        <h1>Thank you for your quote request!</h1>
+        <p>Dear ${firstName},</p>
+        <p>We've received your request for a ${insuranceType} insurance quote. Our team will review your information and contact you shortly.</p>
+        <h2>Your Quote Details:</h2>
+        <ul>
+          <li>Insurance Type: ${insuranceType}</li>
+          ${coverageAmount ? `<li>Coverage Amount: $${coverageAmount.toLocaleString()}</li>` : ''}
+          ${termLength ? `<li>Term Length: ${termLength} years</li>` : ''}
+          ${tobaccoUse !== undefined ? `<li>Tobacco Use: ${tobaccoUse ? 'Yes' : 'No'}</li>` : ''}
+          ${occupation ? `<li>Occupation: ${occupation}</li>` : ''}
+          ${employmentStatus ? `<li>Employment Status: ${employmentStatus}</li>` : ''}
+          ${incomeRange ? `<li>Income Range: ${incomeRange}</li>` : ''}
+          ${vehicleYear ? `<li>Vehicle Year: ${vehicleYear}</li>` : ''}
+          ${vehicleMake ? `<li>Vehicle Make: ${vehicleMake}</li>` : ''}
+          ${vehicleModel ? `<li>Vehicle Model: ${vehicleModel}</li>` : ''}
+          ${healthStatus ? `<li>Health Status: ${healthStatus}</li>` : ''}
+          ${preExistingConditions !== undefined ? `<li>Pre-existing Conditions: ${preExistingConditions ? 'Yes' : 'No'}</li>` : ''}
+        </ul>
+        <p>If you have any questions, please don't hesitate to contact us.</p>
+        <p>Best regards,<br>Your Insurance Team</p>
+      `,
+    })
+
+    if (consumerError) {
+      console.error('Error sending consumer email:', consumerError)
+      return NextResponse.json(
+        { error: 'Failed to send confirmation email' },
+        { status: 500, headers: corsHeaders }
+      )
     }
 
     return NextResponse.json(
-      { success: true, message: 'Confirmation emails sent successfully' },
+      { 
+        success: true, 
+        data: { 
+          supportEmailId: supportEmail?.id,
+          consumerEmailId: consumerEmail?.id
+        } 
+      },
       { headers: corsHeaders }
     )
   } catch (error) {
