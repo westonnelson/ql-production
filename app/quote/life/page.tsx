@@ -87,56 +87,64 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
       setIsSubmitting(true)
       setError(null)
 
-      // First, submit the lead data
+      // Format and sanitize the data
+      const formData = {
+        ...data,
+        // Convert coverage amount to number (remove $ and commas)
+        coverageAmount: Number(data.coverageAmount.toString().replace(/[$,]/g, '')),
+        // Convert term length to number
+        termLength: Number(data.termLength),
+        // Convert age to number
+        age: Number(data.age),
+        // Convert tobacco use to boolean
+        tobaccoUse: data.tobaccoUse === 'yes',
+        productType: 'life',
+      };
+
+      console.log('Submitting form data:', formData);
+
       const leadResponse = await fetch('/api/leads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...data,
-          coverageAmount: Number(data.coverageAmount),
-          termLength: Number(data.termLength),
-          age: Number(data.age),
-          tobaccoUse: data.tobaccoUse === 'yes',
-          productType: 'life',
-        }),
-      })
+        body: JSON.stringify(formData),
+      });
 
-      const leadResult = await leadResponse.json()
+      const responseText = await leadResponse.text();
+      console.log('Raw response:', responseText);
+
+      let leadResult;
+      try {
+        leadResult = JSON.parse(responseText);
+        console.log('Parsed response:', leadResult);
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        throw new Error('Invalid response from server');
+      }
 
       if (!leadResponse.ok) {
-        throw new Error(leadResult.error || 'Failed to submit form. Please try again.')
+        console.error('Server error response:', {
+          status: leadResponse.status,
+          statusText: leadResponse.statusText,
+          result: leadResult
+        });
+        throw new Error(
+          leadResult.error || 
+          (leadResult.details ? JSON.stringify(leadResult.details) : 'Failed to submit form. Please try again.')
+        );
       }
 
-      // Then, send the confirmation emails
-      const emailResponse = await fetch('/api/send-confirmations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...data,
-          coverageAmount: Number(data.coverageAmount),
-          termLength: Number(data.termLength),
-          age: Number(data.age),
-          tobaccoUse: data.tobaccoUse === 'yes',
-        }),
-      })
-
-      const emailResult = await emailResponse.json()
-
-      if (!emailResponse.ok) {
-        console.error('Failed to send confirmation emails:', emailResult.error)
-        // Don't throw here - we still want to redirect since the lead was saved
-      }
-
-      // Clear any existing errors
+      // Clear any existing errors and redirect
       setError(null)
       router.push('/thank-you/life')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.')
       console.error('Form submission error:', err)
+      setError(
+        err instanceof Error 
+          ? err.message 
+          : 'An unexpected error occurred. Please try again.'
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -182,9 +190,15 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
           </p>
         </div>
 
-        {error && isFormTouched && (
+        {error && (
           <div className="mt-4 p-4 bg-red-900/20 backdrop-blur-sm border border-red-500/20 rounded-md animate-fade-in">
             <p className="text-sm text-red-400">{error}</p>
+          </div>
+        )}
+
+        {isSubmitting && (
+          <div className="mt-4 p-4 bg-blue-900/20 backdrop-blur-sm border border-blue-500/20 rounded-md animate-fade-in">
+            <p className="text-sm text-blue-400">Submitting your quote request...</p>
           </div>
         )}
 

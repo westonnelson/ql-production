@@ -14,14 +14,16 @@ const corsHeaders = {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Check if Supabase configuration is available
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing Supabase configuration. Please check environment variables.');
+  throw new Error('Missing Supabase configuration. Please check environment variables.');
 }
 
-const supabase = supabaseUrl && supabaseServiceKey 
-  ? createClient(supabaseUrl, supabaseServiceKey)
-  : null;
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+  }
+});
 
 // Validation schema for lead submission
 const leadSchema = z.object({
@@ -64,75 +66,43 @@ export async function OPTIONS() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    console.log('Received request body:', JSON.stringify(body, null, 2));
     
     // Validate the request body
-    const validatedData = leadSchema.parse(body);
-    
-    // Check if Supabase is configured
+    let validatedData;
+    try {
+      validatedData = leadSchema.parse(body);
+      console.log('Validated data:', JSON.stringify(validatedData, null, 2));
+    } catch (validationError) {
+      console.error('Validation error:', validationError);
+      return NextResponse.json(
+        { error: 'Invalid form data', details: validationError },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // Check Supabase connection
     if (!supabase) {
-      console.error('Supabase client not initialized. Skipping database operation.');
-      
-      // Still send emails even if database operation fails
-      await sendConfirmationEmail({
-        firstName: validatedData.firstName,
-        lastName: validatedData.lastName,
-        email: validatedData.email,
-        phone: validatedData.phone,
-        age: validatedData.age,
-        gender: validatedData.gender,
-        productType: validatedData.productType,
-        coverageAmount: validatedData.coverageAmount,
-        termLength: validatedData.termLength,
-        tobaccoUse: validatedData.tobaccoUse,
-        occupation: validatedData.occupation,
-        employmentStatus: validatedData.employmentStatus,
-        incomeRange: validatedData.incomeRange,
-        preExistingConditions: validatedData.preExistingConditions,
-        desiredCoverageType: validatedData.desiredCoverageType,
-        utmSource: validatedData.utmSource,
-        abTestVariant: validatedData.abTestVariant
-      });
-
-      await sendLeadNotificationEmail({
-        firstName: validatedData.firstName,
-        lastName: validatedData.lastName,
-        email: validatedData.email,
-        phone: validatedData.phone,
-        age: validatedData.age,
-        gender: validatedData.gender,
-        productType: validatedData.productType,
-        coverageAmount: validatedData.coverageAmount,
-        termLength: validatedData.termLength,
-        tobaccoUse: validatedData.tobaccoUse,
-        occupation: validatedData.occupation,
-        employmentStatus: validatedData.employmentStatus,
-        incomeRange: validatedData.incomeRange,
-        preExistingConditions: validatedData.preExistingConditions,
-        desiredCoverageType: validatedData.desiredCoverageType,
-        utmSource: validatedData.utmSource,
-        abTestVariant: validatedData.abTestVariant
-      });
-
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Lead processed (database operation skipped)',
-        data: validatedData 
-      }, { headers: corsHeaders });
+      console.error('Supabase client not initialized');
+      return NextResponse.json(
+        { error: 'Database connection error' },
+        { status: 500, headers: corsHeaders }
+      );
     }
     
     // Insert the lead into Supabase
-    const { data, error } = await supabase
-      .from('leads')
-      .insert([{
-        first_name: validatedData.firstName,
-        last_name: validatedData.lastName,
-        email: validatedData.email,
-        phone: validatedData.phone,
-        age: validatedData.age,
+    try {
+      // Sanitize and format the data
+      const leadRecord = {
+        first_name: validatedData.firstName.trim(),
+        last_name: validatedData.lastName.trim(),
+        email: validatedData.email.trim().toLowerCase(),
+        phone: validatedData.phone.replace(/\D/g, ''), // Remove non-digits
+        age: Number(validatedData.age),
         gender: validatedData.gender,
         product_type: validatedData.productType,
-        coverage_amount: validatedData.coverageAmount,
-        term_length: validatedData.termLength,
+        coverage_amount: Number(validatedData.coverageAmount),
+        term_length: Number(validatedData.termLength),
         tobacco_use: validatedData.tobaccoUse,
         occupation: validatedData.occupation,
         employment_status: validatedData.employmentStatus,
@@ -149,120 +119,117 @@ export async function POST(request: Request) {
         funnel_variant: validatedData.funnelVariant,
         ab_test_id: validatedData.abTestId,
         ab_test_variant: validatedData.abTestVariant,
-      }])
-      .select()
-      .single();
+      };
 
-    if (error) {
-      console.error('Error inserting lead:', error);
+      console.log('Attempting to insert lead with data:', JSON.stringify(leadRecord, null, 2));
+
+      const { data, error } = await supabase
+        .from('leads')
+        .insert([leadRecord])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase insert error:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        
+        // Check for specific error types
+        if (error.code === '42P01') {
+          return NextResponse.json(
+            { error: 'Database table not found', details: error.message },
+            { status: 500, headers: corsHeaders }
+          );
+        } else if (error.code === '23505') {
+          return NextResponse.json(
+            { error: 'A lead with this information already exists', details: error.message },
+            { status: 400, headers: corsHeaders }
+          );
+        } else {
+          return NextResponse.json(
+            { 
+              error: 'Database error',
+              details: error.message,
+              code: error.code
+            },
+            { status: 500, headers: corsHeaders }
+          );
+        }
+      }
+
+      console.log('Successfully inserted lead:', JSON.stringify(data, null, 2));
+
+      // Send confirmation emails
+      try {
+        await Promise.all([
+          sendConfirmationEmail({
+            firstName: validatedData.firstName,
+            lastName: validatedData.lastName,
+            email: validatedData.email,
+            phone: validatedData.phone,
+            age: validatedData.age,
+            gender: validatedData.gender,
+            productType: validatedData.productType,
+            coverageAmount: validatedData.coverageAmount,
+            termLength: validatedData.termLength,
+            tobaccoUse: validatedData.tobaccoUse,
+            occupation: validatedData.occupation,
+            employmentStatus: validatedData.employmentStatus,
+            incomeRange: validatedData.incomeRange,
+            preExistingConditions: validatedData.preExistingConditions,
+            desiredCoverageType: validatedData.desiredCoverageType,
+            utmSource: validatedData.utmSource,
+            abTestVariant: validatedData.abTestVariant
+          }),
+          sendLeadNotificationEmail({
+            firstName: validatedData.firstName,
+            lastName: validatedData.lastName,
+            email: validatedData.email,
+            phone: validatedData.phone,
+            age: validatedData.age,
+            gender: validatedData.gender,
+            productType: validatedData.productType,
+            coverageAmount: validatedData.coverageAmount,
+            termLength: validatedData.termLength,
+            tobaccoUse: validatedData.tobaccoUse,
+            occupation: validatedData.occupation,
+            employmentStatus: validatedData.employmentStatus,
+            incomeRange: validatedData.incomeRange,
+            preExistingConditions: validatedData.preExistingConditions,
+            desiredCoverageType: validatedData.desiredCoverageType,
+            utmSource: validatedData.utmSource,
+            abTestVariant: validatedData.abTestVariant
+          })
+        ]);
+        console.log('Successfully sent confirmation emails');
+      } catch (emailError) {
+        console.error('Error sending emails:', emailError);
+        // Continue with success response but log the error
+      }
+
+      return NextResponse.json({ 
+        success: true,
+        message: 'Lead saved!',
+        data: data
+      }, { headers: corsHeaders });
+
+    } catch (dbError) {
+      console.error('Database operation error:', dbError);
       return NextResponse.json(
-        { error: 'Failed to submit lead' },
+        { 
+          error: 'Database error',
+          details: dbError instanceof Error ? dbError.message : 'Unknown database error'
+        },
         { status: 500, headers: corsHeaders }
       );
     }
-
-    // Send to Salesforce
-    try {
-      const salesforceResponse = await fetch(process.env.SALESFORCE_WEBHOOK_URL || 'https://quotelinker.com/api/salesforce/leads', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          lead: {
-            FirstName: data.first_name,
-            LastName: data.last_name,
-            Email: data.email,
-            Phone: data.phone,
-            Age__c: data.age,
-            Gender__c: data.gender,
-            Product_Type__c: data.product_type,
-            Coverage_Amount__c: data.coverage_amount,
-            Term_Length__c: data.term_length,
-            Tobacco_Use__c: data.tobacco_use,
-            Occupation__c: data.occupation,
-            Employment_Status__c: data.employment_status,
-            Income_Range__c: data.income_range,
-            Pre_Existing_Conditions__c: data.pre_existing_conditions,
-            Desired_Coverage_Type__c: data.desired_coverage_type,
-            LeadSource: data.utm_source,
-            UTM_Medium__c: data.utm_medium,
-            UTM_Campaign__c: data.utm_campaign,
-            UTM_Content__c: data.utm_content,
-            UTM_Term__c: data.utm_term,
-            Funnel_Name__c: data.funnel_name,
-            Funnel_Step__c: data.funnel_step,
-            Funnel_Variant__c: data.funnel_variant,
-            AB_Test_ID__c: data.ab_test_id,
-            AB_Test_Variant__c: data.ab_test_variant,
-            Status: 'New',
-            Company: 'Individual',
-          },
-          supabaseId: data.id
-        }),
-      });
-
-      if (!salesforceResponse.ok) {
-        console.error('Error sending to Salesforce:', await salesforceResponse.text());
-      }
-    } catch (error) {
-      console.error('Error sending to Salesforce:', error);
-    }
-
-    // Send confirmation email to customer
-    await sendConfirmationEmail({
-      firstName: validatedData.firstName,
-      lastName: validatedData.lastName,
-      email: validatedData.email,
-      phone: validatedData.phone,
-      age: validatedData.age,
-      gender: validatedData.gender,
-      productType: validatedData.productType,
-      coverageAmount: validatedData.coverageAmount,
-      termLength: validatedData.termLength,
-      tobaccoUse: validatedData.tobaccoUse,
-      occupation: validatedData.occupation,
-      employmentStatus: validatedData.employmentStatus,
-      incomeRange: validatedData.incomeRange,
-      preExistingConditions: validatedData.preExistingConditions,
-      desiredCoverageType: validatedData.desiredCoverageType,
-      utmSource: validatedData.utmSource,
-      abTestVariant: validatedData.abTestVariant
-    });
-
-    // Send notification email to support
-    await sendLeadNotificationEmail({
-      firstName: validatedData.firstName,
-      lastName: validatedData.lastName,
-      email: validatedData.email,
-      phone: validatedData.phone,
-      age: validatedData.age,
-      gender: validatedData.gender,
-      productType: validatedData.productType,
-      coverageAmount: validatedData.coverageAmount,
-      termLength: validatedData.termLength,
-      tobaccoUse: validatedData.tobaccoUse,
-      occupation: validatedData.occupation,
-      employmentStatus: validatedData.employmentStatus,
-      incomeRange: validatedData.incomeRange,
-      preExistingConditions: validatedData.preExistingConditions,
-      desiredCoverageType: validatedData.desiredCoverageType,
-      utmSource: validatedData.utmSource,
-      abTestVariant: validatedData.abTestVariant
-    });
-
-    return NextResponse.json({ success: true, data }, { headers: corsHeaders });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-    
-    console.error('Unexpected error:', error);
+  } catch (err) {
+    console.error('API route error:', err);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Server error', details: err instanceof Error ? err.message : 'Unknown error' },
       { status: 500, headers: corsHeaders }
     );
   }
