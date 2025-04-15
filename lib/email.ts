@@ -104,9 +104,12 @@ export async function sendLeadNotificationEmail(data: LeadData) {
     const productTitle = getProductTitle(data.productType);
     const productFields = getProductSpecificFields(data);
     
+    // Send to both support and the submitting email
+    const recipients = ['support@quotelinker.com', data.email];
+    
     const { data: emailData, error } = await resend.emails.send({
       from: 'QuoteLinker <support@quotelinker.com>',
-      to: 'support@quotelinker.com',
+      to: recipients,
       subject: `New ${productTitle} Lead: ${data.firstName} ${data.lastName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

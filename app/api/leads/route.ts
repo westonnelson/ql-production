@@ -87,172 +87,52 @@ export async function OPTIONS() {
 
 export async function POST(request: Request) {
   try {
-    // Parse request data
-    const requestData = await request.json();
-    console.log('Received lead data:', JSON.stringify(requestData, null, 2));
-
-    // Parse numeric fields
-    const parsedData = {
-      ...requestData,
-      coverageAmount: requestData.coverageAmount ? parseInt(requestData.coverageAmount.toString().replace(/[$,]/g, ''), 10) : undefined,
-      termLength: requestData.termLength ? parseInt(requestData.termLength.toString(), 10) : undefined,
-      age: parseInt(requestData.age.toString(), 10),
-      tobaccoUse: requestData.tobaccoUse === 'yes' || requestData.tobaccoUse === true,
-    };
-
-    // Validate the data
-    try {
-      const validatedData = leadSchema.parse(parsedData);
-      console.log('Validated lead data:', JSON.stringify(validatedData, null, 2));
-    } catch (validationError) {
-      console.error('Validation error:', validationError);
-      return NextResponse.json(
-        { error: 'Validation error', details: validationError },
-        { status: 400, headers: corsHeaders }
-      );
-    }
+    const data = await request.json();
+    console.log('Received lead data:', data);
 
     // Initialize Supabase client
     const supabase = getSupabaseClient();
     if (!supabase) {
       return NextResponse.json(
         { error: 'Failed to initialize database connection' },
-        { status: 500, headers: corsHeaders }
+        { status: 500 }
       );
     }
 
-    // Prepare lead data based on product type
-    const leadData: any = {
-      first_name: parsedData.firstName,
-      last_name: parsedData.lastName,
-      email: parsedData.email,
-      phone: parsedData.phone,
-      age: parsedData.age,
-      gender: parsedData.gender,
-      created_at: new Date().toISOString()
-    };
+    // Validate the data
+    const validatedData = leadSchema.parse(data);
 
-    // Add product-specific fields
-    if (parsedData.productType === 'life') {
-      leadData.coverage_amount = Number(parsedData.coverageAmount);
-      leadData.term_length = Number(parsedData.termLength);
-      leadData.tobacco_use = parsedData.tobaccoUse;
-    } else if (parsedData.productType === 'disability') {
-      leadData.occupation = parsedData.occupation;
-      leadData.employment_status = parsedData.employmentStatus;
-      leadData.income_range = parsedData.incomeRange;
-    } else if (parsedData.productType === 'supplemental') {
-      leadData.pre_existing_conditions = parsedData.preExistingConditions;
-      leadData.desired_coverage_type = parsedData.desiredCoverageType;
-    }
-
-    // Add tracking fields if present
-    if (parsedData.utmSource) leadData.utm_source = parsedData.utmSource;
-    if (parsedData.utmMedium) leadData.utm_medium = parsedData.utmMedium;
-    if (parsedData.utmCampaign) leadData.utm_campaign = parsedData.utmCampaign;
-    if (parsedData.utmContent) leadData.utm_content = parsedData.utmContent;
-    if (parsedData.utmTerm) leadData.utm_term = parsedData.utmTerm;
-    if (parsedData.funnelName) leadData.funnel_name = parsedData.funnelName;
-    if (parsedData.funnelStep) leadData.funnel_step = parsedData.funnelStep;
-    if (parsedData.funnelVariant) leadData.funnel_variant = parsedData.funnelVariant;
-    if (parsedData.abTestId) leadData.ab_test_id = parsedData.abTestId;
-    if (parsedData.abTestVariant) leadData.ab_test_variant = parsedData.abTestVariant;
-
-    // Insert lead into database
-    const { data: lead, error: dbError } = await supabase
+    // Create the lead in the database
+    const { data: lead, error: createError } = await supabase
       .from('leads')
-      .insert([leadData])
+      .insert([validatedData])
       .select()
       .single();
 
-    if (dbError) {
-      console.error('Database error:', dbError);
+    if (createError) {
+      console.error('Error creating lead:', createError);
       return NextResponse.json(
-        { error: 'Failed to save lead', details: dbError },
-        { status: 500, headers: corsHeaders }
+        { error: 'Failed to save lead', details: createError },
+        { status: 500 }
       );
     }
 
-    console.log('Lead saved successfully:', JSON.stringify(lead, null, 2));
+    // Send confirmation email to the lead
+    await sendConfirmationEmail(lead);
 
-    // Send confirmation email
-    let confirmationResult;
-    try {
-      console.log('Attempting to send confirmation email...');
-      confirmationResult = await sendConfirmationEmail(parsedData);
-      console.log('Confirmation email result:', confirmationResult);
-      if (!confirmationResult.success) {
-        console.error('Failed to send confirmation email:', confirmationResult.error);
-      }
-    } catch (emailError) {
-      console.error('Error sending confirmation email:', emailError);
-      // Don't fail the request if email fails
-    }
+    // Send notification email to support and the submitting email
+    await sendLeadNotificationEmail(lead);
 
-    // Send lead notification email
-    let notificationResult;
-    try {
-      console.log('Attempting to send lead notification email...');
-      notificationResult = await sendLeadNotificationEmail(parsedData);
-      console.log('Lead notification email result:', notificationResult);
-      if (!notificationResult.success) {
-        console.error('Failed to send lead notification email:', notificationResult.error);
-      }
-    } catch (emailError) {
-      console.error('Error sending lead notification email:', emailError);
-      // Don't fail the request if email fails
-    }
+    // TODO: Integrate with Salesforce
+    // This will be implemented in the next phase
+    // The lead data will be sent to Salesforce as an opportunity
 
-    // Chain to other services
-    const serviceResponses = await Promise.allSettled([
-      // Send email notification
-      fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'lead', data: parsedData }),
-      }),
-      // Send to Salesforce
-      fetch('/api/salesforce', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsedData),
-      }),
-    ]);
-
-    // Log service responses
-    serviceResponses.forEach((response, index) => {
-      if (response.status === 'rejected') {
-        console.error(`Service ${index} error:`, response.reason);
-      } else {
-        console.log(`Service ${index} response:`, response.value);
-      }
-    });
-
-    return NextResponse.json(
-      { 
-        success: true, 
-        lead,
-        emailStatus: {
-          confirmation: confirmationResult?.success || false,
-          notification: notificationResult?.success || false
-        },
-        services: serviceResponses.map((response, index) => ({
-          service: index === 0 ? 'email' : 'salesforce',
-          status: response.status,
-          ...(response.status === 'fulfilled' ? { data: response.value } : { error: response.reason }),
-        })),
-      },
-      { headers: corsHeaders }
-    );
-
+    return NextResponse.json({ success: true, data: lead });
   } catch (error) {
-    console.error('Server error:', error);
+    console.error('Error processing lead:', error);
     return NextResponse.json(
-      { 
-        error: 'Internal server error', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
-      },
-      { status: 500, headers: corsHeaders }
+      { error: 'Failed to process lead', details: error },
+      { status: 500 }
     );
   }
 } 
