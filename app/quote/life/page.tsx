@@ -96,9 +96,9 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
         termLength: Number(data.termLength),
         // Convert age to number
         age: Number(data.age),
-        // Convert tobacco use to boolean
+        // Convert tobacco use to string 'yes' or 'no'
         tobaccoUse: data.tobaccoUse === 'yes',
-        productType: 'life',
+        // We don't need to send productType as it's not in the table
       };
 
       console.log('Submitting form data:', formData);

@@ -21,25 +21,30 @@ console.log('Environment check:', {
   nodeEnv: process.env.NODE_ENV
 });
 
-let supabase: SupabaseClient | null = null;
+// Remove the global supabase client
+// let supabase: SupabaseClient | null = null;
 
-try {
+// Function to get Supabase client
+function getSupabaseClient() {
   if (!supabaseUrl || !supabaseServiceKey) {
     console.error('Missing Supabase configuration:', {
       url: supabaseUrl ? 'present' : 'missing',
       key: supabaseServiceKey ? 'present' : 'missing'
     });
-  } else {
-    supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    return null;
+  }
+
+  try {
+    return createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
       }
     });
-    console.log('Supabase client initialized successfully');
+  } catch (error) {
+    console.error('Error initializing Supabase client:', error);
+    return null;
   }
-} catch (error) {
-  console.error('Error initializing Supabase client:', error);
 }
 
 // Validation schema for lead submission
@@ -82,6 +87,7 @@ export async function OPTIONS() {
 
 export async function POST(request: Request) {
   try {
+    console.log('Starting POST request processing');
     const body = await request.json();
     console.log('Received request body:', JSON.stringify(body, null, 2));
     
@@ -98,14 +104,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Get Supabase client for this request
+    console.log('Initializing Supabase client...');
+    const supabase = getSupabaseClient();
+
     // Check Supabase connection
     if (!supabase) {
       console.error('Supabase client not initialized');
       return NextResponse.json(
-        { error: 'Database connection error' },
+        { error: 'Database connection error', details: 'Failed to initialize database connection' },
         { status: 500, headers: corsHeaders }
       );
     }
+    console.log('Supabase client initialized successfully');
     
     // Insert the lead into Supabase
     try {
@@ -117,29 +128,37 @@ export async function POST(request: Request) {
         phone: validatedData.phone.replace(/\D/g, ''), // Remove non-digits
         age: Number(validatedData.age),
         gender: validatedData.gender,
-        product_type: validatedData.productType,
-        coverage_amount: Number(validatedData.coverageAmount),
-        term_length: Number(validatedData.termLength),
-        tobacco_use: validatedData.tobaccoUse,
-        occupation: validatedData.occupation,
-        employment_status: validatedData.employmentStatus,
-        income_range: validatedData.incomeRange,
-        pre_existing_conditions: validatedData.preExistingConditions,
-        desired_coverage_type: validatedData.desiredCoverageType,
-        utm_source: validatedData.utmSource,
-        utm_medium: validatedData.utmMedium,
-        utm_campaign: validatedData.utmCampaign,
-        utm_content: validatedData.utmContent,
-        utm_term: validatedData.utmTerm,
-        funnel_name: validatedData.funnelName,
-        funnel_step: validatedData.funnelStep,
-        funnel_variant: validatedData.funnelVariant,
-        ab_test_id: validatedData.abTestId,
-        ab_test_variant: validatedData.abTestVariant,
+        // Only include fields that exist in the table
+        coverage_amount: validatedData.coverageAmount ? Number(validatedData.coverageAmount) : null,
+        term_length: validatedData.termLength ? Number(validatedData.termLength) : null,
+        tobacco_use: validatedData.tobaccoUse ? 'yes' : 'no',
+        utm_source: validatedData.utmSource || null,
       };
 
       console.log('Attempting to insert lead with data:', JSON.stringify(leadRecord, null, 2));
 
+      // Test the connection first
+      console.log('Testing Supabase connection...');
+      const { data: testData, error: testError } = await supabase
+        .from('leads')
+        .select('count')
+        .limit(1);
+      
+      if (testError) {
+        console.error('Supabase connection test failed:', testError);
+        return NextResponse.json(
+          { 
+            error: 'Database connection test failed',
+            details: testError.message,
+            code: testError.code
+          },
+          { status: 500, headers: corsHeaders }
+        );
+      }
+      console.log('Supabase connection test successful');
+
+      // Proceed with insert
+      console.log('Proceeding with lead insert...');
       const { data, error } = await supabase
         .from('leads')
         .insert([leadRecord])
