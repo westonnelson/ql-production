@@ -87,186 +87,128 @@ export async function OPTIONS() {
 
 export async function POST(request: Request) {
   try {
-    console.log('Starting POST request processing');
-    const body = await request.json();
-    console.log('Received request body:', JSON.stringify(body, null, 2));
+    const data = await request.json();
+    console.log('Received lead data:', JSON.stringify(data, null, 2));
+
+    // Base required fields for all product types
+    const baseRequiredFields = ['firstName', 'lastName', 'email', 'phone', 'age', 'productType'];
     
-    // Validate the request body
-    let validatedData;
+    // Product-specific required fields
+    const productSpecificFields: Record<string, string[]> = {
+      life: ['coverageAmount', 'termLength'],
+      disability: ['occupation', 'employmentStatus', 'incomeRange'],
+      supplemental: ['preExistingConditions', 'desiredCoverageType']
+    };
+
+    // Get all required fields based on product type
+    const requiredFields = [
+      ...baseRequiredFields,
+      ...(productSpecificFields[data.productType] || [])
+    ];
+
+    // Check for missing fields
+    const missingFields = requiredFields.filter(field => !data[field]);
+    if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Missing required fields', 
+          details: missingFields 
+        }),
+        { status: 400 }
+      );
+    }
+
+    // Initialize Supabase client
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Prepare lead data based on product type
+    const leadData: any = {
+      first_name: data.firstName,
+      last_name: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      age: data.age,
+      product_type: data.productType,
+      created_at: new Date().toISOString()
+    };
+
+    // Add product-specific fields
+    if (data.productType === 'life') {
+      leadData.coverage_amount = data.coverageAmount;
+      leadData.term_length = data.termLength;
+      leadData.tobacco_use = data.tobaccoUse;
+    } else if (data.productType === 'disability') {
+      leadData.occupation = data.occupation;
+      leadData.employment_status = data.employmentStatus;
+      leadData.income_range = data.incomeRange;
+    } else if (data.productType === 'supplemental') {
+      leadData.pre_existing_conditions = data.preExistingConditions;
+      leadData.desired_coverage_type = data.desiredCoverageType;
+    }
+
+    // Insert lead into database
+    const { data: lead, error: dbError } = await supabase
+      .from('leads')
+      .insert([leadData])
+      .select()
+      .single();
+
+    if (dbError) {
+      console.error('Database error:', dbError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to save lead', 
+          details: dbError 
+        }),
+        { status: 500 }
+      );
+    }
+
+    console.log('Lead saved successfully:', JSON.stringify(lead, null, 2));
+
+    // Send confirmation email
     try {
-      validatedData = leadSchema.parse(body);
-      console.log('Validated data:', JSON.stringify(validatedData, null, 2));
-    } catch (validationError) {
-      console.error('Validation error:', validationError);
-      return NextResponse.json(
-        { error: 'Invalid form data', details: validationError },
-        { status: 400, headers: corsHeaders }
-      );
+      console.log('Attempting to send confirmation email...');
+      const confirmationResult = await sendConfirmationEmail(data);
+      console.log('Confirmation email result:', confirmationResult);
+      if (!confirmationResult.success) {
+        console.error('Failed to send confirmation email:', confirmationResult.error);
+      }
+    } catch (emailError) {
+      console.error('Error sending confirmation email:', emailError);
+      // Don't fail the request if email fails
     }
 
-    // Get Supabase client for this request
-    console.log('Initializing Supabase client...');
-    const supabase = getSupabaseClient();
-
-    // Check Supabase connection
-    if (!supabase) {
-      console.error('Supabase client not initialized');
-      return NextResponse.json(
-        { error: 'Database connection error', details: 'Failed to initialize database connection' },
-        { status: 500, headers: corsHeaders }
-      );
-    }
-    console.log('Supabase client initialized successfully');
-    
-    // Insert the lead into Supabase
+    // Send lead notification email
     try {
-      // Sanitize and format the data
-      const leadRecord = {
-        first_name: validatedData.firstName.trim(),
-        last_name: validatedData.lastName.trim(),
-        email: validatedData.email.trim().toLowerCase(),
-        phone: validatedData.phone.replace(/\D/g, ''), // Remove non-digits
-        age: Number(validatedData.age),
-        gender: validatedData.gender,
-        // Only include fields that exist in the table
-        coverage_amount: validatedData.coverageAmount ? Number(validatedData.coverageAmount) : null,
-        term_length: validatedData.termLength ? Number(validatedData.termLength) : null,
-        tobacco_use: validatedData.tobaccoUse ? 'yes' : 'no',
-        utm_source: validatedData.utmSource || null,
-      };
-
-      console.log('Attempting to insert lead with data:', JSON.stringify(leadRecord, null, 2));
-
-      // Test the connection first
-      console.log('Testing Supabase connection...');
-      const { data: testData, error: testError } = await supabase
-        .from('leads')
-        .select('count')
-        .limit(1);
-      
-      if (testError) {
-        console.error('Supabase connection test failed:', testError);
-        return NextResponse.json(
-          { 
-            error: 'Database connection test failed',
-            details: testError.message,
-            code: testError.code
-          },
-          { status: 500, headers: corsHeaders }
-        );
+      console.log('Attempting to send lead notification email...');
+      const notificationResult = await sendLeadNotificationEmail(data);
+      console.log('Lead notification email result:', notificationResult);
+      if (!notificationResult.success) {
+        console.error('Failed to send lead notification email:', notificationResult.error);
       }
-      console.log('Supabase connection test successful');
-
-      // Proceed with insert
-      console.log('Proceeding with lead insert...');
-      const { data, error } = await supabase
-        .from('leads')
-        .insert([leadRecord])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase insert error:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
-        
-        // Check for specific error types
-        if (error.code === '42P01') {
-          return NextResponse.json(
-            { error: 'Database table not found', details: error.message },
-            { status: 500, headers: corsHeaders }
-          );
-        } else if (error.code === '23505') {
-          return NextResponse.json(
-            { error: 'A lead with this information already exists', details: error.message },
-            { status: 400, headers: corsHeaders }
-          );
-        } else {
-          return NextResponse.json(
-            { 
-              error: 'Database error',
-              details: error.message,
-              code: error.code
-            },
-            { status: 500, headers: corsHeaders }
-          );
-        }
-      }
-
-      console.log('Successfully inserted lead:', JSON.stringify(data, null, 2));
-
-      // Send confirmation emails
-      try {
-        await Promise.all([
-          sendConfirmationEmail({
-            firstName: validatedData.firstName,
-            lastName: validatedData.lastName,
-            email: validatedData.email,
-            phone: validatedData.phone,
-            age: validatedData.age,
-            gender: validatedData.gender,
-            productType: validatedData.productType,
-            coverageAmount: validatedData.coverageAmount,
-            termLength: validatedData.termLength,
-            tobaccoUse: validatedData.tobaccoUse,
-            occupation: validatedData.occupation,
-            employmentStatus: validatedData.employmentStatus,
-            incomeRange: validatedData.incomeRange,
-            preExistingConditions: validatedData.preExistingConditions,
-            desiredCoverageType: validatedData.desiredCoverageType,
-            utmSource: validatedData.utmSource,
-            abTestVariant: validatedData.abTestVariant
-          }),
-          sendLeadNotificationEmail({
-            firstName: validatedData.firstName,
-            lastName: validatedData.lastName,
-            email: validatedData.email,
-            phone: validatedData.phone,
-            age: validatedData.age,
-            gender: validatedData.gender,
-            productType: validatedData.productType,
-            coverageAmount: validatedData.coverageAmount,
-            termLength: validatedData.termLength,
-            tobaccoUse: validatedData.tobaccoUse,
-            occupation: validatedData.occupation,
-            employmentStatus: validatedData.employmentStatus,
-            incomeRange: validatedData.incomeRange,
-            preExistingConditions: validatedData.preExistingConditions,
-            desiredCoverageType: validatedData.desiredCoverageType,
-            utmSource: validatedData.utmSource,
-            abTestVariant: validatedData.abTestVariant
-          })
-        ]);
-        console.log('Successfully sent confirmation emails');
-      } catch (emailError) {
-        console.error('Error sending emails:', emailError);
-        // Continue with success response but log the error
-      }
-
-      return NextResponse.json({ 
-        success: true,
-        message: 'Lead saved!',
-        data: data
-      }, { headers: corsHeaders });
-
-    } catch (dbError) {
-      console.error('Database operation error:', dbError);
-      return NextResponse.json(
-        { 
-          error: 'Database error',
-          details: dbError instanceof Error ? dbError.message : 'Unknown database error'
-        },
-        { status: 500, headers: corsHeaders }
-      );
+    } catch (emailError) {
+      console.error('Error sending lead notification email:', emailError);
+      // Don't fail the request if email fails
     }
-  } catch (err) {
-    console.error('API route error:', err);
-    return NextResponse.json(
-      { error: 'Server error', details: err instanceof Error ? err.message : 'Unknown error' },
-      { status: 500, headers: corsHeaders }
+
+    return new Response(JSON.stringify({ success: true, lead }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('Server error:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Internal server error', 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      }),
+      { status: 500 }
     );
   }
 } 

@@ -1,9 +1,11 @@
 import { Resend } from 'resend';
 
 if (!process.env.RESEND_API_KEY) {
+  console.error('RESEND_API_KEY is missing from environment variables');
   throw new Error('Missing RESEND_API_KEY environment variable');
 }
 
+console.log('Resend API Key present:', process.env.RESEND_API_KEY.substring(0, 10) + '...');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 type ProductType = 'life' | 'disability' | 'supplemental';
@@ -31,6 +33,52 @@ interface LeadData {
   utmSource?: string;
   abTestVariant?: string;
 }
+
+// Validate email format
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+// Validate phone number format
+const isValidPhone = (phone: string): boolean => {
+  const phoneRegex = /^\+?[\d\s-()]{10,}$/;
+  return phoneRegex.test(phone);
+};
+
+// Validate lead data
+const validateLeadData = (data: LeadData): { isValid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+
+  // Base validation for all product types
+  if (!data.firstName?.trim()) errors.push('First name is required');
+  if (!data.lastName?.trim()) errors.push('Last name is required');
+  if (!data.email?.trim()) errors.push('Email is required');
+  if (!isValidEmail(data.email)) errors.push('Invalid email format');
+  if (!data.phone?.trim()) errors.push('Phone is required');
+  if (!isValidPhone(data.phone)) errors.push('Invalid phone format');
+  if (!data.age || data.age < 18 || data.age > 100) errors.push('Invalid age');
+  if (!data.gender?.trim()) errors.push('Gender is required');
+  if (!data.productType) errors.push('Product type is required');
+
+  // Product-specific validation
+  if (data.productType === 'life') {
+    if (!data.coverageAmount || data.coverageAmount < 10000) errors.push('Invalid coverage amount');
+    if (!data.termLength || data.termLength < 5 || data.termLength > 30) errors.push('Invalid term length');
+  } else if (data.productType === 'disability') {
+    if (!data.occupation?.trim()) errors.push('Occupation is required');
+    if (!data.employmentStatus?.trim()) errors.push('Employment status is required');
+    if (!data.incomeRange?.trim()) errors.push('Income range is required');
+  } else if (data.productType === 'supplemental') {
+    if (!data.preExistingConditions?.trim()) errors.push('Pre-existing conditions are required');
+    if (!data.desiredCoverageType?.trim()) errors.push('Desired coverage type is required');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
 
 const getProductSpecificFields = (data: LeadData) => {
   switch (data.productType) {
@@ -71,7 +119,18 @@ const getProductTitle = (productType: ProductType) => {
 
 export async function sendConfirmationEmail(data: LeadData) {
   try {
+    console.log('Preparing to send confirmation email to:', data.email);
+    
+    // Validate lead data
+    const validation = validateLeadData(data);
+    if (!validation.isValid) {
+      console.error('Invalid lead data for confirmation email:', validation.errors);
+      return { success: false, error: validation.errors };
+    }
+
     const productTitle = getProductTitle(data.productType);
+    console.log('Sending confirmation email for product:', productTitle);
+
     const { data: emailData, error } = await resend.emails.send({
       from: 'QuoteLinker <support@quotelinker.com>',
       to: data.email,
@@ -88,22 +147,44 @@ export async function sendConfirmationEmail(data: LeadData) {
     });
 
     if (error) {
-      console.error('Error sending confirmation email:', error);
+      console.error('Resend API error sending confirmation email:', error);
       return { success: false, error };
     }
 
+    console.log('Confirmation email sent successfully to:', data.email);
     return { success: true, data: emailData };
   } catch (error) {
-    console.error('Error sending confirmation email:', error);
+    console.error('Unexpected error sending confirmation email:', error);
     return { success: false, error };
   }
 }
 
 export async function sendLeadNotificationEmail(data: LeadData) {
   try {
+    console.log('Preparing to send lead notification email');
+    console.log('Environment check:', {
+      hasResendKey: !!process.env.RESEND_API_KEY,
+      nodeEnv: process.env.NODE_ENV,
+      resendKeyLength: process.env.RESEND_API_KEY?.length
+    });
+    
+    // Validate lead data
+    const validation = validateLeadData(data);
+    if (!validation.isValid) {
+      console.error('Invalid lead data for notification email:', validation.errors);
+      return { success: false, error: validation.errors };
+    }
+
     const productTitle = getProductTitle(data.productType);
     const productFields = getProductSpecificFields(data);
     
+    console.log('Sending lead notification email for:', `${data.firstName} ${data.lastName}`);
+    console.log('Email configuration:', {
+      from: 'QuoteLinker <support@quotelinker.com>',
+      to: 'support@quotelinker.com',
+      subject: `New ${productTitle} Lead: ${data.firstName} ${data.lastName}`
+    });
+
     const { data: emailData, error } = await resend.emails.send({
       from: 'QuoteLinker <support@quotelinker.com>',
       to: 'support@quotelinker.com',
@@ -133,13 +214,14 @@ export async function sendLeadNotificationEmail(data: LeadData) {
     });
 
     if (error) {
-      console.error('Error sending lead notification email:', error);
+      console.error('Resend API error sending lead notification email:', error);
       return { success: false, error };
     }
 
+    console.log('Lead notification email sent successfully:', emailData);
     return { success: true, data: emailData };
   } catch (error) {
-    console.error('Error sending lead notification email:', error);
+    console.error('Unexpected error sending lead notification email:', error);
     return { success: false, error };
   }
 } 
