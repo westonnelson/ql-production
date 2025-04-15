@@ -100,7 +100,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000))
       // Redirect to thank you page
-      router.push('/thank-you')
+      router.push('/thank-you/supplemental-health')
     } catch (error) {
       console.error('Error submitting form:', error)
     } finally {
