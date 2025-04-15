@@ -71,8 +71,9 @@ export async function sendNotificationEmails({
     });
 
     return {
-      supportEmailId: supportEmail.id,
-      consumerEmailId: consumerEmail.id,
+      success: true,
+      supportEmailId: supportEmail.data?.id,
+      consumerEmailId: consumerEmail.data?.id,
     };
   } catch (error) {
     console.error('Error sending notification emails:', error);
