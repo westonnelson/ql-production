@@ -15,17 +15,31 @@ const corsHeaders = {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+console.log('Environment check:', {
+  hasSupabaseUrl: !!supabaseUrl,
+  hasServiceKey: !!supabaseServiceKey,
+  nodeEnv: process.env.NODE_ENV
+});
+
 let supabase: SupabaseClient | null = null;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing Supabase configuration. Please check environment variables.');
-} else {
-  supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    }
-  });
+try {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Missing Supabase configuration:', {
+      url: supabaseUrl ? 'present' : 'missing',
+      key: supabaseServiceKey ? 'present' : 'missing'
+    });
+  } else {
+    supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      }
+    });
+    console.log('Supabase client initialized successfully');
+  }
+} catch (error) {
+  console.error('Error initializing Supabase client:', error);
 }
 
 // Validation schema for lead submission
