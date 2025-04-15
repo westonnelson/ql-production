@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter, usePathname } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { logFunnelStep, logFormSubmission } from '../lib/analytics';
+import { useUtmParams, getFunnelConfig, getFunnelStep } from '@/lib/utm';
 
 // Define the form schema based on insurance type
 const createFormSchema = (insuranceType: string) => {
@@ -55,6 +56,8 @@ interface QuoteFormProps {
   funnelVariant?: string;
   abTestId?: string;
   abTestVariant?: string;
+  initialData?: any;
+  onSuccess?: (data: any) => void;
 }
 
 const QuoteForm: React.FC<QuoteFormProps> = ({
@@ -63,9 +66,15 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
   funnelVariant = 'control',
   abTestId,
   abTestVariant,
+  initialData,
+  onSuccess,
 }) => {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(1);
+  const pathname = usePathname();
+  const utmParams = useUtmParams();
+  const funnelConfig = getFunnelConfig(pathname);
+  const currentStep = getFunnelStep(pathname);
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,6 +90,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      ...initialData,
       utmSource: (router.query.utm_source as string) || '',
       utmMedium: (router.query.utm_medium as string) || '',
       utmCampaign: (router.query.utm_campaign as string) || '',
@@ -120,22 +130,33 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
     },
   ];
 
+  useEffect(() => {
+    // Log funnel step view
+    logFunnelStep({
+      step: currentStep,
+      insuranceType,
+      funnelName: funnelConfig.name,
+      funnelVariant: funnelConfig.variant,
+      abTestId: funnelConfig.abTestId,
+      abTestVariant: funnelConfig.abTestVariant
+    });
+  }, [currentStep, insuranceType, funnelConfig]);
+
   const nextStep = async () => {
     const currentStepData = steps[currentStep - 1];
     const isValid = await trigger(currentStepData.fields as any);
     
     if (isValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, steps.length));
       setError(null);
       
       // Log funnel step
       await logFunnelStep({
         step: currentStep + 1,
         insuranceType,
-        funnelName,
-        funnelVariant,
-        abTestId,
-        abTestVariant,
+        funnelName: funnelConfig.name,
+        funnelVariant: funnelConfig.variant,
+        abTestId: funnelConfig.abTestId,
+        abTestVariant: funnelConfig.abTestVariant,
       });
     } else {
       const currentErrors = Object.entries(errors)
@@ -151,7 +172,6 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
 
   const prevStep = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
       setError(null);
     }
   };
@@ -165,18 +185,12 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
       await logFormSubmission({
         insuranceType,
         formData: data,
-        utmParams: {
-          utm_source: data.utmSource,
-          utm_medium: data.utmMedium,
-          utm_campaign: data.utmCampaign,
-          utm_content: data.utmContent,
-          utm_term: data.utmTerm,
-        },
-        funnelName,
-        funnelStep: 'complete',
-        funnelVariant,
-        abTestId,
-        abTestVariant,
+        utmParams,
+        funnelName: funnelConfig.name,
+        funnelStep: currentStep,
+        funnelVariant: funnelConfig.variant,
+        abTestId: funnelConfig.abTestId,
+        abTestVariant: funnelConfig.abTestVariant,
       });
 
       // Submit form data to API
@@ -186,16 +200,20 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
         body: JSON.stringify({
           ...data,
           insuranceType,
-          funnelName,
-          funnelStep: 'complete',
-          funnelVariant,
-          abTestId,
-          abTestVariant,
+          funnelName: funnelConfig.name,
+          funnelStep: currentStep,
+          funnelVariant: funnelConfig.variant,
+          abTestId: funnelConfig.abTestId,
+          abTestVariant: funnelConfig.abTestVariant,
         }),
       });
 
       if (!response.ok) {
         throw new Error('Failed to submit form');
+      }
+
+      if (onSuccess) {
+        onSuccess(data);
       }
 
       // Redirect to thank you page

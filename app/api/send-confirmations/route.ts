@@ -36,93 +36,102 @@ export async function OPTIONS() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    
-    // Validate the request body
-    const validatedData = formSchema.parse(body)
-
-    // Determine if we're in test mode (using Resend's test domain)
-    const isTestMode = process.env.NODE_ENV !== 'production'
-    const fromEmail = isTestMode ? 'onboarding@resend.dev' : 'support@quotelinker.com'
-    const toCustomerEmail = isTestMode ? 'delivered@resend.dev' : validatedData.email
-    const toSupportEmail = isTestMode ? 'delivered@resend.dev' : 'support@quotelinker.com'
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      insuranceType,
+      leadId,
+      // Insurance-specific fields
+      coverageAmount,
+      termLength,
+      tobaccoUse,
+      occupation,
+      employmentStatus,
+      incomeRange,
+      vehicleYear,
+      vehicleMake,
+      vehicleModel,
+      healthStatus,
+      preExistingConditions,
+    } = body
 
     // Send confirmation email to customer
-    const { data: customerEmailData, error: customerEmailError } = await resend.emails.send({
-      from: `QuoteLinker <${fromEmail}>`,
-      to: [toCustomerEmail],
-      subject: "We've received your quote request!",
+    const customerEmailResponse = await resend.emails.send({
+      from: 'quotes@yourdomain.com',
+      to: email,
+      subject: `Thank you for your ${insuranceType} insurance quote request`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #00a0b0;">Hi ${validatedData.firstName},</h1>
-          <p>Thanks for requesting a quote through QuoteLinker. We'll follow up shortly.</p>
-          <p>—QuoteLinker</p>
-        </div>
+        <h1>Thank you for your quote request!</h1>
+        <p>Dear ${firstName},</p>
+        <p>We've received your request for a ${insuranceType} insurance quote. Our team will review your information and contact you shortly.</p>
+        <h2>Your Quote Details:</h2>
+        <ul>
+          <li>Insurance Type: ${insuranceType}</li>
+          ${coverageAmount ? `<li>Coverage Amount: $${coverageAmount.toLocaleString()}</li>` : ''}
+          ${termLength ? `<li>Term Length: ${termLength} years</li>` : ''}
+          ${tobaccoUse !== undefined ? `<li>Tobacco Use: ${tobaccoUse ? 'Yes' : 'No'}</li>` : ''}
+          ${occupation ? `<li>Occupation: ${occupation}</li>` : ''}
+          ${employmentStatus ? `<li>Employment Status: ${employmentStatus}</li>` : ''}
+          ${incomeRange ? `<li>Income Range: ${incomeRange}</li>` : ''}
+          ${vehicleYear ? `<li>Vehicle Year: ${vehicleYear}</li>` : ''}
+          ${vehicleMake ? `<li>Vehicle Make: ${vehicleMake}</li>` : ''}
+          ${vehicleModel ? `<li>Vehicle Model: ${vehicleModel}</li>` : ''}
+          ${healthStatus ? `<li>Health Status: ${healthStatus}</li>` : ''}
+          ${preExistingConditions !== undefined ? `<li>Pre-existing Conditions: ${preExistingConditions ? 'Yes' : 'No'}</li>` : ''}
+        </ul>
+        <p>If you have any questions, please don't hesitate to contact us.</p>
+        <p>Best regards,<br>Your Insurance Team</p>
       `,
     })
 
-    if (customerEmailError) {
-      console.error('Error sending customer confirmation email:', customerEmailError)
-      return NextResponse.json(
-        { error: 'Failed to send confirmation email', details: customerEmailError },
-        { status: 500, headers: corsHeaders }
-      )
-    }
-
-    // Send notification email to support
-    const { data: supportEmailData, error: supportEmailError } = await resend.emails.send({
-      from: `QuoteLinker <${fromEmail}>`,
-      to: [toSupportEmail],
-      subject: `New Quote Request: ${validatedData.firstName} ${validatedData.lastName}`,
+    // Send notification email to sales team
+    const salesEmailResponse = await resend.emails.send({
+      from: 'quotes@yourdomain.com',
+      to: 'sales@yourdomain.com',
+      subject: `New ${insuranceType} Insurance Quote Request - ${firstName} ${lastName}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #00a0b0;">New Quote Request</h1>
-          <h2>${validatedData.firstName} ${validatedData.lastName}</h2>
-          <p><strong>Email:</strong> ${validatedData.email}</p>
-          <p><strong>Phone:</strong> ${validatedData.phone}</p>
-          <p><strong>Age:</strong> ${validatedData.age}</p>
-          <p><strong>Gender:</strong> ${validatedData.gender}</p>
-          ${validatedData.coverageAmount ? `<p><strong>Coverage Amount:</strong> $${validatedData.coverageAmount.toLocaleString()}</p>` : ''}
-          ${validatedData.termLength ? `<p><strong>Term Length:</strong> ${validatedData.termLength} years</p>` : ''}
-          ${validatedData.tobaccoUse !== undefined ? `<p><strong>Tobacco Use:</strong> ${validatedData.tobaccoUse ? 'Yes' : 'No'}</p>` : ''}
-          ${validatedData.utmSource ? `<p><strong>UTM Source:</strong> ${validatedData.utmSource}</p>` : ''}
-        </div>
+        <h1>New Quote Request</h1>
+        <p>A new quote request has been submitted:</p>
+        <h2>Customer Information:</h2>
+        <ul>
+          <li>Name: ${firstName} ${lastName}</li>
+          <li>Email: ${email}</li>
+          <li>Phone: ${phone}</li>
+          <li>Insurance Type: ${insuranceType}</li>
+          <li>Lead ID: ${leadId}</li>
+          ${coverageAmount ? `<li>Coverage Amount: $${coverageAmount.toLocaleString()}</li>` : ''}
+          ${termLength ? `<li>Term Length: ${termLength} years</li>` : ''}
+          ${tobaccoUse !== undefined ? `<li>Tobacco Use: ${tobaccoUse ? 'Yes' : 'No'}</li>` : ''}
+          ${occupation ? `<li>Occupation: ${occupation}</li>` : ''}
+          ${employmentStatus ? `<li>Employment Status: ${employmentStatus}</li>` : ''}
+          ${incomeRange ? `<li>Income Range: ${incomeRange}</li>` : ''}
+          ${vehicleYear ? `<li>Vehicle Year: ${vehicleYear}</li>` : ''}
+          ${vehicleMake ? `<li>Vehicle Make: ${vehicleMake}</li>` : ''}
+          ${vehicleModel ? `<li>Vehicle Model: ${vehicleModel}</li>` : ''}
+          ${healthStatus ? `<li>Health Status: ${healthStatus}</li>` : ''}
+          ${preExistingConditions !== undefined ? `<li>Pre-existing Conditions: ${preExistingConditions ? 'Yes' : 'No'}</li>` : ''}
+        </ul>
+        <p>Please follow up with the customer as soon as possible.</p>
       `,
     })
 
-    if (supportEmailError) {
-      console.error('Error sending support notification email:', supportEmailError)
-      // We still return success if customer email was sent but support notification failed
-      return NextResponse.json(
-        { 
-          success: true, 
-          warning: 'Customer notification sent but support notification failed',
-          data: { customerEmail: customerEmailData }
-        }, 
-        { headers: corsHeaders }
-      )
+    if (!customerEmailResponse.id || !salesEmailResponse.id) {
+      throw new Error('Failed to send one or more emails')
     }
 
     return NextResponse.json(
-      { 
-        success: true, 
-        data: {
-          customerEmail: customerEmailData,
-          supportEmail: supportEmailData
-        }
-      }, 
+      { success: true, message: 'Confirmation emails sent successfully' },
       { headers: corsHeaders }
     )
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
-        { status: 400, headers: corsHeaders }
-      )
-    }
-    
-    console.error('Unexpected error:', error)
+    console.error('Error sending confirmation emails:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Failed to send confirmation emails',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500, headers: corsHeaders }
     )
   }
