@@ -87,11 +87,26 @@ export async function OPTIONS() {
 
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
-    console.log('Received lead data:', JSON.stringify(data, null, 2));
+    let requestData = await request.json();
+    console.log('Received lead data:', JSON.stringify(requestData, null, 2));
+
+    // Parse and validate the data using the schema
+    try {
+      const validatedData = leadSchema.parse(requestData);
+      requestData = validatedData; // Use the validated data
+    } catch (validationError) {
+      console.error('Validation error:', validationError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Validation error', 
+          details: validationError instanceof Error ? validationError.message : 'Invalid data'
+        }),
+        { status: 400 }
+      );
+    }
 
     // Base required fields for all product types
-    const baseRequiredFields = ['firstName', 'lastName', 'email', 'phone', 'age', 'productType'];
+    const baseRequiredFields = ['firstName', 'lastName', 'email', 'phone', 'age', 'gender', 'productType'];
     
     // Product-specific required fields
     const productSpecificFields: Record<string, string[]> = {
@@ -103,11 +118,11 @@ export async function POST(request: Request) {
     // Get all required fields based on product type
     const requiredFields = [
       ...baseRequiredFields,
-      ...(productSpecificFields[data.productType] || [])
+      ...(productSpecificFields[requestData.productType] || [])
     ];
 
     // Check for missing fields
-    const missingFields = requiredFields.filter(field => !data[field]);
+    const missingFields = requiredFields.filter(field => requestData[field] === undefined || requestData[field] === null || requestData[field] === '');
     if (missingFields.length > 0) {
       console.error('Missing required fields:', missingFields);
       return new Response(
@@ -127,28 +142,37 @@ export async function POST(request: Request) {
 
     // Prepare lead data based on product type
     const leadData: any = {
-      first_name: data.firstName,
-      last_name: data.lastName,
-      email: data.email,
-      phone: data.phone,
-      age: data.age,
-      product_type: data.productType,
+      first_name: requestData.firstName,
+      last_name: requestData.lastName,
+      email: requestData.email,
+      phone: requestData.phone,
+      age: requestData.age,
+      gender: requestData.gender,
+      product_type: requestData.productType,
       created_at: new Date().toISOString()
     };
 
     // Add product-specific fields
-    if (data.productType === 'life') {
-      leadData.coverage_amount = data.coverageAmount;
-      leadData.term_length = data.termLength;
-      leadData.tobacco_use = data.tobaccoUse;
-    } else if (data.productType === 'disability') {
-      leadData.occupation = data.occupation;
-      leadData.employment_status = data.employmentStatus;
-      leadData.income_range = data.incomeRange;
-    } else if (data.productType === 'supplemental') {
-      leadData.pre_existing_conditions = data.preExistingConditions;
-      leadData.desired_coverage_type = data.desiredCoverageType;
+    if (requestData.productType === 'life') {
+      leadData.coverage_amount = Number(requestData.coverageAmount);
+      leadData.term_length = Number(requestData.termLength);
+      leadData.tobacco_use = requestData.tobaccoUse;
+    } else if (requestData.productType === 'disability') {
+      leadData.occupation = requestData.occupation;
+      leadData.employment_status = requestData.employmentStatus;
+      leadData.income_range = requestData.incomeRange;
+    } else if (requestData.productType === 'supplemental') {
+      leadData.pre_existing_conditions = requestData.preExistingConditions;
+      leadData.desired_coverage_type = requestData.desiredCoverageType;
     }
+
+    // Add tracking fields if present
+    if (requestData.utmSource) leadData.utm_source = requestData.utmSource;
+    if (requestData.utmMedium) leadData.utm_medium = requestData.utmMedium;
+    if (requestData.utmCampaign) leadData.utm_campaign = requestData.utmCampaign;
+    if (requestData.utmContent) leadData.utm_content = requestData.utmContent;
+    if (requestData.utmTerm) leadData.utm_term = requestData.utmTerm;
+    if (requestData.abTestVariant) leadData.ab_test_variant = requestData.abTestVariant;
 
     // Insert lead into database
     const { data: lead, error: dbError } = await supabase
@@ -171,9 +195,10 @@ export async function POST(request: Request) {
     console.log('Lead saved successfully:', JSON.stringify(lead, null, 2));
 
     // Send confirmation email
+    let confirmationResult;
     try {
       console.log('Attempting to send confirmation email...');
-      const confirmationResult = await sendConfirmationEmail(data);
+      confirmationResult = await sendConfirmationEmail(requestData);
       console.log('Confirmation email result:', confirmationResult);
       if (!confirmationResult.success) {
         console.error('Failed to send confirmation email:', confirmationResult.error);
@@ -184,9 +209,10 @@ export async function POST(request: Request) {
     }
 
     // Send lead notification email
+    let notificationResult;
     try {
       console.log('Attempting to send lead notification email...');
-      const notificationResult = await sendLeadNotificationEmail(data);
+      notificationResult = await sendLeadNotificationEmail(requestData);
       console.log('Lead notification email result:', notificationResult);
       if (!notificationResult.success) {
         console.error('Failed to send lead notification email:', notificationResult.error);
@@ -196,7 +222,14 @@ export async function POST(request: Request) {
       // Don't fail the request if email fails
     }
 
-    return new Response(JSON.stringify({ success: true, lead }), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      lead,
+      emailStatus: {
+        confirmation: confirmationResult?.success || false,
+        notification: notificationResult?.success || false
+      }
+    }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });

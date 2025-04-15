@@ -19,7 +19,7 @@ const formSchema = z.object({
   age: z.coerce.number().min(18, 'Must be at least 18 years old').max(85, 'Must be under 85 years old'),
   gender: z.enum(['male', 'female']),
   coverageAmount: z.string().refine((val) => {
-    const num = Number(val);
+    const num = Number(val.toString().replace(/[$,]/g, ''));
     return !isNaN(num) && coverageAmounts.includes(num as typeof coverageAmounts[number]);
   }, 'Please select a coverage amount'),
   termLength: z.string().refine((val) => {
@@ -96,12 +96,15 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
         termLength: Number(data.termLength),
         // Convert age to number
         age: Number(data.age),
-        // Convert tobacco use to string 'yes' or 'no'
+        // Convert tobacco use to boolean
         tobaccoUse: data.tobaccoUse === 'yes',
-        // We don't need to send productType as it's not in the table
+        // Add product type explicitly
+        productType: 'life' as const,
+        // Add gender
+        gender: data.gender,
       };
 
-      console.log('Submitting form data:', formData);
+      console.log('Submitting form data:', JSON.stringify(formData, null, 2));
 
       const leadResponse = await fetch('/api/leads', {
         method: 'POST',
@@ -117,7 +120,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
       let leadResult;
       try {
         leadResult = JSON.parse(responseText);
-        console.log('Parsed response:', leadResult);
+        console.log('Parsed response:', JSON.stringify(leadResult, null, 2));
       } catch (parseError) {
         console.error('Error parsing response:', parseError);
         throw new Error('Invalid response from server');
