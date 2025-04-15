@@ -18,8 +18,14 @@ const formSchema = z.object({
   phone: z.string().min(10, 'Phone number must be at least 10 digits'),
   age: z.coerce.number().min(18, 'Must be at least 18 years old').max(85, 'Must be under 85 years old'),
   gender: z.enum(['male', 'female']),
-  coverageAmount: z.coerce.number(),
-  termLength: z.coerce.number(),
+  coverageAmount: z.string().refine((val) => {
+    const num = Number(val);
+    return !isNaN(num) && coverageAmounts.includes(num as typeof coverageAmounts[number]);
+  }, 'Please select a coverage amount'),
+  termLength: z.string().refine((val) => {
+    const num = Number(val);
+    return !isNaN(num) && termLengths.includes(num as typeof termLengths[number]);
+  }, 'Please select a term length'),
   tobaccoUse: z.enum(['yes', 'no']).optional().or(z.literal('')),
   utmSource: z.string().optional(),
 })
@@ -70,6 +76,8 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
     defaultValues: {
       utmSource: utmSource || 'direct',
       tobaccoUse: '',
+      coverageAmount: '',
+      termLength: '',
     },
     mode: 'onTouched',
   })
@@ -91,6 +99,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
           termLength: Number(data.termLength),
           age: Number(data.age),
           tobaccoUse: data.tobaccoUse === 'yes',
+          productType: 'life',
         }),
       })
 
