@@ -116,7 +116,13 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
       logFormSubmission({
         insuranceType,
         formData: data,
-        utmParams,
+        utmParams: {
+          source: data.utmSource,
+          medium: data.utmMedium,
+          campaign: data.utmCampaign,
+          content: data.utmContent,
+          term: data.utmTerm,
+        },
         funnelName: funnelConfig.name,
         funnelStep: currentStep,
         funnelVariant: funnelConfig.variant,
