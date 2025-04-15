@@ -20,11 +20,11 @@ const baseSchema = z.object({
   funnelVariant: z.string().optional(),
   abTestId: z.string().optional(),
   abTestVariant: z.string().optional(),
-  utmSource: z.string().optional(),
-  utmMedium: z.string().optional(),
-  utmCampaign: z.string().optional(),
-  utmContent: z.string().optional(),
-  utmTerm: z.string().optional(),
+  utm_source: z.string().optional(),
+  utm_medium: z.string().optional(),
+  utm_campaign: z.string().optional(),
+  utm_content: z.string().optional(),
+  utm_term: z.string().optional(),
 });
 
 // Insurance-specific schemas
@@ -90,11 +90,11 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
     defaultValues: {
       ...initialData,
       insuranceType: insuranceType as FormData['insuranceType'],
-      utmSource: searchParams.get('utm_source') || undefined,
-      utmMedium: searchParams.get('utm_medium') || undefined,
-      utmCampaign: searchParams.get('utm_campaign') || undefined,
-      utmContent: searchParams.get('utm_content') || undefined,
-      utmTerm: searchParams.get('utm_term') || undefined,
+      utm_source: searchParams.get('utm_source') || undefined,
+      utm_medium: searchParams.get('utm_medium') || undefined,
+      utm_campaign: searchParams.get('utm_campaign') || undefined,
+      utm_content: searchParams.get('utm_content') || undefined,
+      utm_term: searchParams.get('utm_term') || undefined,
     },
   });
 
@@ -117,11 +117,11 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
         insuranceType,
         formData: data,
         utmParams: {
-          source: data.utmSource,
-          medium: data.utmMedium,
-          campaign: data.utmCampaign,
-          content: data.utmContent,
-          term: data.utmTerm,
+          source: data.utm_source,
+          medium: data.utm_medium,
+          campaign: data.utm_campaign,
+          content: data.utm_content,
+          term: data.utm_term,
         },
         funnelName: funnelConfig.name,
         funnelStep: currentStep,
