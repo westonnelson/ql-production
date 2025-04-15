@@ -20,7 +20,7 @@ const formSchema = z.object({
   gender: z.enum(['male', 'female']),
   coverageAmount: z.coerce.number(),
   termLength: z.coerce.number(),
-  tobaccoUse: z.enum(['yes', 'no']),
+  tobaccoUse: z.enum(['yes', 'no']).optional().or(z.literal('')),
   utmSource: z.string().optional(),
 })
 
@@ -57,6 +57,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isFormTouched, setIsFormTouched] = useState(false)
 
   const {
     register,
@@ -68,6 +69,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       utmSource: utmSource || 'direct',
+      tobaccoUse: '',
     },
     mode: 'onTouched',
   })
@@ -77,7 +79,8 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
       setIsSubmitting(true)
       setError(null)
 
-      const response = await fetch('/api/leads', {
+      // First, submit the lead data
+      const leadResponse = await fetch('/api/leads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,10 +94,32 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
         }),
       })
 
-      const result = await response.json()
+      const leadResult = await leadResponse.json()
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit form. Please try again.')
+      if (!leadResponse.ok) {
+        throw new Error(leadResult.error || 'Failed to submit form. Please try again.')
+      }
+
+      // Then, send the confirmation emails
+      const emailResponse = await fetch('/api/send-confirmations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          coverageAmount: Number(data.coverageAmount),
+          termLength: Number(data.termLength),
+          age: Number(data.age),
+          tobaccoUse: data.tobaccoUse === 'yes',
+        }),
+      })
+
+      const emailResult = await emailResponse.json()
+
+      if (!emailResponse.ok) {
+        console.error('Failed to send confirmation emails:', emailResult.error)
+        // Don't throw here - we still want to redirect since the lead was saved
       }
 
       // Clear any existing errors
@@ -109,6 +134,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
   }
 
   const nextStep = async () => {
+    setIsFormTouched(true)
     const fields = stepFields[currentStep]
     const isValid = await trigger(fields)
     
@@ -147,7 +173,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
           </p>
         </div>
 
-        {error && !isSubmitting && touchedFields && (
+        {error && isFormTouched && (
           <div className="mt-4 p-4 bg-red-900/20 backdrop-blur-sm border border-red-500/20 rounded-md animate-fade-in">
             <p className="text-sm text-red-400">{error}</p>
           </div>
@@ -349,8 +375,8 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                     <option value="no">No</option>
                     <option value="yes">Yes</option>
                   </select>
-                  {errors.tobaccoUse && touchedFields.tobaccoUse && (
-                    <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.tobaccoUse.message}</p>
+                  {errors.tobaccoUse && touchedFields.tobaccoUse && isFormTouched && (
+                    <p className="mt-1 text-sm text-red-400 animate-fade-in">Please select yes or no</p>
                   )}
                 </div>
               </div>
