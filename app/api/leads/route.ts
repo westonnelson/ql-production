@@ -168,7 +168,7 @@ export async function POST(request: Request) {
       desiredCoverageType: validatedData.desiredCoverageType,
       utmSource: validatedData.utmSource,
       abTestVariant: validatedData.abTestVariant
-    })
+    });
 
     // Send notification email to support
     await sendLeadNotificationEmail({
@@ -189,7 +189,7 @@ export async function POST(request: Request) {
       desiredCoverageType: validatedData.desiredCoverageType,
       utmSource: validatedData.utmSource,
       abTestVariant: validatedData.abTestVariant
-    })
+    });
 
     return NextResponse.json({ success: true, data }, { headers: corsHeaders });
   } catch (error) {
