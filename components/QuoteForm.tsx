@@ -55,7 +55,7 @@ const supplementalSchema = baseSchema.extend({
   preExistingConditions: z.boolean(),
 });
 
-// Combined schema
+// Combined schema with discriminated union
 const formSchema = z.discriminatedUnion('insuranceType', [
   lifeSchema,
   disabilitySchema,
@@ -117,11 +117,11 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
         insuranceType,
         formData: data,
         utmParams: {
-          source: data.utm_source,
-          medium: data.utm_medium,
-          campaign: data.utm_campaign,
-          content: data.utm_content,
-          term: data.utm_term,
+          utm_source: data.utm_source,
+          utm_medium: data.utm_medium,
+          utm_campaign: data.utm_campaign,
+          utm_content: data.utm_content,
+          utm_term: data.utm_term,
         },
         funnelName: funnelConfig.name,
         funnelStep: currentStep,
@@ -275,11 +275,11 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
               id="coverageAmount"
               {...register('coverageAmount', { valueAsNumber: true })}
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                errors.coverageAmount ? 'border-red-500' : ''
+                (errors as any).coverageAmount ? 'border-red-500' : ''
               }`}
             />
-            {errors.coverageAmount && (
-              <p className="mt-1 text-sm text-red-600">{errors.coverageAmount.message}</p>
+            {(errors as any).coverageAmount && (
+              <p className="mt-1 text-sm text-red-600">{(errors as any).coverageAmount.message}</p>
             )}
           </div>
 
@@ -292,11 +292,11 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
               id="termLength"
               {...register('termLength', { valueAsNumber: true })}
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                errors.termLength ? 'border-red-500' : ''
+                (errors as any).termLength ? 'border-red-500' : ''
               }`}
             />
-            {errors.termLength && (
-              <p className="mt-1 text-sm text-red-600">{errors.termLength.message}</p>
+            {(errors as any).termLength && (
+              <p className="mt-1 text-sm text-red-600">{(errors as any).termLength.message}</p>
             )}
           </div>
 
@@ -306,17 +306,17 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
             </label>
             <select
               id="tobaccoUse"
-              {...register('tobaccoUse', { valueAsNumber: true })}
+              {...register('tobaccoUse')}
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                errors.tobaccoUse ? 'border-red-500' : ''
+                (errors as any).tobaccoUse ? 'border-red-500' : ''
               }`}
             >
               <option value="">Select</option>
               <option value="true">Yes</option>
               <option value="false">No</option>
             </select>
-            {errors.tobaccoUse && (
-              <p className="mt-1 text-sm text-red-600">{errors.tobaccoUse.message}</p>
+            {(errors as any).tobaccoUse && (
+              <p className="mt-1 text-sm text-red-600">{(errors as any).tobaccoUse.message}</p>
             )}
           </div>
         </>
@@ -333,11 +333,11 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
               id="occupation"
               {...register('occupation')}
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                errors.occupation ? 'border-red-500' : ''
+                (errors as any).occupation ? 'border-red-500' : ''
               }`}
             />
-            {errors.occupation && (
-              <p className="mt-1 text-sm text-red-600">{errors.occupation.message}</p>
+            {(errors as any).occupation && (
+              <p className="mt-1 text-sm text-red-600">{(errors as any).occupation.message}</p>
             )}
           </div>
 
@@ -349,7 +349,7 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
               id="employmentStatus"
               {...register('employmentStatus')}
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                errors.employmentStatus ? 'border-red-500' : ''
+                (errors as any).employmentStatus ? 'border-red-500' : ''
               }`}
             >
               <option value="">Select status</option>
@@ -357,8 +357,8 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
               <option value="part-time">Part Time</option>
               <option value="self-employed">Self Employed</option>
             </select>
-            {errors.employmentStatus && (
-              <p className="mt-1 text-sm text-red-600">{errors.employmentStatus.message}</p>
+            {(errors as any).employmentStatus && (
+              <p className="mt-1 text-sm text-red-600">{(errors as any).employmentStatus.message}</p>
             )}
           </div>
 
@@ -370,7 +370,7 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
               id="incomeRange"
               {...register('incomeRange')}
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                errors.incomeRange ? 'border-red-500' : ''
+                (errors as any).incomeRange ? 'border-red-500' : ''
               }`}
             >
               <option value="">Select range</option>
@@ -380,8 +380,8 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
               <option value="75001-100000">$75,001 - $100,000</option>
               <option value="100001+">$100,001+</option>
             </select>
-            {errors.incomeRange && (
-              <p className="mt-1 text-sm text-red-600">{errors.incomeRange.message}</p>
+            {(errors as any).incomeRange && (
+              <p className="mt-1 text-sm text-red-600">{(errors as any).incomeRange.message}</p>
             )}
           </div>
         </>
@@ -398,11 +398,11 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
               id="vehicleYear"
               {...register('vehicleYear', { valueAsNumber: true })}
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                errors.vehicleYear ? 'border-red-500' : ''
+                (errors as any).vehicleYear ? 'border-red-500' : ''
               }`}
             />
-            {errors.vehicleYear && (
-              <p className="mt-1 text-sm text-red-600">{errors.vehicleYear.message}</p>
+            {(errors as any).vehicleYear && (
+              <p className="mt-1 text-sm text-red-600">{(errors as any).vehicleYear.message}</p>
             )}
           </div>
 
@@ -415,11 +415,11 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
               id="vehicleMake"
               {...register('vehicleMake')}
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                errors.vehicleMake ? 'border-red-500' : ''
+                (errors as any).vehicleMake ? 'border-red-500' : ''
               }`}
             />
-            {errors.vehicleMake && (
-              <p className="mt-1 text-sm text-red-600">{errors.vehicleMake.message}</p>
+            {(errors as any).vehicleMake && (
+              <p className="mt-1 text-sm text-red-600">{(errors as any).vehicleMake.message}</p>
             )}
           </div>
 
@@ -432,11 +432,11 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
               id="vehicleModel"
               {...register('vehicleModel')}
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                errors.vehicleModel ? 'border-red-500' : ''
+                (errors as any).vehicleModel ? 'border-red-500' : ''
               }`}
             />
-            {errors.vehicleModel && (
-              <p className="mt-1 text-sm text-red-600">{errors.vehicleModel.message}</p>
+            {(errors as any).vehicleModel && (
+              <p className="mt-1 text-sm text-red-600">{(errors as any).vehicleModel.message}</p>
             )}
           </div>
         </>
@@ -452,7 +452,7 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
               id="healthStatus"
               {...register('healthStatus')}
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                errors.healthStatus ? 'border-red-500' : ''
+                (errors as any).healthStatus ? 'border-red-500' : ''
               }`}
             >
               <option value="">Select status</option>
@@ -461,8 +461,8 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
               <option value="fair">Fair</option>
               <option value="poor">Poor</option>
             </select>
-            {errors.healthStatus && (
-              <p className="mt-1 text-sm text-red-600">{errors.healthStatus.message}</p>
+            {(errors as any).healthStatus && (
+              <p className="mt-1 text-sm text-red-600">{(errors as any).healthStatus.message}</p>
             )}
           </div>
 
@@ -472,17 +472,17 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
             </label>
             <select
               id="preExistingConditions"
-              {...register('preExistingConditions', { valueAsNumber: true })}
+              {...register('preExistingConditions')}
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                errors.preExistingConditions ? 'border-red-500' : ''
+                (errors as any).preExistingConditions ? 'border-red-500' : ''
               }`}
             >
               <option value="">Select</option>
               <option value="true">Yes</option>
               <option value="false">No</option>
             </select>
-            {errors.preExistingConditions && (
-              <p className="mt-1 text-sm text-red-600">{errors.preExistingConditions.message}</p>
+            {(errors as any).preExistingConditions && (
+              <p className="mt-1 text-sm text-red-600">{(errors as any).preExistingConditions.message}</p>
             )}
           </div>
         </>
