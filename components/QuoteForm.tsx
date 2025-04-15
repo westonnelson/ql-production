@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useUtmParams, getFunnelConfig, getFunnelStep } from '@/lib/utm';
+import { logFunnelStep, logFormSubmission } from '@/lib/analytics';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { logFunnelStep, logFormSubmission } from '../lib/analytics';
-import { useUtmParams, getFunnelConfig, getFunnelStep } from '@/lib/utm';
 
 // Base schema for all insurance types
 const baseSchema = z.object({
@@ -71,7 +71,7 @@ interface QuoteFormProps {
   onSuccess?: (data: FormData) => void;
 }
 
-const QuoteForm: React.FC<QuoteFormProps> = ({ insuranceType, initialData, onSuccess }) => {
+export default function QuoteForm({ insuranceType, initialData, onSuccess }: QuoteFormProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -149,371 +149,346 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ insuranceType, initialData, onSuc
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0F1218] to-[#1A1F2B] py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-extrabold text-white sm:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-500">
-            {insuranceType.charAt(0).toUpperCase() + insuranceType.slice(1)} Insurance Quote
-          </h1>
-          <p className="mt-4 text-xl text-gray-300">
-            Get your personalized {insuranceType} insurance quote in minutes
-          </p>
-        </div>
-
-        {/* Progress Steps */}
-        <div className="mb-12">
-          <div className="flex justify-between mb-4">
-            {steps.map((step) => (
-              <div
-                key={step.id}
-                className={`flex-1 text-center transition-all duration-300 ${
-                  step.id === currentStep ? 'scale-110' : 'opacity-50'
-                }`}
-              >
-                <div className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center mb-2 border-2 ${
-                  step.id <= currentStep ? 'border-primary bg-primary/20' : 'border-gray-600 bg-gray-800'
-                }`}>
-                  <span className="text-sm font-medium">{step.id}</span>
-                </div>
-                <div className={`text-sm font-medium ${
-                  step.id <= currentStep ? 'text-primary' : 'text-gray-500'
-                }`}>
-                  {step.title}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="relative">
-            <div className="absolute top-0 h-1 bg-gray-800 w-full rounded-full"></div>
-            <div
-              className="absolute top-0 h-1 bg-gradient-to-r from-primary to-blue-500 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / steps.length) * 100}%` }}
-            ></div>
-          </div>
-        </div>
-
-        {error && (
-          <div className="mt-4 p-4 bg-red-900/20 backdrop-blur-sm border border-red-500/20 rounded-md animate-fade-in">
-            <p className="text-sm text-red-400">{error}</p>
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Base fields */}
+      <div>
+        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+          First Name
+        </label>
+        <input
+          type="text"
+          id="firstName"
+          {...register('firstName')}
+          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+            errors.firstName ? 'border-red-500' : ''
+          }`}
+        />
+        {errors.firstName && (
+          <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
         )}
+      </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-8 backdrop-blur-sm bg-white/5 p-8 rounded-xl border border-gray-800">
-          {/* Step 1: Personal Information */}
-          {currentStep === 1 && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-300">
-                    First Name
-                  </label>
-                  <input
-                    type="text"
-                    id="firstName"
-                    {...register('firstName')}
-                    className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                    placeholder="John"
-                  />
-                  {errors.firstName && touchedFields.firstName && (
-                    <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.firstName.message}</p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-300">
-                    Last Name
-                  </label>
-                  <input
-                    type="text"
-                    id="lastName"
-                    {...register('lastName')}
-                    className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                    placeholder="Doe"
-                  />
-                  {errors.lastName && touchedFields.lastName && (
-                    <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.lastName.message}</p>
-                  )}
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="age" className="block text-sm font-medium text-gray-300">
-                    Age
-                  </label>
-                  <input
-                    type="number"
-                    id="age"
-                    {...register('age', { valueAsNumber: true })}
-                    className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                    placeholder="35"
-                  />
-                  {errors.age && touchedFields.age && (
-                    <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.age.message}</p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="gender" className="block text-sm font-medium text-gray-300">
-                    Gender
-                  </label>
-                  <select
-                    id="gender"
-                    {...register('gender')}
-                    className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                  >
-                    <option value="">Select gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                  {errors.gender && touchedFields.gender && (
-                    <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.gender.message}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+      <div>
+        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+          Last Name
+        </label>
+        <input
+          type="text"
+          id="lastName"
+          {...register('lastName')}
+          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+            errors.lastName ? 'border-red-500' : ''
+          }`}
+        />
+        {errors.lastName && (
+          <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
+        )}
+      </div>
 
-          {/* Step 2: Contact Details */}
-          {currentStep === 2 && (
-            <div className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  {...register('email')}
-                  className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                  placeholder="john@example.com"
-                />
-                {errors.email && touchedFields.email && (
-                  <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.email.message}</p>
-                )}
-              </div>
-              <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-300">
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  id="phone"
-                  {...register('phone')}
-                  className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                  placeholder="(555) 123-4567"
-                />
-                {errors.phone && touchedFields.phone && (
-                  <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.phone.message}</p>
-                )}
-              </div>
-            </div>
-          )}
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          Email
+        </label>
+        <input
+          type="email"
+          id="email"
+          {...register('email')}
+          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+            errors.email ? 'border-red-500' : ''
+          }`}
+        />
+        {errors.email && (
+          <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+        )}
+      </div>
 
-          {/* Step 3: Insurance-specific fields */}
-          {currentStep === 3 && (
-            <div className="space-y-6">
-              {insuranceType === 'auto' && (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                      <label htmlFor="vehicleYear" className="block text-sm font-medium text-gray-300">
-                        Vehicle Year
-                      </label>
-                      <input
-                        type="number"
-                        id="vehicleYear"
-                        {...register('vehicleYear', { valueAsNumber: true })}
-                        className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                        placeholder="2024"
-                      />
-                      {errors.vehicleYear && touchedFields.vehicleYear && (
-                        <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.vehicleYear.message}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label htmlFor="vehicleMake" className="block text-sm font-medium text-gray-300">
-                        Vehicle Make
-                      </label>
-                      <input
-                        type="text"
-                        id="vehicleMake"
-                        {...register('vehicleMake')}
-                        className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                        placeholder="Toyota"
-                      />
-                      {errors.vehicleMake && touchedFields.vehicleMake && (
-                        <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.vehicleMake.message}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label htmlFor="vehicleModel" className="block text-sm font-medium text-gray-300">
-                        Vehicle Model
-                      </label>
-                      <input
-                        type="text"
-                        id="vehicleModel"
-                        {...register('vehicleModel')}
-                        className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                        placeholder="Camry"
-                      />
-                      {errors.vehicleModel && touchedFields.vehicleModel && (
-                        <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.vehicleModel.message}</p>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
+      <div>
+        <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+          Phone Number
+        </label>
+        <input
+          type="tel"
+          id="phone"
+          {...register('phone')}
+          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+            errors.phone ? 'border-red-500' : ''
+          }`}
+        />
+        {errors.phone && (
+          <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+        )}
+      </div>
 
-              {insuranceType === 'life' && (
-                <>
-                  <div>
-                    <label htmlFor="coverageAmount" className="block text-sm font-medium text-gray-300">
-                      Coverage Amount
-                    </label>
-                    <select
-                      id="coverageAmount"
-                      {...register('coverageAmount', { valueAsNumber: true })}
-                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                    >
-                      <option value="">Select coverage amount</option>
-                      <option value="100000">$100,000</option>
-                      <option value="250000">$250,000</option>
-                      <option value="500000">$500,000</option>
-                      <option value="1000000">$1,000,000</option>
-                    </select>
-                    {errors.coverageAmount && touchedFields.coverageAmount && (
-                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.coverageAmount.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="termLength" className="block text-sm font-medium text-gray-300">
-                      Term Length
-                    </label>
-                    <select
-                      id="termLength"
-                      {...register('termLength', { valueAsNumber: true })}
-                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                    >
-                      <option value="">Select term length</option>
-                      <option value="10">10 Years</option>
-                      <option value="20">20 Years</option>
-                      <option value="30">30 Years</option>
-                    </select>
-                    {errors.termLength && touchedFields.termLength && (
-                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.termLength.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="tobaccoUse" className="block text-sm font-medium text-gray-300">
-                      Do you use tobacco products?
-                    </label>
-                    <select
-                      id="tobaccoUse"
-                      {...register('tobaccoUse', { valueAsNumber: true })}
-                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                    >
-                      <option value="">Select tobacco use</option>
-                      <option value="0">No</option>
-                      <option value="1">Yes</option>
-                    </select>
-                    {errors.tobaccoUse && touchedFields.tobaccoUse && (
-                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.tobaccoUse.message}</p>
-                    )}
-                  </div>
-                </>
-              )}
+      <div>
+        <label htmlFor="age" className="block text-sm font-medium text-gray-700">
+          Age
+        </label>
+        <input
+          type="number"
+          id="age"
+          {...register('age', { valueAsNumber: true })}
+          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+            errors.age ? 'border-red-500' : ''
+          }`}
+        />
+        {errors.age && (
+          <p className="mt-1 text-sm text-red-600">{errors.age.message}</p>
+        )}
+      </div>
 
-              {insuranceType === 'disability' && (
-                <>
-                  <div>
-                    <label htmlFor="occupation" className="block text-sm font-medium text-gray-300">
-                      Occupation
-                    </label>
-                    <input
-                      type="text"
-                      id="occupation"
-                      {...register('occupation')}
-                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                      placeholder="Software Engineer"
-                    />
-                    {errors.occupation && touchedFields.occupation && (
-                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.occupation.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="employmentStatus" className="block text-sm font-medium text-gray-300">
-                      Employment Status
-                    </label>
-                    <select
-                      id="employmentStatus"
-                      {...register('employmentStatus')}
-                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                    >
-                      <option value="">Select employment status</option>
-                      <option value="full-time">Full-time</option>
-                      <option value="part-time">Part-time</option>
-                      <option value="self-employed">Self-employed</option>
-                    </select>
-                    {errors.employmentStatus && touchedFields.employmentStatus && (
-                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.employmentStatus.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="incomeRange" className="block text-sm font-medium text-gray-300">
-                      Annual Income Range
-                    </label>
-                    <select
-                      id="incomeRange"
-                      {...register('incomeRange')}
-                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                    >
-                      <option value="">Select income range</option>
-                      <option value="0-50000">$0 - $50,000</option>
-                      <option value="50000-100000">$50,000 - $100,000</option>
-                      <option value="100000-150000">$100,000 - $150,000</option>
-                      <option value="150000+">$150,000+</option>
-                    </select>
-                    {errors.incomeRange && touchedFields.incomeRange && (
-                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.incomeRange.message}</p>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+      <div>
+        <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
+          Gender
+        </label>
+        <select
+          id="gender"
+          {...register('gender')}
+          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+            errors.gender ? 'border-red-500' : ''
+          }`}
+        >
+          <option value="">Select gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+        {errors.gender && (
+          <p className="mt-1 text-sm text-red-600">{errors.gender.message}</p>
+        )}
+      </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between">
-            {currentStep > 1 && (
-              <button
-                type="button"
-                onClick={prevStep}
-                className="px-6 py-3 border border-gray-700 text-base font-medium rounded-lg text-gray-300 bg-transparent hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200"
-              >
-                Back
-              </button>
-            )}
-            {currentStep < steps.length ? (
-              <button
-                type="button"
-                onClick={nextStep}
-                className="ml-auto px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200"
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="ml-auto px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 disabled:opacity-50"
-              >
-                {isSubmitting ? 'Submitting...' : 'Get Your Quote'}
-              </button>
+      {/* Insurance-specific fields */}
+      {insuranceType === 'life' && (
+        <>
+          <div>
+            <label htmlFor="coverageAmount" className="block text-sm font-medium text-gray-700">
+              Coverage Amount
+            </label>
+            <input
+              type="number"
+              id="coverageAmount"
+              {...register('coverageAmount', { valueAsNumber: true })}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                errors.coverageAmount ? 'border-red-500' : ''
+              }`}
+            />
+            {errors.coverageAmount && (
+              <p className="mt-1 text-sm text-red-600">{errors.coverageAmount.message}</p>
             )}
           </div>
-        </form>
-      </div>
-    </div>
-  );
-};
 
-export default QuoteForm; 
+          <div>
+            <label htmlFor="termLength" className="block text-sm font-medium text-gray-700">
+              Term Length (years)
+            </label>
+            <input
+              type="number"
+              id="termLength"
+              {...register('termLength', { valueAsNumber: true })}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                errors.termLength ? 'border-red-500' : ''
+              }`}
+            />
+            {errors.termLength && (
+              <p className="mt-1 text-sm text-red-600">{errors.termLength.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="tobaccoUse" className="block text-sm font-medium text-gray-700">
+              Tobacco Use
+            </label>
+            <select
+              id="tobaccoUse"
+              {...register('tobaccoUse', { valueAsNumber: true })}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                errors.tobaccoUse ? 'border-red-500' : ''
+              }`}
+            >
+              <option value="">Select</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+            {errors.tobaccoUse && (
+              <p className="mt-1 text-sm text-red-600">{errors.tobaccoUse.message}</p>
+            )}
+          </div>
+        </>
+      )}
+
+      {insuranceType === 'disability' && (
+        <>
+          <div>
+            <label htmlFor="occupation" className="block text-sm font-medium text-gray-700">
+              Occupation
+            </label>
+            <input
+              type="text"
+              id="occupation"
+              {...register('occupation')}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                errors.occupation ? 'border-red-500' : ''
+              }`}
+            />
+            {errors.occupation && (
+              <p className="mt-1 text-sm text-red-600">{errors.occupation.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="employmentStatus" className="block text-sm font-medium text-gray-700">
+              Employment Status
+            </label>
+            <select
+              id="employmentStatus"
+              {...register('employmentStatus')}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                errors.employmentStatus ? 'border-red-500' : ''
+              }`}
+            >
+              <option value="">Select status</option>
+              <option value="full-time">Full Time</option>
+              <option value="part-time">Part Time</option>
+              <option value="self-employed">Self Employed</option>
+            </select>
+            {errors.employmentStatus && (
+              <p className="mt-1 text-sm text-red-600">{errors.employmentStatus.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="incomeRange" className="block text-sm font-medium text-gray-700">
+              Income Range
+            </label>
+            <select
+              id="incomeRange"
+              {...register('incomeRange')}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                errors.incomeRange ? 'border-red-500' : ''
+              }`}
+            >
+              <option value="">Select range</option>
+              <option value="0-30000">$0 - $30,000</option>
+              <option value="30001-50000">$30,001 - $50,000</option>
+              <option value="50001-75000">$50,001 - $75,000</option>
+              <option value="75001-100000">$75,001 - $100,000</option>
+              <option value="100001+">$100,001+</option>
+            </select>
+            {errors.incomeRange && (
+              <p className="mt-1 text-sm text-red-600">{errors.incomeRange.message}</p>
+            )}
+          </div>
+        </>
+      )}
+
+      {insuranceType === 'auto' && (
+        <>
+          <div>
+            <label htmlFor="vehicleYear" className="block text-sm font-medium text-gray-700">
+              Vehicle Year
+            </label>
+            <input
+              type="number"
+              id="vehicleYear"
+              {...register('vehicleYear', { valueAsNumber: true })}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                errors.vehicleYear ? 'border-red-500' : ''
+              }`}
+            />
+            {errors.vehicleYear && (
+              <p className="mt-1 text-sm text-red-600">{errors.vehicleYear.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="vehicleMake" className="block text-sm font-medium text-gray-700">
+              Vehicle Make
+            </label>
+            <input
+              type="text"
+              id="vehicleMake"
+              {...register('vehicleMake')}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                errors.vehicleMake ? 'border-red-500' : ''
+              }`}
+            />
+            {errors.vehicleMake && (
+              <p className="mt-1 text-sm text-red-600">{errors.vehicleMake.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="vehicleModel" className="block text-sm font-medium text-gray-700">
+              Vehicle Model
+            </label>
+            <input
+              type="text"
+              id="vehicleModel"
+              {...register('vehicleModel')}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                errors.vehicleModel ? 'border-red-500' : ''
+              }`}
+            />
+            {errors.vehicleModel && (
+              <p className="mt-1 text-sm text-red-600">{errors.vehicleModel.message}</p>
+            )}
+          </div>
+        </>
+      )}
+
+      {insuranceType === 'supplemental' && (
+        <>
+          <div>
+            <label htmlFor="healthStatus" className="block text-sm font-medium text-gray-700">
+              Health Status
+            </label>
+            <select
+              id="healthStatus"
+              {...register('healthStatus')}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                errors.healthStatus ? 'border-red-500' : ''
+              }`}
+            >
+              <option value="">Select status</option>
+              <option value="excellent">Excellent</option>
+              <option value="good">Good</option>
+              <option value="fair">Fair</option>
+              <option value="poor">Poor</option>
+            </select>
+            {errors.healthStatus && (
+              <p className="mt-1 text-sm text-red-600">{errors.healthStatus.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="preExistingConditions" className="block text-sm font-medium text-gray-700">
+              Pre-existing Conditions
+            </label>
+            <select
+              id="preExistingConditions"
+              {...register('preExistingConditions', { valueAsNumber: true })}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                errors.preExistingConditions ? 'border-red-500' : ''
+              }`}
+            >
+              <option value="">Select</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+            {errors.preExistingConditions && (
+              <p className="mt-1 text-sm text-red-600">{errors.preExistingConditions.message}</p>
+            )}
+          </div>
+        </>
+      )}
+
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+      >
+        {isSubmitting ? 'Submitting...' : 'Get Quote'}
+      </button>
+    </form>
+  );
+} 
