@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { sendConfirmationEmail, sendLeadNotificationEmail } from '@/lib/email'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 // CORS headers
 const corsHeaders = {
@@ -14,16 +15,18 @@ const corsHeaders = {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing Supabase configuration. Please check environment variables.');
-}
+let supabase: SupabaseClient | null = null;
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  }
-});
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Missing Supabase configuration. Please check environment variables.');
+} else {
+  supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    }
+  });
+}
 
 // Validation schema for lead submission
 const leadSchema = z.object({
