@@ -11,9 +11,17 @@ const corsHeaders = {
 };
 
 // Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Check if Supabase configuration is available
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Missing Supabase configuration. Please check environment variables.');
+}
+
+const supabase = supabaseUrl && supabaseServiceKey 
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
 
 // Validation schema for lead submission
 const leadSchema = z.object({
@@ -59,6 +67,58 @@ export async function POST(request: Request) {
     
     // Validate the request body
     const validatedData = leadSchema.parse(body);
+    
+    // Check if Supabase is configured
+    if (!supabase) {
+      console.error('Supabase client not initialized. Skipping database operation.');
+      
+      // Still send emails even if database operation fails
+      await sendConfirmationEmail({
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        email: validatedData.email,
+        phone: validatedData.phone,
+        age: validatedData.age,
+        gender: validatedData.gender,
+        productType: validatedData.productType,
+        coverageAmount: validatedData.coverageAmount,
+        termLength: validatedData.termLength,
+        tobaccoUse: validatedData.tobaccoUse,
+        occupation: validatedData.occupation,
+        employmentStatus: validatedData.employmentStatus,
+        incomeRange: validatedData.incomeRange,
+        preExistingConditions: validatedData.preExistingConditions,
+        desiredCoverageType: validatedData.desiredCoverageType,
+        utmSource: validatedData.utmSource,
+        abTestVariant: validatedData.abTestVariant
+      });
+
+      await sendLeadNotificationEmail({
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        email: validatedData.email,
+        phone: validatedData.phone,
+        age: validatedData.age,
+        gender: validatedData.gender,
+        productType: validatedData.productType,
+        coverageAmount: validatedData.coverageAmount,
+        termLength: validatedData.termLength,
+        tobaccoUse: validatedData.tobaccoUse,
+        occupation: validatedData.occupation,
+        employmentStatus: validatedData.employmentStatus,
+        incomeRange: validatedData.incomeRange,
+        preExistingConditions: validatedData.preExistingConditions,
+        desiredCoverageType: validatedData.desiredCoverageType,
+        utmSource: validatedData.utmSource,
+        abTestVariant: validatedData.abTestVariant
+      });
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Lead processed (database operation skipped)',
+        data: validatedData 
+      }, { headers: corsHeaders });
+    }
     
     // Insert the lead into Supabase
     const { data, error } = await supabase
