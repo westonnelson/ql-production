@@ -87,92 +87,76 @@ export async function OPTIONS() {
 
 export async function POST(request: Request) {
   try {
-    let requestData = await request.json();
+    // Parse request data
+    const requestData = await request.json();
     console.log('Received lead data:', JSON.stringify(requestData, null, 2));
 
-    // Parse and validate the data using the schema
-    try {
-      const validatedData = leadSchema.parse(requestData);
-      requestData = validatedData; // Use the validated data
-    } catch (validationError) {
-      console.error('Validation error:', validationError);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Validation error', 
-          details: validationError instanceof Error ? validationError.message : 'Invalid data'
-        }),
-        { status: 400 }
-      );
-    }
-
-    // Base required fields for all product types
-    const baseRequiredFields = ['firstName', 'lastName', 'email', 'phone', 'age', 'gender', 'productType'];
-    
-    // Product-specific required fields
-    const productSpecificFields: Record<string, string[]> = {
-      life: ['coverageAmount', 'termLength'],
-      disability: ['occupation', 'employmentStatus', 'incomeRange'],
-      supplemental: ['preExistingConditions', 'desiredCoverageType']
+    // Parse numeric fields
+    const parsedData = {
+      ...requestData,
+      coverageAmount: requestData.coverageAmount ? parseInt(requestData.coverageAmount.toString().replace(/[$,]/g, ''), 10) : undefined,
+      termLength: requestData.termLength ? parseInt(requestData.termLength.toString(), 10) : undefined,
+      age: parseInt(requestData.age.toString(), 10),
+      tobaccoUse: requestData.tobaccoUse === 'yes' || requestData.tobaccoUse === true,
     };
 
-    // Get all required fields based on product type
-    const requiredFields = [
-      ...baseRequiredFields,
-      ...(productSpecificFields[requestData.productType] || [])
-    ];
-
-    // Check for missing fields
-    const missingFields = requiredFields.filter(field => requestData[field] === undefined || requestData[field] === null || requestData[field] === '');
-    if (missingFields.length > 0) {
-      console.error('Missing required fields:', missingFields);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Missing required fields', 
-          details: missingFields 
-        }),
-        { status: 400 }
+    // Validate the data
+    try {
+      const validatedData = leadSchema.parse(parsedData);
+      console.log('Validated lead data:', JSON.stringify(validatedData, null, 2));
+    } catch (validationError) {
+      console.error('Validation error:', validationError);
+      return NextResponse.json(
+        { error: 'Validation error', details: validationError },
+        { status: 400, headers: corsHeaders }
       );
     }
 
     // Initialize Supabase client
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Failed to initialize database connection' },
+        { status: 500, headers: corsHeaders }
+      );
+    }
 
     // Prepare lead data based on product type
     const leadData: any = {
-      first_name: requestData.firstName,
-      last_name: requestData.lastName,
-      email: requestData.email,
-      phone: requestData.phone,
-      age: requestData.age,
-      gender: requestData.gender,
-      product_type: requestData.productType,
+      first_name: parsedData.firstName,
+      last_name: parsedData.lastName,
+      email: parsedData.email,
+      phone: parsedData.phone,
+      age: parsedData.age,
+      gender: parsedData.gender,
       created_at: new Date().toISOString()
     };
 
     // Add product-specific fields
-    if (requestData.productType === 'life') {
-      leadData.coverage_amount = Number(requestData.coverageAmount);
-      leadData.term_length = Number(requestData.termLength);
-      leadData.tobacco_use = requestData.tobaccoUse;
-    } else if (requestData.productType === 'disability') {
-      leadData.occupation = requestData.occupation;
-      leadData.employment_status = requestData.employmentStatus;
-      leadData.income_range = requestData.incomeRange;
-    } else if (requestData.productType === 'supplemental') {
-      leadData.pre_existing_conditions = requestData.preExistingConditions;
-      leadData.desired_coverage_type = requestData.desiredCoverageType;
+    if (parsedData.productType === 'life') {
+      leadData.coverage_amount = Number(parsedData.coverageAmount);
+      leadData.term_length = Number(parsedData.termLength);
+      leadData.tobacco_use = parsedData.tobaccoUse;
+    } else if (parsedData.productType === 'disability') {
+      leadData.occupation = parsedData.occupation;
+      leadData.employment_status = parsedData.employmentStatus;
+      leadData.income_range = parsedData.incomeRange;
+    } else if (parsedData.productType === 'supplemental') {
+      leadData.pre_existing_conditions = parsedData.preExistingConditions;
+      leadData.desired_coverage_type = parsedData.desiredCoverageType;
     }
 
     // Add tracking fields if present
-    if (requestData.utmSource) leadData.utm_source = requestData.utmSource;
-    if (requestData.utmMedium) leadData.utm_medium = requestData.utmMedium;
-    if (requestData.utmCampaign) leadData.utm_campaign = requestData.utmCampaign;
-    if (requestData.utmContent) leadData.utm_content = requestData.utmContent;
-    if (requestData.utmTerm) leadData.utm_term = requestData.utmTerm;
-    if (requestData.abTestVariant) leadData.ab_test_variant = requestData.abTestVariant;
+    if (parsedData.utmSource) leadData.utm_source = parsedData.utmSource;
+    if (parsedData.utmMedium) leadData.utm_medium = parsedData.utmMedium;
+    if (parsedData.utmCampaign) leadData.utm_campaign = parsedData.utmCampaign;
+    if (parsedData.utmContent) leadData.utm_content = parsedData.utmContent;
+    if (parsedData.utmTerm) leadData.utm_term = parsedData.utmTerm;
+    if (parsedData.funnelName) leadData.funnel_name = parsedData.funnelName;
+    if (parsedData.funnelStep) leadData.funnel_step = parsedData.funnelStep;
+    if (parsedData.funnelVariant) leadData.funnel_variant = parsedData.funnelVariant;
+    if (parsedData.abTestId) leadData.ab_test_id = parsedData.abTestId;
+    if (parsedData.abTestVariant) leadData.ab_test_variant = parsedData.abTestVariant;
 
     // Insert lead into database
     const { data: lead, error: dbError } = await supabase
@@ -183,12 +167,9 @@ export async function POST(request: Request) {
 
     if (dbError) {
       console.error('Database error:', dbError);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Failed to save lead', 
-          details: dbError 
-        }),
-        { status: 500 }
+      return NextResponse.json(
+        { error: 'Failed to save lead', details: dbError },
+        { status: 500, headers: corsHeaders }
       );
     }
 
@@ -198,7 +179,7 @@ export async function POST(request: Request) {
     let confirmationResult;
     try {
       console.log('Attempting to send confirmation email...');
-      confirmationResult = await sendConfirmationEmail(requestData);
+      confirmationResult = await sendConfirmationEmail(parsedData);
       console.log('Confirmation email result:', confirmationResult);
       if (!confirmationResult.success) {
         console.error('Failed to send confirmation email:', confirmationResult.error);
@@ -212,7 +193,7 @@ export async function POST(request: Request) {
     let notificationResult;
     try {
       console.log('Attempting to send lead notification email...');
-      notificationResult = await sendLeadNotificationEmail(requestData);
+      notificationResult = await sendLeadNotificationEmail(parsedData);
       console.log('Lead notification email result:', notificationResult);
       if (!notificationResult.success) {
         console.error('Failed to send lead notification email:', notificationResult.error);
@@ -222,26 +203,56 @@ export async function POST(request: Request) {
       // Don't fail the request if email fails
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      lead,
-      emailStatus: {
-        confirmation: confirmationResult?.success || false,
-        notification: notificationResult?.success || false
+    // Chain to other services
+    const serviceResponses = await Promise.allSettled([
+      // Send email notification
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'lead', data: parsedData }),
+      }),
+      // Send to Salesforce
+      fetch('/api/salesforce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(parsedData),
+      }),
+    ]);
+
+    // Log service responses
+    serviceResponses.forEach((response, index) => {
+      if (response.status === 'rejected') {
+        console.error(`Service ${index} error:`, response.reason);
+      } else {
+        console.log(`Service ${index} response:`, response.value);
       }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
+
+    return NextResponse.json(
+      { 
+        success: true, 
+        lead,
+        emailStatus: {
+          confirmation: confirmationResult?.success || false,
+          notification: notificationResult?.success || false
+        },
+        services: serviceResponses.map((response, index) => ({
+          service: index === 0 ? 'email' : 'salesforce',
+          status: response.status,
+          ...(response.status === 'fulfilled' ? { data: response.value } : { error: response.reason }),
+        })),
+      },
+      { headers: corsHeaders }
+    );
 
   } catch (error) {
     console.error('Server error:', error);
-    return new Response(
-      JSON.stringify({ 
+    return NextResponse.json(
+      { 
         error: 'Internal server error', 
         details: error instanceof Error ? error.message : 'Unknown error' 
-      }),
-      { status: 500 }
+      },
+      { status: 500, headers: corsHeaders }
     );
   }
 } 
