@@ -101,7 +101,7 @@ export default function QuoteForm({ insuranceType, initialData, onSuccess }: Quo
   useEffect(() => {
     // Log funnel step view
     logFunnelStep({
-      step: currentStep,
+      step: parseInt(currentStep, 10) || 1,
       insuranceType,
       funnelName: funnelConfig.name,
       funnelVariant: funnelConfig.variant,
