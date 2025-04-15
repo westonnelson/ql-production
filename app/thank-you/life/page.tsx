@@ -3,6 +3,12 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Script from 'next/script'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Thank You - QuoteLinker',
+  description: 'Thank you for your life insurance quote request. We will contact you shortly.',
+}
 
 export default function ThankYouPage() {
   const router = useRouter()
@@ -53,6 +59,37 @@ export default function ThankYouPage() {
         </div>
       </div>
       <Script src="https://assets.calendly.com/assets/external/widget.js" strategy="lazyOnload" />
+
+      {/* Google Ads Conversion Tracking */}
+      <Script id="google-ads-conversion" strategy="afterInteractive">
+        {`
+          // Google Ads Conversion Tracking
+          // Replace the following with your actual Google Ads tag from Google Ads
+          gtag('event', 'conversion', {
+            'send_to': '${process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_ID}/${process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL}',
+            'value': 1.0,
+            'currency': 'USD'
+          });
+        `}
+      </Script>
+
+      {/* 
+        TODO: Replace the above script with your actual Google Ads tag from Google Ads
+        The tag should look something like this:
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-CONVERSION_ID"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'AW-CONVERSION_ID');
+          gtag('event', 'conversion', {
+            'send_to': 'AW-CONVERSION_ID/CONVERSION_LABEL',
+            'value': 1.0,
+            'currency': 'USD'
+          });
+        </script>
+      */}
     </div>
   )
 } 
