@@ -7,6 +7,8 @@ import { z } from 'zod'
 import { LifeQuoteFormData, QuoteStep, Gender, TobaccoUse, CoverageAmount, TermLength, EmailData } from '@/types/quote'
 import { supabase } from '@/lib/supabaseClient'
 import { useSearchParams, useRouter } from 'next/navigation'
+import ProgressBar from '@/app/components/ProgressBar'
+import Button from '@/app/components/Button'
 
 const coverageAmounts = [150000, 250000, 500000, 700000, 1000000, 2000000] as const
 const termLengths = [10, 20, 30] as const
@@ -190,6 +192,8 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
             Get your personalized life insurance quote in minutes
           </p>
         </div>
+
+        <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
 
         {error && (
           <div className="mt-4 p-4 bg-red-900/20 backdrop-blur-sm border border-red-500/20 rounded-md animate-fade-in">
@@ -410,42 +414,27 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-12">
             {currentStep > 1 && (
-              <button
-                type="button"
+              <Button
+                label="Previous"
+                variant="secondary"
                 onClick={prevStep}
-                className="inline-flex items-center px-6 py-3 border border-gray-700 text-base font-medium rounded-lg text-gray-300 bg-transparent hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200"
-              >
-                Previous
-              </button>
+                type="button"
+              />
             )}
             {currentStep < steps.length ? (
-              <button
-                type="button"
+              <Button
+                label="Next"
                 onClick={nextStep}
-                className={`inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 ${
-                  currentStep === 1 ? 'ml-auto' : ''
-                }`}
-              >
-                Next
-              </button>
+                type="button"
+                className={currentStep === 1 ? 'ml-auto' : ''}
+              />
             ) : (
-              <button
+              <Button
+                label={isSubmitting ? 'Processing...' : 'Get Your Quote'}
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
-              >
-                {isSubmitting ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing...
-                  </>
-                ) : (
-                  'Get Your Quote'
-                )}
-              </button>
+                className="ml-auto"
+              />
             )}
           </div>
         </form>
