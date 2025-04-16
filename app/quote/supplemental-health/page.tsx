@@ -62,6 +62,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [touchedFields, setTouchedFields] = useState<Record<FormFields, boolean>>({} as Record<FormFields, boolean>)
+  const [error, setError] = useState<string | null>(null)
 
   const {
     register,
@@ -95,14 +96,27 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true)
     try {
-      // TODO: Implement form submission logic
-      console.log('Form data:', data)
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      // Redirect to thank you page
+      const response = await fetch('/api/submit-quote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          insuranceType: 'supplemental',
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit form')
+      }
+
       router.push('/thank-you/supplemental-health')
     } catch (error) {
       console.error('Error submitting form:', error)
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred')
     } finally {
       setIsSubmitting(false)
     }

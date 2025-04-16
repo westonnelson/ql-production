@@ -1,67 +1,104 @@
 #!/bin/bash
 
-API_URL="https://www.quotelinker.com"
+# Test script for form submissions
+# This script tests the form submissions for different insurance types
 
-# Test data for life insurance lead
-echo "Testing life insurance lead submission..."
-curl -X POST -H "Content-Type: application/json" -d '{
-  "firstName": "Test",
-  "lastName": "User",
-  "email": "test@example.com",
-  "phone": "1234567890",
-  "age": 35,
+# Colors for output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+# Base URL for the API
+BASE_URL="https://ql-production-k6gbhwrrj-yield.vercel.app"
+
+# Function to test a form submission
+test_form() {
+  local form_type=$1
+  local data=$2
+  local expected_status=$3
+
+  echo -e "\nTesting ${form_type} form submission..."
+  
+  response=$(curl -s -w "\n%{http_code}" -X POST \
+    -H "Content-Type: application/json" \
+    -d "$data" \
+    "${BASE_URL}/api/submit-quote")
+
+  status_code=$(echo "$response" | tail -n1)
+  response_body=$(echo "$response" | sed '$d')
+
+  if [ "$status_code" -eq "$expected_status" ]; then
+    echo -e "${GREEN}✓ Success${NC}"
+    echo "Response: $response_body"
+  else
+    echo -e "${RED}✗ Failed${NC}"
+    echo "Expected status: $expected_status"
+    echo "Got status: $status_code"
+    echo "Response: $response_body"
+  fi
+}
+
+# Test data for Life Insurance
+life_data='{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "phone": "5551234567",
+  "age": 30,
   "gender": "male",
-  "productType": "life",
+  "insuranceType": "life",
   "coverageAmount": 500000,
   "termLength": 20,
-  "tobaccoUse": false,
-  "utmSource": "test_script",
-  "utmMedium": "direct",
-  "funnelName": "test_funnel",
-  "funnelStep": "test"
-}' $API_URL/api/leads
+  "tobaccoUse": false
+}'
 
-sleep 2
-
-echo "\n\nTesting disability insurance lead submission..."
-curl -X POST -H "Content-Type: application/json" -d '{
+# Test data for Disability Insurance
+disability_data='{
   "firstName": "Jane",
-  "lastName": "Doe",
-  "email": "jane@example.com",
-  "phone": "9876543210",
-  "age": 45,
-  "gender": "female",
-  "productType": "disability",
-  "occupation": "Software Engineer",
-  "employmentStatus": "Full-time",
-  "incomeRange": "100000-150000",
-  "coverageAmount": 5000,
-  "termLength": 12,
-  "tobaccoUse": false,
-  "utmSource": "test_script",
-  "utmMedium": "direct",
-  "funnelName": "test_funnel",
-  "funnelStep": "test"
-}' $API_URL/api/leads
-
-sleep 2
-
-echo "\n\nTesting supplemental insurance lead submission..."
-curl -X POST -H "Content-Type: application/json" -d '{
-  "firstName": "Bob",
   "lastName": "Smith",
-  "email": "bob@example.com",
+  "email": "jane.smith@example.com",
+  "phone": "5559876543",
+  "age": 35,
+  "gender": "female",
+  "insuranceType": "disability",
+  "occupation": "Software Engineer",
+  "employmentStatus": "full-time",
+  "incomeRange": "100000-150000"
+}'
+
+# Test data for Supplemental Health Insurance
+supplemental_data='{
+  "firstName": "Robert",
+  "lastName": "Johnson",
+  "email": "robert.johnson@example.com",
   "phone": "5555555555",
-  "age": 55,
+  "age": 45,
   "gender": "male",
-  "productType": "supplemental",
-  "preExistingConditions": "None",
-  "desiredCoverageType": "Accident",
-  "coverageAmount": 10000,
-  "termLength": 12,
-  "tobaccoUse": false,
-  "utmSource": "test_script",
-  "utmMedium": "direct",
-  "funnelName": "test_funnel",
-  "funnelStep": "test"
-}' $API_URL/api/leads 
+  "insuranceType": "supplemental",
+  "healthStatus": "good",
+  "preExistingConditions": false
+}'
+
+# Test data for Auto Insurance
+auto_data='{
+  "firstName": "Sarah",
+  "lastName": "Williams",
+  "email": "sarah.williams@example.com",
+  "phone": "5552223333",
+  "age": 25,
+  "gender": "female",
+  "insuranceType": "auto",
+  "vehicleYear": 2020,
+  "vehicleMake": "Toyota",
+  "vehicleModel": "Camry"
+}'
+
+# Run the tests
+echo "Starting form submission tests..."
+
+test_form "Life Insurance" "$life_data" 200
+test_form "Disability Insurance" "$disability_data" 200
+test_form "Supplemental Health Insurance" "$supplemental_data" 200
+test_form "Auto Insurance" "$auto_data" 200
+
+echo -e "\nAll form tests completed." 

@@ -78,13 +78,28 @@ const formSchema = z.discriminatedUnion('insuranceType', [
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const result = await handleFormSubmission(data);
-    return NextResponse.json(result);
+    
+    // Validate the data against the schema
+    const validatedData = formSchema.parse(data);
+    
+    // Process the form submission
+    const result = await handleFormSubmission(validatedData);
+    
+    // Return success response with CORS headers
+    return NextResponse.json(result, { headers: corsHeaders });
   } catch (error) {
     console.error('API error:', error);
+    
+    // Return error response with CORS headers
     return NextResponse.json(
-      { error: 'Failed to submit form' },
-      { status: 500 }
+      { 
+        error: 'Failed to submit form',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { 
+        status: 500,
+        headers: corsHeaders 
+      }
     );
   }
 }

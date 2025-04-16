@@ -92,7 +92,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
       setIsSubmitting(true)
       setError(null)
 
-      const response = await fetch('/api/leads', {
+      const response = await fetch('/api/submit-quote', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
         body: JSON.stringify({
           ...data,
           age: Number(data.age),
-          productType: 'disability',
+          insuranceType: 'disability',
         }),
       })
 
