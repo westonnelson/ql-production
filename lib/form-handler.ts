@@ -9,14 +9,14 @@ const supabase = createClient(
 )
 
 export type FormSubmission = {
-  insuranceType: 'auto' | 'life' | 'homeowners'
+  insuranceType: 'auto' | 'life' | 'homeowners' | 'disability' | 'supplemental'
   firstName: string
   lastName: string
   email: string
   phone: string
   age: number
-  gender: 'male' | 'female'
-  zipCode: string
+  gender: 'male' | 'female' | 'other'
+  zipCode?: string
   utmSource?: string
   utmMedium?: string
   utmCampaign?: string
@@ -38,6 +38,14 @@ export type FormSubmission = {
   homeSquareFootage?: number
   homeType?: string
   claimsHistory?: 'none' | 'one' | 'multiple'
+  // Disability specific fields
+  occupation?: string
+  employmentStatus?: string
+  incomeRange?: string
+  preExistingConditions?: boolean
+  desiredCoverageType?: string
+  // Supplemental specific fields
+  healthStatus?: string
 }
 
 export async function handleFormSubmission(data: FormSubmission) {
