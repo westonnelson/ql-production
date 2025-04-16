@@ -1,0 +1,11 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /agent
+Disallow: /admin
+
+# Host
+Host: https://quotelinker.com
+
+# Sitemaps
+Sitemap: https://quotelinker.com/sitemap.xml

@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { headers } from 'next/headers';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-03-31.basil',
 });
 
 const supabase = createClient(
@@ -82,7 +82,7 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
       stripe_subscription_id: subscription.id,
       subscription_status: subscription.status,
       subscription_tier: subscription.items.data[0].price.id,
-      subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      subscription_current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
     })
     .eq('id', agent.id);
 

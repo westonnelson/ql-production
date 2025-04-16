@@ -1,5 +1,3 @@
-'use client'
-
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -46,7 +44,7 @@ const articles = [
   {
     id: 3,
     title: 'Disability Insurance: Protecting Your Income',
-    excerpt: 'Understand how disability insurance works and why it's crucial for protecting your financial future.',
+    excerpt: 'Understand how disability insurance works and why it\'s crucial for protecting your financial future.',
     category: 'Disability Insurance',
     image: '/images/education/disability-insurance-guide.jpg',
     date: '2024-04-13',
