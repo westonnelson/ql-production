@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       
       const { data: emailData, error } = await resend.emails.send({
         from: 'QuoteLinker <support@quotelinker.com>',
-        to: 'support@quotelinker.com',
+        to: 'newquote@quotelinker.com',
         subject: `New Life Insurance Lead: ${firstName} ${lastName}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { sendConsumerConfirmationEmail, sendAgentNotificationEmail } from './sendEmail'
-import { trackConversion } from './analytics'
+import { logFormSubmission } from './analytics'
 import { createSalesforceOpportunity } from './salesforce'
 
 const supabase = createClient(
@@ -63,14 +63,30 @@ export async function handleFormSubmission(data: FormSubmission) {
     if (dbError) throw dbError
 
     // 2. Track conversion in analytics
-    await trackConversion({
+    await logFormSubmission({
       insuranceType: data.insuranceType,
-      leadId: lead.id,
-      utmSource: data.utmSource,
-      utmMedium: data.utmMedium,
-      utmCampaign: data.utmCampaign,
-      utmTerm: data.utmTerm,
-      utmContent: data.utmContent,
+      formData: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        age: data.age,
+        gender: data.gender,
+        zipCode: data.zipCode,
+        coverageAmount: data.coverageAmount,
+        termLength: data.termLength,
+        tobaccoUse: data.tobaccoUse,
+      },
+      utmParams: {
+        utm_source: data.utmSource,
+        utm_medium: data.utmMedium,
+        utm_campaign: data.utmCampaign,
+        utm_term: data.utmTerm,
+        utm_content: data.utmContent,
+      },
+      funnelName: 'default',
+      funnelStep: 'complete',
+      funnelVariant: 'control',
     })
 
     // 3. Send confirmation email to the user

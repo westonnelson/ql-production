@@ -7,10 +7,11 @@ import { z } from 'zod'
 import { useSearchParams, useRouter } from 'next/navigation'
 import ProgressBar from '@/app/components/ProgressBar'
 
+const currentYear = new Date().getFullYear()
 const vehicleYears = Array.from(
-  { length: new Date().getFullYear() - 1900 + 1 },
-  (_, i) => new Date().getFullYear() - i
-) as const
+  { length: currentYear - 1900 + 1 },
+  (_, i) => currentYear - i
+)
 
 const coverageTypes = [
   'comprehensive',

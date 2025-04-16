@@ -26,6 +26,19 @@ interface FormSubmissionData {
   abTestVariant?: string;
 }
 
+interface TrackEventParams {
+  action: string
+  category: string
+  label: string
+  value?: number
+  variant_id?: string
+  variant_name?: string
+  error_message?: string
+  time_spent?: number
+  field_interactions?: string
+  errors?: string
+}
+
 // Google Analytics and Google Ads Integration
 declare global {
   interface Window {
@@ -70,25 +83,21 @@ export const trackPageView = (url: string) => {
 };
 
 // Track events
-export const trackEvent = ({
-  action,
-  category,
-  label,
-  value,
-}: {
-  action: string;
-  category: string;
-  label: string;
-  value?: number;
-}) => {
+export function trackEvent(params: TrackEventParams) {
   if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', action, {
-      event_category: category,
-      event_label: label,
-      value: value,
-    });
+    window.gtag('event', params.action, {
+      event_category: params.category,
+      event_label: params.label,
+      value: params.value,
+      variant_id: params.variant_id,
+      variant_name: params.variant_name,
+      error_message: params.error_message,
+      time_spent: params.time_spent,
+      field_interactions: params.field_interactions,
+      errors: params.errors,
+    })
   }
-};
+}
 
 // Track form submissions
 export const trackFormSubmission = (formType: string, insuranceType: string) => {

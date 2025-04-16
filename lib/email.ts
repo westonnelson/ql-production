@@ -21,7 +21,7 @@ interface LeadData {
   ab_test_variant?: string;
 }
 
-function getProductTitle(productType: LeadData['product_type']): string {
+function getProductTitle(productType: string): string {
   switch (productType) {
     case 'life':
       return 'Life Insurance';
@@ -29,6 +29,10 @@ function getProductTitle(productType: LeadData['product_type']): string {
       return 'Disability Insurance';
     case 'supplemental':
       return 'Supplemental Health Insurance';
+    case 'auto':
+      return 'Auto Insurance';
+    case 'homeowners':
+      return 'Homeowners Insurance';
     default:
       return 'Insurance';
   }
@@ -61,8 +65,7 @@ function getProductSpecificFields(data: LeadData): string {
 export async function sendConfirmationEmail(data: LeadData) {
   try {
     console.log('Sending confirmation email');
-    const productTitle = getProductTitle(data.product_type);
-    await sendConsumerConfirmationEmail(data.email, productTitle);
+    await sendConsumerConfirmationEmail(data.email, data);
     console.log('Confirmation email sent successfully');
     return { success: true };
   } catch (error) {
@@ -74,8 +77,7 @@ export async function sendConfirmationEmail(data: LeadData) {
 export async function sendLeadNotificationEmail(data: LeadData) {
   try {
     console.log('Sending lead notification email');
-    const productTitle = getProductTitle(data.product_type);
-    await sendAgentNotificationEmail(productTitle, data);
+    await sendAgentNotificationEmail(data);
     console.log('Lead notification email sent successfully');
     return { success: true };
   } catch (error) {

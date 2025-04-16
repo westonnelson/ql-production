@@ -104,7 +104,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
         product_type: 'life' as const,
         coverage_amount: Number(data.coverageAmount.toString().replace(/[$,]/g, '')),
         term_length: Number(data.termLength),
-        tobacco_use: data.tobaccoUse === 'yes',
+        tobacco_use: data.tobaccoUse === 'yes' ? true : false,
         utm_source: data.utmSource
       };
 

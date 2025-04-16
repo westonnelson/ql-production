@@ -25,8 +25,11 @@ export function startFormTracking(insuranceType: string, variant: FormVariant) {
     errors: {},
   }
 
-  trackEvent('form_start', {
-    insurance_type: insuranceType,
+  trackEvent({
+    action: 'form_start',
+    category: 'Form',
+    label: insuranceType,
+    value: 1,
     variant_id: variant.id,
     variant_name: variant.name,
   })
@@ -37,9 +40,11 @@ export function trackFieldInteraction(fieldName: string) {
 
   currentMetrics.fieldInteractions[fieldName] = (currentMetrics.fieldInteractions[fieldName] || 0) + 1
 
-  trackEvent('field_interaction', {
-    field_name: fieldName,
-    interaction_count: currentMetrics.fieldInteractions[fieldName],
+  trackEvent({
+    action: 'field_interaction',
+    category: 'Form',
+    label: fieldName,
+    value: currentMetrics.fieldInteractions[fieldName],
   })
 }
 
@@ -48,10 +53,12 @@ export function trackFieldError(fieldName: string, errorMessage: string) {
 
   currentMetrics.errors[fieldName] = (currentMetrics.errors[fieldName] || 0) + 1
 
-  trackEvent('field_error', {
-    field_name: fieldName,
+  trackEvent({
+    action: 'field_error',
+    category: 'Form',
+    label: fieldName,
+    value: currentMetrics.errors[fieldName],
     error_message: errorMessage,
-    error_count: currentMetrics.errors[fieldName],
   })
 }
 
@@ -61,11 +68,14 @@ export function trackFormAbandonment(step: number) {
   currentMetrics.abandonmentStep = step
   currentMetrics.completionTime = Date.now()
 
-  trackEvent('form_abandonment', {
-    step,
+  trackEvent({
+    action: 'form_abandonment',
+    category: 'Form',
+    label: `Step ${step}`,
+    value: 1,
     time_spent: currentMetrics.completionTime - currentMetrics.startTime,
-    field_interactions: currentMetrics.fieldInteractions,
-    errors: currentMetrics.errors,
+    field_interactions: JSON.stringify(currentMetrics.fieldInteractions),
+    errors: JSON.stringify(currentMetrics.errors),
   })
 
   currentMetrics = null
@@ -76,11 +86,14 @@ export function trackFormCompletion(success: boolean) {
 
   currentMetrics.completionTime = Date.now()
 
-  trackEvent('form_completion', {
-    success,
+  trackEvent({
+    action: 'form_completion',
+    category: 'Form',
+    label: success ? 'Success' : 'Failure',
+    value: success ? 1 : 0,
     time_spent: currentMetrics.completionTime - currentMetrics.startTime,
-    field_interactions: currentMetrics.fieldInteractions,
-    errors: currentMetrics.errors,
+    field_interactions: JSON.stringify(currentMetrics.fieldInteractions),
+    errors: JSON.stringify(currentMetrics.errors),
   })
 
   currentMetrics = null
