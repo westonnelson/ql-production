@@ -27,7 +27,7 @@ async function getSalesforceConnection() {
     );
     
     // Cache the token and set expiry (token typically valid for 2 hours)
-    sfToken = userInfo.access_token;
+    sfToken = userInfo.accessToken;
     tokenExpiry = Date.now() + (2 * 60 * 60 * 1000); // 2 hours
     
     return sf;
