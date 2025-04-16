@@ -19,6 +19,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
+    "axios": "^1.8.4",
     "critters": "^0.0.23",
     "dotenv": "^16.5.0",
     "jsforce": "^1.11.1",

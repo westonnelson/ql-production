@@ -29,7 +29,15 @@ interface FormSubmissionData {
 // Google Analytics and Google Ads Integration
 declare global {
   interface Window {
-    gtag: (...args: any[]) => void;
+    gtag: (
+      command: string,
+      action: string,
+      params: {
+        send_to?: string;
+        value?: number;
+        [key: string]: any;
+      }
+    ) => void;
     dataLayer: any[];
   }
 }
@@ -41,13 +49,13 @@ export const initGA = () => {
     window.gtag = function gtag() {
       window.dataLayer.push(arguments);
     };
-    window.gtag('js', new Date());
-    window.gtag('config', process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID, {
+    window.gtag('js', new Date().toISOString(), {});
+    window.gtag('config', process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || '', {
       page_path: window.location.pathname,
     });
     // Initialize Google Ads if ID is available
     if (process.env.NEXT_PUBLIC_GOOGLE_ADS_ID) {
-      window.gtag('config', process.env.NEXT_PUBLIC_GOOGLE_ADS_ID);
+      window.gtag('config', process.env.NEXT_PUBLIC_GOOGLE_ADS_ID, {});
     }
   }
 };
@@ -55,7 +63,7 @@ export const initGA = () => {
 // Track page views
 export const trackPageView = (url: string) => {
   if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('config', process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID, {
+    window.gtag('config', process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || '', {
       page_path: url,
     });
   }

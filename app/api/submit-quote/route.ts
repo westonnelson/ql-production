@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 import { sendConsumerConfirmationEmail, sendAgentNotificationEmail } from '@/lib/sendEmail';
 import { createSalesforceOpportunity } from '@/lib/salesforce';
+import { handleFormSubmission } from '@/lib/form-handler';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -76,174 +77,14 @@ const formSchema = z.discriminatedUnion('insuranceType', [
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    
-    // Validate the request body
-    const validatedData = formSchema.parse(body);
-
-    // Track the form submission in Google Analytics
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'form_submission', {
-        event_category: 'quote_request',
-        event_label: validatedData.insuranceType,
-        funnel_name: validatedData.funnelName,
-        funnel_step: validatedData.funnelStep,
-        funnel_variant: validatedData.funnelVariant,
-        ab_test_id: validatedData.abTestId,
-        ab_test_variant: validatedData.abTestVariant,
-        utm_source: validatedData.utmSource,
-        utm_medium: validatedData.utmMedium,
-        utm_campaign: validatedData.utmCampaign,
-      });
-
-      // Track as conversion if Google Ads ID is available
-      if (process.env.NEXT_PUBLIC_GOOGLE_ADS_ID) {
-        window.gtag('event', 'conversion', {
-          send_to: process.env.NEXT_PUBLIC_GOOGLE_ADS_ID,
-          value: 1.0,
-          currency: 'USD',
-        });
-      }
-    }
-
-    // Store the lead in the database
-    const { data: lead, error: leadError } = await supabase
-      .from('leads')
-      .insert([
-        {
-          first_name: validatedData.firstName,
-          last_name: validatedData.lastName,
-          email: validatedData.email,
-          phone: validatedData.phone,
-          age: validatedData.age,
-          gender: validatedData.gender,
-          product_type: validatedData.insuranceType,
-          utm_source: validatedData.utmSource,
-          utm_medium: validatedData.utmMedium,
-          utm_campaign: validatedData.utmCampaign,
-          utm_content: validatedData.utmContent,
-          utm_term: validatedData.utmTerm,
-          funnel_name: validatedData.funnelName,
-          funnel_step: validatedData.funnelStep,
-          funnel_variant: validatedData.funnelVariant,
-          ab_test_id: validatedData.abTestId,
-          ab_test_variant: validatedData.abTestVariant,
-          // Insurance-specific fields
-          ...(validatedData.insuranceType === 'life' && {
-            coverage_amount: validatedData.coverageAmount,
-            term_length: validatedData.termLength,
-            tobacco_use: validatedData.tobaccoUse,
-          }),
-          ...(validatedData.insuranceType === 'disability' && {
-            occupation: validatedData.occupation,
-            employment_status: validatedData.employmentStatus,
-            income_range: validatedData.incomeRange,
-          }),
-          ...(validatedData.insuranceType === 'auto' && {
-            vehicle_year: validatedData.vehicleYear,
-            vehicle_make: validatedData.vehicleMake,
-            vehicle_model: validatedData.vehicleModel,
-          }),
-          ...(validatedData.insuranceType === 'supplemental' && {
-            health_status: validatedData.healthStatus,
-            pre_existing_conditions: validatedData.preExistingConditions ? 'Yes' : 'No',
-          }),
-        },
-      ])
-      .select()
-      .single();
-
-    if (leadError) {
-      console.error('Error storing lead:', leadError);
-      return NextResponse.json(
-        { error: 'Failed to store lead', details: leadError },
-        { status: 500, headers: corsHeaders }
-      );
-    }
-
-    // Send notification emails and create Salesforce opportunity
-    try {
-      // Send confirmation email to consumer
-      await sendConsumerConfirmationEmail(validatedData.email, validatedData.insuranceType);
-      
-      // Send notification email to agent
-      await sendAgentNotificationEmail(validatedData.insuranceType, {
-        first_name: validatedData.firstName,
-        last_name: validatedData.lastName,
-        email: validatedData.email,
-        phone: validatedData.phone,
-        age: validatedData.age,
-        gender: validatedData.gender,
-        product_type: validatedData.insuranceType,
-        coverage_amount: validatedData.insuranceType === 'life' ? validatedData.coverageAmount : undefined,
-        term_length: validatedData.insuranceType === 'life' ? validatedData.termLength : undefined,
-        tobacco_use: validatedData.insuranceType === 'life' ? validatedData.tobaccoUse : undefined,
-        occupation: validatedData.insuranceType === 'disability' ? validatedData.occupation : undefined,
-        employment_status: validatedData.insuranceType === 'disability' ? validatedData.employmentStatus : undefined,
-        income_range: validatedData.insuranceType === 'disability' ? validatedData.incomeRange : undefined,
-        pre_existing_conditions: validatedData.insuranceType === 'supplemental' ? (validatedData.preExistingConditions ? 'Yes' : 'No') : undefined,
-        utm_source: validatedData.utmSource,
-        ab_test_variant: validatedData.abTestVariant,
-        funnel_name: validatedData.funnelName,
-        funnel_step: validatedData.funnelStep,
-        funnel_variant: validatedData.funnelVariant,
-        ab_test_id: validatedData.abTestId,
-      });
-
-      // Create Salesforce opportunity
-      const sfResult = await createSalesforceOpportunity({
-        first_name: validatedData.firstName,
-        last_name: validatedData.lastName,
-        email: validatedData.email,
-        phone: validatedData.phone,
-        age: validatedData.age,
-        gender: validatedData.gender,
-        product_type: validatedData.insuranceType,
-        coverage_amount: validatedData.insuranceType === 'life' ? validatedData.coverageAmount : undefined,
-        term_length: validatedData.insuranceType === 'life' ? validatedData.termLength : undefined,
-        tobacco_use: validatedData.insuranceType === 'life' ? validatedData.tobaccoUse : undefined,
-        occupation: validatedData.insuranceType === 'disability' ? validatedData.occupation : undefined,
-        employment_status: validatedData.insuranceType === 'disability' ? validatedData.employmentStatus : undefined,
-        income_range: validatedData.insuranceType === 'disability' ? validatedData.incomeRange : undefined,
-        pre_existing_conditions: validatedData.insuranceType === 'supplemental' ? (validatedData.preExistingConditions ? 'Yes' : 'No') : undefined,
-        utm_source: validatedData.utmSource,
-        ab_test_variant: validatedData.abTestVariant,
-        funnel_name: validatedData.funnelName,
-        funnel_step: validatedData.funnelStep,
-        funnel_variant: validatedData.funnelVariant,
-        ab_test_id: validatedData.abTestId,
-      });
-
-      return NextResponse.json(
-        { 
-          success: true, 
-          data: { 
-            lead,
-            salesforce: sfResult
-          } 
-        },
-        { headers: corsHeaders }
-      );
-    } catch (error) {
-      console.error('Error processing submission:', error);
-      // We still return success if lead was stored but other operations failed
-      return NextResponse.json(
-        {
-          success: true,
-          warning: 'Lead stored but some operations failed',
-          data: { lead },
-        },
-        { headers: corsHeaders }
-      );
-    }
+    const data = await request.json();
+    const result = await handleFormSubmission(data);
+    return NextResponse.json(result);
   } catch (error) {
-    console.error('Error processing quote submission:', error);
+    console.error('API error:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to process quote submission',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500, headers: corsHeaders }
+      { error: 'Failed to submit form' },
+      { status: 500 }
     );
   }
 }

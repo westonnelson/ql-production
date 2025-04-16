@@ -11,7 +11,8 @@ import ProgressBar from '@/app/components/ProgressBar'
 import Button from '@/app/components/Button'
 
 const coverageAmounts = [150000, 250000, 500000, 700000, 1000000, 2000000] as const
-const termLengths = [10, 20, 30] as const
+const termLengths = [10, 15, 20, 30] as const
+const permanentTypes = ['whole-life', 'universal-life', 'limited-pay-10', 'limited-pay-15', 'limited-pay-20'] as const
 
 const formSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -20,14 +21,17 @@ const formSchema = z.object({
   phone: z.string().min(10, 'Phone number must be at least 10 digits'),
   age: z.coerce.number().min(18, 'Must be at least 18 years old').max(85, 'Must be under 85 years old'),
   gender: z.enum(['male', 'female']),
+  insuranceType: z.enum(['term', 'permanent']),
   coverageAmount: z.string().refine((val) => {
     const num = Number(val.toString().replace(/[$,]/g, ''));
     return !isNaN(num) && coverageAmounts.includes(num as typeof coverageAmounts[number]);
   }, 'Please select a coverage amount'),
-  termLength: z.string().refine((val) => {
+  termLength: z.string().optional().refine((val) => {
+    if (!val) return true;
     const num = Number(val);
     return !isNaN(num) && termLengths.includes(num as typeof termLengths[number]);
   }, 'Please select a term length'),
+  permanentType: z.enum(permanentTypes).optional(),
   tobaccoUse: z.enum(['yes', 'no']).optional().or(z.literal('')),
   utmSource: z.string().optional(),
 })
@@ -57,7 +61,7 @@ type FormFields = keyof FormData
 const stepFields: Record<number, FormFields[]> = {
   1: ['firstName', 'lastName', 'age', 'gender'],
   2: ['email', 'phone'],
-  3: ['coverageAmount', 'termLength', 'tobaccoUse'],
+  3: ['insuranceType', 'coverageAmount', 'termLength', 'permanentType', 'tobaccoUse'],
 }
 
 function QuoteForm({ utmSource }: { utmSource: string | null }) {
@@ -351,6 +355,70 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
             {currentStep === 3 && (
               <div className="space-y-6">
                 <div>
+                  <label htmlFor="insuranceType" className="block text-sm font-medium text-gray-300">
+                    Insurance Type
+                  </label>
+                  <select
+                    id="insuranceType"
+                    {...register('insuranceType')}
+                    className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+                  >
+                    <option value="">Select insurance type</option>
+                    <option value="term">Term Life Insurance</option>
+                    <option value="permanent">Permanent Life Insurance</option>
+                  </select>
+                  {errors.insuranceType && touchedFields.insuranceType && (
+                    <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.insuranceType.message}</p>
+                  )}
+                </div>
+
+                {watch('insuranceType') === 'term' && (
+                  <div>
+                    <label htmlFor="termLength" className="block text-sm font-medium text-gray-300">
+                      Term Length
+                    </label>
+                    <select
+                      id="termLength"
+                      {...register('termLength')}
+                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+                    >
+                      <option value="">Select term length</option>
+                      {termLengths.map((term) => (
+                        <option key={term} value={term}>
+                          {term} Years
+                        </option>
+                      ))}
+                    </select>
+                    {errors.termLength && touchedFields.termLength && (
+                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.termLength.message}</p>
+                    )}
+                  </div>
+                )}
+
+                {watch('insuranceType') === 'permanent' && (
+                  <div>
+                    <label htmlFor="permanentType" className="block text-sm font-medium text-gray-300">
+                      Permanent Insurance Type
+                    </label>
+                    <select
+                      id="permanentType"
+                      {...register('permanentType')}
+                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+                    >
+                      <option value="">Select permanent insurance type</option>
+                      <option value="whole-life">Whole Life Insurance</option>
+                      <option value="universal-life">Universal Life Insurance</option>
+                      <option value="limited-pay-10">Limited Pay 10</option>
+                      <option value="limited-pay-15">Limited Pay 15</option>
+                      <option value="limited-pay-20">Limited Pay 20</option>
+                    </select>
+                    {errors.permanentType && touchedFields.permanentType && (
+                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.permanentType.message}</p>
+                    )}
+                  </div>
+                )}
+
+                <div>
                   <label htmlFor="coverageAmount" className="block text-sm font-medium text-gray-300">
                     Coverage Amount
                   </label>
@@ -368,26 +436,6 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
                   </select>
                   {errors.coverageAmount && touchedFields.coverageAmount && (
                     <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.coverageAmount.message}</p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="termLength" className="block text-sm font-medium text-gray-300">
-                    Term Length
-                  </label>
-                  <select
-                    id="termLength"
-                    {...register('termLength')}
-                    className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                  >
-                    <option value="">Select term length</option>
-                    {termLengths.map((term) => (
-                      <option key={term} value={term}>
-                        {term} Years
-                      </option>
-                    ))}
-                  </select>
-                  {errors.termLength && touchedFields.termLength && (
-                    <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.termLength.message}</p>
                   )}
                 </div>
                 <div>
