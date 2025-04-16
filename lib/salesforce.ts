@@ -4,8 +4,12 @@ if (!process.env.SF_USERNAME || !process.env.SF_PASSWORD || !process.env.SF_SECU
   throw new Error('Missing Salesforce credentials in environment variables');
 }
 
+interface SalesforceConnection extends jsforce.Connection {
+  accessToken?: string;
+}
+
 // Initialize Salesforce connection
-const sf = new jsforce.Connection({
+const sf: SalesforceConnection = new jsforce.Connection({
   loginUrl: process.env.SF_LOGIN_URL || 'https://login.salesforce.com'
 });
 
@@ -21,13 +25,13 @@ async function getSalesforceConnection() {
 
   // Login to Salesforce
   try {
-    const userInfo = await sf.login(
+    await sf.login(
       process.env.SF_USERNAME!,
       process.env.SF_PASSWORD! + process.env.SF_SECURITY_TOKEN!
     );
     
     // Cache the token and set expiry (token typically valid for 2 hours)
-    sfToken = sf.accessToken;
+    sfToken = sf.accessToken || null;
     tokenExpiry = Date.now() + (2 * 60 * 60 * 1000); // 2 hours
     
     return sf;
