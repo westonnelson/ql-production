@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 import { sendConsumerConfirmationEmail, sendAgentNotificationEmail } from '@/lib/sendEmail';
+import { createSalesforceOpportunity } from '@/lib/salesforce';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -135,7 +136,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Send notification emails
+    // Send notification emails and create Salesforce opportunity
     try {
       // Send confirmation email to consumer
       await sendConsumerConfirmationEmail(validatedData.email, validatedData.insuranceType);
@@ -158,24 +159,58 @@ export async function POST(request: Request) {
         pre_existing_conditions: validatedData.insuranceType === 'supplemental' ? (validatedData.preExistingConditions ? 'Yes' : 'No') : undefined,
         utm_source: validatedData.utmSource,
         ab_test_variant: validatedData.abTestVariant,
+        funnel_name: validatedData.funnelName,
+        funnel_step: validatedData.funnelStep,
+        funnel_variant: validatedData.funnelVariant,
+        ab_test_id: validatedData.abTestId,
       });
-    } catch (emailError) {
-      console.error('Error sending notification emails:', emailError);
-      // We still return success if lead was stored but emails failed
+
+      // Create Salesforce opportunity
+      const sfResult = await createSalesforceOpportunity({
+        first_name: validatedData.firstName,
+        last_name: validatedData.lastName,
+        email: validatedData.email,
+        phone: validatedData.phone,
+        age: validatedData.age,
+        gender: validatedData.gender,
+        product_type: validatedData.insuranceType,
+        coverage_amount: validatedData.insuranceType === 'life' ? validatedData.coverageAmount : undefined,
+        term_length: validatedData.insuranceType === 'life' ? validatedData.termLength : undefined,
+        tobacco_use: validatedData.insuranceType === 'life' ? validatedData.tobaccoUse : undefined,
+        occupation: validatedData.insuranceType === 'disability' ? validatedData.occupation : undefined,
+        employment_status: validatedData.insuranceType === 'disability' ? validatedData.employmentStatus : undefined,
+        income_range: validatedData.insuranceType === 'disability' ? validatedData.incomeRange : undefined,
+        pre_existing_conditions: validatedData.insuranceType === 'supplemental' ? (validatedData.preExistingConditions ? 'Yes' : 'No') : undefined,
+        utm_source: validatedData.utmSource,
+        ab_test_variant: validatedData.abTestVariant,
+        funnel_name: validatedData.funnelName,
+        funnel_step: validatedData.funnelStep,
+        funnel_variant: validatedData.funnelVariant,
+        ab_test_id: validatedData.abTestId,
+      });
+
+      return NextResponse.json(
+        { 
+          success: true, 
+          data: { 
+            lead,
+            salesforce: sfResult
+          } 
+        },
+        { headers: corsHeaders }
+      );
+    } catch (error) {
+      console.error('Error processing submission:', error);
+      // We still return success if lead was stored but other operations failed
       return NextResponse.json(
         {
           success: true,
-          warning: 'Lead stored but notification emails failed',
+          warning: 'Lead stored but some operations failed',
           data: { lead },
         },
         { headers: corsHeaders }
       );
     }
-
-    return NextResponse.json(
-      { success: true, data: { lead } },
-      { headers: corsHeaders }
-    );
   } catch (error) {
     console.error('Error processing quote submission:', error);
     return NextResponse.json(
