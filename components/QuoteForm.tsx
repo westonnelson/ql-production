@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import InputField from './InputField';
 import ProgressBar from './ProgressBar';
+import { toast } from 'react-hot-toast';
 
 interface QuoteFormProps {
   insuranceType?: string;
@@ -12,6 +13,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ insuranceType = 'general' }) => {
   const [utmParams, setUtmParams] = useState({ utm_source: '', utm_medium: '', utm_campaign: '' });
   const [formData, setFormData] = useState({ email: '', vehicleYear: '', insuranceType });
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 3;  // Three-step process for new user signup
 
   useEffect(() => {
@@ -40,22 +42,34 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ insuranceType = 'general' }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Combine formData and UTM parameters for the submission
-    const submission = { ...formData, ...utmParams };
-    const res = await fetch('/api/submit-quote', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(submission),
-    });
-    if (res.ok) {
-      console.log('Quote submitted successfully');
+    setIsSubmitting(true);
+
+    try {
+      const submission = { ...formData, ...utmParams };
+      const res = await fetch('/api/submit-quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submission),
+      });
+
+      if (res.ok) {
+        toast.success('Quote submitted successfully!');
+        router.push('/thank-you');
+      } else {
+        throw new Error('Failed to submit quote');
+      }
+    } catch (error) {
+      toast.error('Failed to submit quote. Please try again.');
+      console.error('Quote submission error:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="quote-form-container">
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="space-y-6">
         <InputField
           label="Email"
           type="email"
@@ -64,6 +78,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ insuranceType = 'general' }) => {
           value={formData.email}
           onChange={handleChange}
           valid={formData.email.length > 0}
+          required
         />
         {insuranceType === 'auto' && (
           <InputField
@@ -74,35 +89,18 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ insuranceType = 'general' }) => {
             value={formData.vehicleYear}
             onChange={handleChange}
             valid={!!formData.vehicleYear}
+            required
           />
         )}
         {/* Insert additional fields for other insurance types as needed */}
-        <button type="submit" className="cta-button">Get Your Free Quote</button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full py-3 px-4 bg-[#00E0FF] text-white font-medium rounded-md shadow-sm hover:bg-[#00E0FF]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00E0FF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? 'Submitting...' : 'Get Your Free Quote'}
+        </button>
       </form>
-      <style jsx>{`
-        .quote-form-container {
-          max-width: 800px;
-          margin: 2rem auto;
-          padding: 1rem;
-        }
-
-        .cta-button {
-          background-color: #0055a4;
-          color: #fff;
-          padding: 1em 2em;
-          border: none;
-          border-radius: 5px;
-          font-size: 1.1em;
-          cursor: pointer;
-          transition: background-color 0.3s ease;
-          width: 100%;
-          margin-top: 1rem;
-        }
-
-        .cta-button:hover {
-          background-color: #004080;
-        }
-      `}</style>
     </div>
   );
 };

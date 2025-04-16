@@ -1,70 +1,90 @@
 # QuoteLinker
 
-A modern life insurance quote platform built with Next.js and Supabase.
-
-## Features
-
-- Multi-step quote form with validation
-- Real-time form validation
-- Mobile-responsive design
-- Lead tracking and management
-- Email notifications
-- UTM parameter tracking
+A production-ready, scalable insurance quote capture application built with modern web technologies.
 
 ## Tech Stack
 
-- Next.js 14
-- TypeScript
-- Tailwind CSS
-- Supabase
-- React Hook Form
-- Zod
+- **Framework**: Next.js 14 with TypeScript
+- **Styling**: Tailwind CSS with custom theme
+- **Database**: Supabase for lead storage
+- **Email**: Resend for transactional emails
+- **CRM**: Salesforce integration for lead management
+- **Analytics**: Google Analytics 4
+- **Deployment**: Vercel
+
+## Features
+
+- 🎨 Modern, clean UI with consistent branding
+- 📱 Fully responsive design
+- 📝 Multi-step quote forms
+- 📧 Automated email notifications
+- 📊 Lead tracking and analytics
+- 🔒 Secure data handling
+- 🚀 Fast performance with Next.js
 
 ## Getting Started
 
 1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/quotelinker.git
-cd quotelinker
-```
+   ```bash
+   git clone https://github.com/yourusername/quotelinker.git
+   cd quotelinker
+   ```
 
 2. Install dependencies:
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
-3. Create a `.env.local` file with the following variables:
-```
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_GA_MEASUREMENT_ID=your_ga_id
-NEXT_PUBLIC_GTM_ID=your_gtm_id
-NEXT_PUBLIC_CALENDLY_URL=your_calendly_url
-RESEND_API_KEY=your_resend_api_key
-```
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env.local
+   ```
+   Fill in the required environment variables in `.env.local`
 
 4. Run the development server:
-```bash
-npm run dev
-```
+   ```bash
+   npm run dev
+   ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Database Setup
-
-1. Create a new Supabase project
-2. Run the schema migration in `supabase/schema.sql`
-3. Update your environment variables with the Supabase credentials
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Deployment
 
-The project is set up for deployment on Vercel:
-
 1. Push your code to GitHub
-2. Import the repository in Vercel
-3. Add the environment variables
-4. Deploy
+
+2. Connect your repository to Vercel:
+   - Go to [Vercel](https://vercel.com)
+   - Create a new project
+   - Import your repository
+   - Configure environment variables
+   - Deploy
+
+3. Set up custom domain (optional):
+   - Add your domain in Vercel project settings
+   - Configure DNS records
+   - Enable HTTPS
+
+## Environment Variables
+
+Required environment variables:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Resend
+RESEND_API_KEY=
+
+# Salesforce
+SF_USERNAME=
+SF_PASSWORD=
+SF_SECURITY_TOKEN=
+
+# Google Analytics
+NEXT_PUBLIC_GA_MEASUREMENT_ID=
+```
 
 ## Contributing
 
@@ -76,4 +96,4 @@ The project is set up for deployment on Vercel:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the ISC License. 

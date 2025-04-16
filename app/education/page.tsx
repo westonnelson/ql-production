@@ -1,178 +1,212 @@
 'use client'
 
-import Link from 'next/link'
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Metadata } from 'next';
 
-const insuranceBasics = [
+export const metadata: Metadata = {
+  title: 'Insurance Education Hub | QuoteLinker',
+  description: 'Learn about different types of insurance, coverage options, and how to choose the right policy for your needs. Expert guides, videos, and resources.',
+  openGraph: {
+    title: 'Insurance Education Hub | QuoteLinker',
+    description: 'Learn about different types of insurance, coverage options, and how to choose the right policy for your needs. Expert guides, videos, and resources.',
+    type: 'website',
+    url: 'https://quotelinker.com/education',
+    images: [
+      {
+        url: '/og-education.png',
+        width: 1200,
+        height: 630,
+        alt: 'Insurance Education Hub | QuoteLinker',
+      },
+    ],
+  },
+};
+
+const articles = [
   {
-    title: 'Understanding Insurance Types',
-    content: [
-      {
-        subtitle: 'Life Insurance',
-        description: 'Life insurance provides financial protection for your loved ones in the event of your death. It can help cover funeral expenses, replace lost income, pay off debts, and ensure your family\'s financial security.',
-        keyPoints: [
-          'Term Life: Coverage for a specific period (e.g., 10, 20, or 30 years)',
-          'Whole Life: Permanent coverage with cash value accumulation',
-          'Universal Life: Flexible premium payments with investment options'
-        ]
-      },
-      {
-        subtitle: 'Disability Insurance',
-        description: 'Disability insurance protects your income if you become unable to work due to illness or injury. It ensures you can maintain your lifestyle and meet financial obligations during recovery.',
-        keyPoints: [
-          'Short-term: Covers 3-6 months of disability',
-          'Long-term: Provides coverage for extended periods',
-          'Own-occupation: Protects your specific occupation\'s income'
-        ]
-      },
-      {
-        subtitle: 'Supplemental Health Insurance',
-        description: 'Supplemental health insurance fills gaps in your primary health coverage, helping with out-of-pocket costs and providing additional benefits not covered by your main policy.',
-        keyPoints: [
-          'Coverage for deductibles and copayments',
-          'Additional benefits for specific conditions',
-          'Cash benefits for hospital stays'
-        ]
-      }
-    ]
+    id: 1,
+    title: 'Understanding Life Insurance: A Complete Guide',
+    excerpt: 'Learn about different types of life insurance policies and how to choose the right coverage for your needs.',
+    category: 'Life Insurance',
+    image: '/images/education/life-insurance-guide.jpg',
+    date: '2024-04-15',
+    readTime: '8 min read',
   },
   {
-    title: 'How Insurance Works',
-    content: [
-      {
-        subtitle: 'Premiums and Coverage',
-        description: 'Insurance premiums are the payments you make to maintain your coverage. The amount depends on various factors including your age, health, occupation, and the type and amount of coverage you choose.',
-        keyPoints: [
-          'Regular premium payments keep your coverage active',
-          'Higher coverage amounts typically mean higher premiums',
-          'Healthier individuals often qualify for lower rates'
-        ]
-      },
-      {
-        subtitle: 'Claims Process',
-        description: 'When you need to use your insurance, you\'ll file a claim with your insurance company. The process varies by policy type but generally involves submitting documentation of your loss or need.',
-        keyPoints: [
-          'Documentation requirements vary by policy type',
-          'Claims can be filed online, by phone, or through your agent',
-          'Response times vary based on claim complexity'
-        ]
-      }
-    ]
-  }
-]
-
-const agentBenefits = [
-  {
-    title: 'Exclusive Lead Generation',
-    description: 'Access high-intent leads that are actively seeking insurance coverage. Our AI-powered platform matches you with prospects who match your expertise and target market.',
-    benefits: [
-      'Pre-qualified leads ready to purchase',
-      'Reduced time spent on cold calling',
-      'Higher conversion rates',
-      'Targeted lead matching based on your specialties'
-    ]
+    id: 2,
+    title: 'Health Insurance Basics: What You Need to Know',
+    excerpt: 'A comprehensive overview of health insurance plans, coverage options, and how to maximize your benefits.',
+    category: 'Health Insurance',
+    image: '/images/education/health-insurance-basics.jpg',
+    date: '2024-04-14',
+    readTime: '10 min read',
   },
   {
-    title: 'Streamlined Workflow',
-    description: 'Our platform integrates with your existing tools and automates routine tasks, allowing you to focus on what matters most - closing deals and serving clients.',
-    benefits: [
-      'Automated lead follow-up',
-      'CRM integration',
-      'Document management',
-      'Client communication tools'
-    ]
+    id: 3,
+    title: 'Disability Insurance: Protecting Your Income',
+    excerpt: 'Understand how disability insurance works and why it's crucial for protecting your financial future.',
+    category: 'Disability Insurance',
+    image: '/images/education/disability-insurance-guide.jpg',
+    date: '2024-04-13',
+    readTime: '7 min read',
   },
   {
-    title: 'Business Growth Tools',
-    description: 'Access resources and tools designed to help you grow your insurance business and provide better service to your clients.',
-    benefits: [
-      'Marketing materials and templates',
-      'Training resources',
-      'Performance analytics',
-      'Commission tracking'
-    ]
-  }
-]
+    id: 4,
+    title: 'Medicare Supplement Plans Explained',
+    excerpt: 'Everything you need to know about Medicare supplement plans and how they can enhance your coverage.',
+    category: 'Supplemental Health',
+    image: '/images/education/medicare-supplement-guide.jpg',
+    date: '2024-04-12',
+    readTime: '9 min read',
+  },
+  {
+    id: 5,
+    title: 'Auto Insurance: Coverage Types and Requirements',
+    excerpt: 'A detailed guide to auto insurance coverage types, state requirements, and how to save on your premium.',
+    category: 'Auto Insurance',
+    image: '/images/education/auto-insurance-guide.jpg',
+    date: '2024-04-11',
+    readTime: '8 min read',
+  },
+  {
+    id: 6,
+    title: 'How to Compare Insurance Quotes',
+    excerpt: 'Learn the best practices for comparing insurance quotes and finding the most suitable coverage.',
+    category: 'Insurance Tips',
+    image: '/images/education/compare-quotes-guide.jpg',
+    date: '2024-04-10',
+    readTime: '6 min read',
+  },
+];
 
-export default function EducationPage() {
+const videos = [
+  {
+    id: 1,
+    title: 'Life Insurance Explained in 5 Minutes',
+    thumbnail: '/images/education/video-life-insurance.jpg',
+    duration: '5:23',
+    category: 'Life Insurance',
+  },
+  {
+    id: 2,
+    title: 'Understanding Health Insurance Plans',
+    thumbnail: '/images/education/video-health-insurance.jpg',
+    duration: '7:45',
+    category: 'Health Insurance',
+  },
+  {
+    id: 3,
+    title: 'Disability Insurance: What You Need to Know',
+    thumbnail: '/images/education/video-disability-insurance.jpg',
+    duration: '6:12',
+    category: 'Disability Insurance',
+  },
+  {
+    id: 4,
+    title: 'Medicare Supplement Plans: A Quick Guide',
+    thumbnail: '/images/education/video-medicare-supplement.jpg',
+    duration: '4:56',
+    category: 'Supplemental Health',
+  },
+];
+
+export default function EducationHub() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0F1218] to-[#1A1F2B] py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-extrabold text-white sm:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-500">
-            Insurance Education Center
-          </h1>
-          <p className="mt-4 text-xl text-gray-300">
-            Learn about insurance basics and discover how our platform benefits agents
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Insurance Education Hub</h1>
+          <p className="text-xl text-gray-600">
+            Expert guides, videos, and resources to help you make informed insurance decisions
           </p>
         </div>
 
-        {/* Insurance Basics Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Insurance Basics</h2>
-          <div className="grid grid-cols-1 gap-8">
-            {insuranceBasics.map((section) => (
-              <div key={section.title} className="bg-white/5 backdrop-blur-sm p-8 rounded-xl border border-gray-800">
-                <h3 className="text-2xl font-bold text-white mb-6">{section.title}</h3>
-                <div className="space-y-8">
-                  {section.content.map((item) => (
-                    <div key={item.subtitle}>
-                      <h4 className="text-xl font-semibold text-primary mb-3">{item.subtitle}</h4>
-                      <p className="text-gray-300 mb-4">{item.description}</p>
-                      <ul className="list-disc pl-6 space-y-2 text-gray-300">
-                        {item.keyPoints.map((point) => (
-                          <li key={point}>{point}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
+        {/* Featured Articles */}
+        <section className="mb-16">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-8">Featured Articles</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {articles.map((article) => (
+              <article key={article.id} className="bg-white rounded-lg border border-gray-200 shadow-md overflow-hidden">
+                <div className="relative h-48">
+                  <Image
+                    src={article.image}
+                    alt={article.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center text-sm text-gray-500 mb-2">
+                    <span>{article.category}</span>
+                    <span className="mx-2">•</span>
+                    <span>{article.readTime}</span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    <Link href={`/education/articles/${article.id}`} className="hover:text-[#00E0FF]">
+                      {article.title}
+                    </Link>
+                  </h3>
+                  <p className="text-gray-600 mb-4">{article.excerpt}</p>
+                  <Link
+                    href={`/education/articles/${article.id}`}
+                    className="text-[#00E0FF] hover:text-[#00E0FF]/80 font-medium"
+                  >
+                    Read more →
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* Video Library */}
+        <section className="mb-16">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-8">Video Library</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {videos.map((video) => (
+              <div key={video.id} className="bg-white rounded-lg border border-gray-200 shadow-md overflow-hidden">
+                <div className="relative h-48">
+                  <Image
+                    src={video.thumbnail}
+                    alt={video.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute bottom-2 right-2 bg-black/75 text-white px-2 py-1 rounded text-sm">
+                    {video.duration}
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div className="text-sm text-gray-500 mb-1">{video.category}</div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    <Link href={`/education/videos/${video.id}`} className="hover:text-[#00E0FF]">
+                      {video.title}
+                    </Link>
+                  </h3>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Agent Benefits Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Benefits for Insurance Agents</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {agentBenefits.map((benefit) => (
-              <div key={benefit.title} className="bg-white/5 backdrop-blur-sm p-8 rounded-xl border border-gray-800">
-                <h3 className="text-xl font-bold text-white mb-4">{benefit.title}</h3>
-                <p className="text-gray-300 mb-6">{benefit.description}</p>
-                <ul className="space-y-3">
-                  {benefit.benefits.map((item) => (
-                    <li key={item} className="flex items-start">
-                      <svg className="h-6 w-6 text-primary flex-shrink-0 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className="text-gray-300">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+        {/* Categories */}
+        <section>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-8">Browse by Category</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {['Life Insurance', 'Health Insurance', 'Disability Insurance', 'Supplemental Health', 'Auto Insurance'].map((category) => (
+              <Link
+                key={category}
+                href={`/education/category/${category.toLowerCase().replace(' ', '-')}`}
+                className="bg-white border border-gray-200 rounded-lg p-4 text-center hover:border-[#00E0FF] hover:shadow-md transition-all"
+              >
+                <span className="text-gray-900 font-medium">{category}</span>
+              </Link>
             ))}
           </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-6">Ready to Get Started?</h2>
-          <div className="space-x-4">
-            <Link
-              href="/quote/life"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200"
-            >
-              Get Insurance Quote
-            </Link>
-            <Link
-              href="/agent/signup"
-              className="inline-flex items-center px-6 py-3 border border-gray-700 text-base font-medium rounded-lg text-gray-300 bg-transparent hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200"
-            >
-              Become an Agent
-            </Link>
-          </div>
-        </div>
+        </section>
       </div>
     </div>
-  )
+  );
 } 

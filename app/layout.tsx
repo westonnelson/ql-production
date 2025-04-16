@@ -4,6 +4,7 @@ import './globals.css'
 import Script from 'next/script'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import { Toaster } from 'react-hot-toast'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -16,6 +17,14 @@ export const metadata: Metadata = {
     description: 'Get your personalized insurance quotes quickly and easily.',
     type: 'website',
     url: 'https://quotelinker.com',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'QuoteLinker - Insurance Quotes Made Easy',
+      },
+    ],
   },
   icons: {
     icon: [
@@ -37,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="bg-[#0F1218]">
+    <html lang="en" className="bg-white">
       <head>
         {/* Google Analytics */}
         <Script
@@ -58,7 +67,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} bg-[#0F1218]`}>
+      <body className={`${inter.className} bg-white text-gray-900`}>
         {/* Google Tag Manager */}
         <Script id="gtm" strategy="afterInteractive">
           {`
@@ -69,8 +78,9 @@ export default function RootLayout({
             })(window,document,'script','dataLayer','${process.env.NEXT_PUBLIC_GTM_ID}');
           `}
         </Script>
+        <Toaster position="top-right" />
         <Header />
-        <main className="bg-[#0F1218]">{children}</main>
+        <main className="min-h-screen bg-white">{children}</main>
         <Footer />
         {/* Google Tag Manager (noscript) */}
         <noscript>
