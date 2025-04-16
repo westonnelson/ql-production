@@ -120,7 +120,7 @@ export async function POST(request: Request) {
           }),
           ...(validatedData.insuranceType === 'supplemental' && {
             health_status: validatedData.healthStatus,
-            pre_existing_conditions: validatedData.preExistingConditions,
+            pre_existing_conditions: validatedData.preExistingConditions ? 'Yes' : 'No',
           }),
         },
       ])
@@ -155,7 +155,7 @@ export async function POST(request: Request) {
         occupation: validatedData.insuranceType === 'disability' ? validatedData.occupation : undefined,
         employment_status: validatedData.insuranceType === 'disability' ? validatedData.employmentStatus : undefined,
         income_range: validatedData.insuranceType === 'disability' ? validatedData.incomeRange : undefined,
-        pre_existing_conditions: validatedData.insuranceType === 'supplemental' ? validatedData.preExistingConditions : undefined,
+        pre_existing_conditions: validatedData.insuranceType === 'supplemental' ? (validatedData.preExistingConditions ? 'Yes' : 'No') : undefined,
         utm_source: validatedData.utmSource,
         ab_test_variant: validatedData.abTestVariant,
       });
