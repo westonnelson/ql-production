@@ -81,6 +81,31 @@ export async function POST(request: Request) {
     // Validate the request body
     const validatedData = formSchema.parse(body);
 
+    // Track the form submission in Google Analytics
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'form_submission', {
+        event_category: 'quote_request',
+        event_label: validatedData.insuranceType,
+        funnel_name: validatedData.funnelName,
+        funnel_step: validatedData.funnelStep,
+        funnel_variant: validatedData.funnelVariant,
+        ab_test_id: validatedData.abTestId,
+        ab_test_variant: validatedData.abTestVariant,
+        utm_source: validatedData.utmSource,
+        utm_medium: validatedData.utmMedium,
+        utm_campaign: validatedData.utmCampaign,
+      });
+
+      // Track as conversion if Google Ads ID is available
+      if (process.env.NEXT_PUBLIC_GOOGLE_ADS_ID) {
+        window.gtag('event', 'conversion', {
+          send_to: process.env.NEXT_PUBLIC_GOOGLE_ADS_ID,
+          value: 1.0,
+          currency: 'USD',
+        });
+      }
+    }
+
     // Store the lead in the database
     const { data: lead, error: leadError } = await supabase
       .from('leads')
