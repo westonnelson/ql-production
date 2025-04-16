@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
-import { sendNotificationEmails } from '@/lib/sendEmail';
+import { sendConsumerConfirmationEmail, sendAgentNotificationEmail } from '@/lib/sendEmail';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -137,20 +137,27 @@ export async function POST(request: Request) {
 
     // Send notification emails
     try {
-      await sendNotificationEmails({
-        userEmail: validatedData.email,
-        insuranceType: validatedData.insuranceType,
-        firstName: validatedData.firstName,
-        lastName: validatedData.lastName,
-        funnelName: validatedData.funnelName,
-        funnelStep: validatedData.funnelStep,
-        utmParams: {
-          source: validatedData.utmSource,
-          medium: validatedData.utmMedium,
-          campaign: validatedData.utmCampaign,
-          term: validatedData.utmTerm,
-          content: validatedData.utmContent,
-        },
+      // Send confirmation email to consumer
+      await sendConsumerConfirmationEmail(validatedData.email, validatedData.insuranceType);
+      
+      // Send notification email to agent
+      await sendAgentNotificationEmail(validatedData.insuranceType, {
+        first_name: validatedData.firstName,
+        last_name: validatedData.lastName,
+        email: validatedData.email,
+        phone: validatedData.phone,
+        age: validatedData.age,
+        gender: validatedData.gender,
+        product_type: validatedData.insuranceType,
+        coverage_amount: validatedData.insuranceType === 'life' ? validatedData.coverageAmount : undefined,
+        term_length: validatedData.insuranceType === 'life' ? validatedData.termLength : undefined,
+        tobacco_use: validatedData.insuranceType === 'life' ? validatedData.tobaccoUse : undefined,
+        occupation: validatedData.insuranceType === 'disability' ? validatedData.occupation : undefined,
+        employment_status: validatedData.insuranceType === 'disability' ? validatedData.employmentStatus : undefined,
+        income_range: validatedData.insuranceType === 'disability' ? validatedData.incomeRange : undefined,
+        pre_existing_conditions: validatedData.insuranceType === 'supplemental' ? validatedData.preExistingConditions : undefined,
+        utm_source: validatedData.utmSource,
+        ab_test_variant: validatedData.abTestVariant,
       });
     } catch (emailError) {
       console.error('Error sending notification emails:', emailError);
