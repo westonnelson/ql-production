@@ -27,7 +27,7 @@ async function getSalesforceConnection() {
     );
     
     // Cache the token and set expiry (token typically valid for 2 hours)
-    sfToken = userInfo.accessToken;
+    sfToken = userInfo.access_token;
     tokenExpiry = Date.now() + (2 * 60 * 60 * 1000); // 2 hours
     
     return sf;
@@ -59,6 +59,12 @@ interface LeadData {
   funnel_step?: string;
   funnel_variant?: string;
   ab_test_id?: string;
+}
+
+interface SalesforceResult {
+  id: string;
+  success: boolean;
+  errors: string[];
 }
 
 export async function createSalesforceOpportunity(data: LeadData) {
@@ -103,7 +109,11 @@ export async function createSalesforceOpportunity(data: LeadData) {
     }
 
     // Upsert the lead based on email
-    const leadResult = await sf.sobject('Lead').upsert(leadData, 'Email');
+    const leadResult = await sf.sobject('Lead').upsert(leadData, 'Email') as SalesforceResult;
+
+    if (!leadResult.success) {
+      throw new Error(`Failed to create/update lead: ${leadResult.errors.join(', ')}`);
+    }
 
     // Create an Opportunity linked to the Lead
     const opportunityData = {
@@ -144,7 +154,11 @@ export async function createSalesforceOpportunity(data: LeadData) {
       });
     }
 
-    const opportunity = await sf.sobject('Opportunity').create(opportunityData);
+    const opportunity = await sf.sobject('Opportunity').create(opportunityData) as SalesforceResult;
+
+    if (!opportunity.success) {
+      throw new Error(`Failed to create opportunity: ${opportunity.errors.join(', ')}`);
+    }
 
     return {
       success: true,

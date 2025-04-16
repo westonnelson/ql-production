@@ -18,6 +18,10 @@ interface EmailData {
   desired_coverage_type?: string;
   utm_source?: string;
   ab_test_variant?: string;
+  funnel_name?: string;
+  funnel_step?: string;
+  funnel_variant?: string;
+  ab_test_id?: string;
 }
 
 /**
