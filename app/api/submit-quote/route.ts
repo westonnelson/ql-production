@@ -6,10 +6,9 @@ import { createSalesforceOpportunity } from '@/lib/salesforce';
 import { handleFormSubmission } from '@/lib/form-handler';
 
 // Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // CORS headers
 const corsHeaders = {
@@ -78,28 +77,92 @@ const formSchema = z.discriminatedUnion('insuranceType', [
 export async function POST(request: Request) {
   try {
     const data = await request.json();
+
+    // Validate required fields
+    const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'age', 'gender', 'insuranceType'];
+    const missingFields = requiredFields.filter(field => !data[field]);
     
-    // Validate the data against the schema
-    const validatedData = formSchema.parse(data);
-    
-    // Process the form submission
-    const result = await handleFormSubmission(validatedData);
-    
-    // Return success response with CORS headers
-    return NextResponse.json(result, { headers: corsHeaders });
+    if (missingFields.length > 0) {
+      return NextResponse.json(
+        { error: `Missing required fields: ${missingFields.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate phone number
+    const phoneRegex = /^\+?[\d\s-()]{10,}$/;
+    if (!phoneRegex.test(data.phone)) {
+      return NextResponse.json(
+        { error: 'Invalid phone number format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate age
+    const age = Number(data.age);
+    if (isNaN(age) || age < 18 || age > 100) {
+      return NextResponse.json(
+        { error: 'Age must be between 18 and 100' },
+        { status: 400 }
+      );
+    }
+
+    // Prepare quote data
+    const quoteData = {
+      first_name: data.firstName,
+      last_name: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      age: age,
+      gender: data.gender,
+      insurance_type: data.insuranceType,
+      utm_source: data.utm_source || null,
+      utm_medium: data.utm_medium || null,
+      utm_campaign: data.utm_campaign || null,
+      utm_content: data.utm_content || null,
+      utm_term: data.utm_term || null,
+      user_agent: data.userAgent || null,
+      platform: data.platform || 'web',
+      created_at: new Date().toISOString(),
+      status: 'new'
+    };
+
+    // Insert into Supabase
+    const { data: quote, error: insertError } = await supabase
+      .from('quotes')
+      .insert([quoteData])
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Supabase insert error:', insertError);
+      return NextResponse.json(
+        { error: 'Failed to save quote' },
+        { status: 500 }
+      );
+    }
+
+    // Return success response
+    return NextResponse.json({
+      success: true,
+      message: 'Quote submitted successfully',
+      quoteId: quote.id
+    });
+
   } catch (error) {
-    console.error('API error:', error);
-    
-    // Return error response with CORS headers
+    console.error('Quote submission error:', error);
     return NextResponse.json(
-      { 
-        error: 'Failed to submit form',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { 
-        status: 500,
-        headers: corsHeaders 
-      }
+      { error: 'Internal server error' },
+      { status: 500 }
     );
   }
 }

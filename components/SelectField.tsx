@@ -1,12 +1,19 @@
 import React from 'react';
 
-interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface Option {
+  value: string;
   label: string;
+}
+
+interface SelectFieldProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  label: string;
+  options: Option[];
   error?: string;
 }
 
-const InputField: React.FC<InputFieldProps> = ({
+const SelectField: React.FC<SelectFieldProps> = ({
   label,
+  options,
   error,
   className = '',
   ...props
@@ -17,11 +24,12 @@ const InputField: React.FC<InputFieldProps> = ({
         {label}
         {props.required && <span className="text-red-500 ml-1">*</span>}
       </label>
-      <input
+      <select
         className={`
           block w-full px-3 py-2 
           border border-gray-300 
           rounded-md shadow-sm 
+          bg-white
           placeholder-gray-400
           focus:outline-none focus:ring-[#00E0FF] focus:border-[#00E0FF]
           disabled:bg-gray-50 disabled:text-gray-500
@@ -29,7 +37,14 @@ const InputField: React.FC<InputFieldProps> = ({
           ${className}
         `}
         {...props}
-      />
+      >
+        <option value="">Select {label.toLowerCase()}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
       {error && (
         <p className="mt-1 text-sm text-red-600">{error}</p>
       )}
@@ -37,4 +52,4 @@ const InputField: React.FC<InputFieldProps> = ({
   );
 };
 
-export default InputField; 
+export default SelectField; 
