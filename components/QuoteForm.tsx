@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter, useSearchParams } from 'next/navigation';
 import InputField from './InputField';
 import ProgressBar from './ProgressBar';
 import { toast } from 'react-hot-toast';
@@ -12,7 +12,12 @@ interface QuoteFormProps {
 
 const QuoteForm: React.FC<QuoteFormProps> = ({ insuranceType = 'general' }) => {
   const router = useRouter();
-  const [utmParams, setUtmParams] = useState({ utm_source: '', utm_medium: '', utm_campaign: '' });
+  const searchParams = useSearchParams();
+  const [utmParams, setUtmParams] = useState({ 
+    utm_source: '', 
+    utm_medium: '', 
+    utm_campaign: '' 
+  });
   const [formData, setFormData] = useState({ email: '', vehicleYear: '', insuranceType });
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,13 +25,12 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ insuranceType = 'general' }) => {
 
   useEffect(() => {
     // Capture UTM parameters for PPC tracking and dynamic landing page variation
-    const query = router.query;
     setUtmParams({
-      utm_source: (query.utm_source as string) || '',
-      utm_medium: (query.utm_medium as string) || '',
-      utm_campaign: (query.utm_campaign as string) || ''
+      utm_source: searchParams.get('utm_source') || '',
+      utm_medium: searchParams.get('utm_medium') || '',
+      utm_campaign: searchParams.get('utm_campaign') || ''
     });
-  }, [router.query]);
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
