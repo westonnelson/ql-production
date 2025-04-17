@@ -1,24 +1,4 @@
 {
   "version": 2,
-  "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "outputDirectory": ".next",
-  "env": {
-    "NEXT_PUBLIC_SITE_URL": "https://quotelinker.com",
-    "NODE_ENV": "production",
-    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@next_public_supabase_anon_key",
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
-    "RESEND_API_KEY": "@resend_api_key",
-    "SALESFORCE_USERNAME": "@salesforce_username",
-    "SALESFORCE_PASSWORD": "@salesforce_password",
-    "SALESFORCE_SECURITY_TOKEN": "@salesforce_security_token",
-    "SALESFORCE_LOGIN_URL": "https://login.salesforce.com"
-  },
-  "build": {
-    "env": {
-      "NODE_VERSION": "18.x"
-    }
-  }
+  "framework": "nextjs"
 } 
