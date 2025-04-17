@@ -6,7 +6,7 @@ const stripeSecret = process.env.STRIPE_SECRET_KEY;
 
 // Initialize Stripe client if secret is available
 const stripe = stripeSecret && stripeSecret !== 'placeholder' 
-  ? new Stripe(stripeSecret, { apiVersion: '2022-11-15' })
+  ? new Stripe(stripeSecret, { apiVersion: '2025-03-31.basil' })
   : null;
 
 const supabase = createClient(
