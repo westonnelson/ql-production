@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import jsforce from 'jsforce';
 
 // CORS headers
 const corsHeaders = {
@@ -51,8 +52,9 @@ export async function POST(request: Request) {
     const requestData = await request.json();
     console.log('Received Salesforce lead data:', JSON.stringify(requestData, null, 2));
 
+    let validatedData;
     try {
-      const validatedData = leadSchema.parse(requestData);
+      validatedData = leadSchema.parse(requestData);
       console.log('Validated lead data:', JSON.stringify(validatedData, null, 2));
     } catch (validationError) {
       console.error('Validation error:', validationError);
@@ -62,20 +64,49 @@ export async function POST(request: Request) {
       );
     }
 
-    // TODO: Implement Salesforce REST API integration
-    // 1. Authenticate with Salesforce using OAuth 2.0
-    // 2. Create Lead record in Salesforce
-    // 3. Handle any errors and return appropriate response
+    // Initialize Salesforce connection
+    const conn = new jsforce.Connection({
+      loginUrl: process.env.SALESFORCE_LOGIN_URL || 'https://login.salesforce.com'
+    });
 
-    // Placeholder success response
-    return NextResponse.json(
-      { 
-        success: true, 
-        message: 'Salesforce integration pending implementation',
-        data: requestData 
-      },
-      { headers: corsHeaders }
+    // Authenticate with Salesforce
+    await conn.login(
+      process.env.SALESFORCE_USERNAME!,
+      process.env.SALESFORCE_PASSWORD! + process.env.SALESFORCE_SECURITY_TOKEN!
     );
+
+    // Prepare lead data for Salesforce
+    const leadData = {
+      FirstName: validatedData.firstName,
+      LastName: validatedData.lastName,
+      Email: validatedData.email,
+      Phone: validatedData.phone,
+      Age__c: validatedData.age,
+      Gender__c: validatedData.gender,
+      Product_Type__c: validatedData.productType,
+      Coverage_Amount__c: validatedData.coverageAmount,
+      Term_Length__c: validatedData.termLength,
+      Tobacco_Use__c: validatedData.tobaccoUse,
+      LeadSource: validatedData.utmSource || 'Website',
+      Status: 'Open - Not Contacted',
+      Company: 'Individual'  // Required by Salesforce
+    };
+
+    // Create lead in Salesforce
+    const result = await conn.sobject('Lead').create(leadData);
+
+    if (result.success) {
+      return NextResponse.json(
+        { 
+          success: true, 
+          message: 'Lead created successfully',
+          leadId: result.id 
+        },
+        { headers: corsHeaders }
+      );
+    } else {
+      throw new Error('Failed to create lead in Salesforce');
+    }
 
   } catch (error) {
     console.error('Salesforce API error:', error);
