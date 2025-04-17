@@ -121,6 +121,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
     }
 
     setIsSubmitting(true);
+    const toastId = toast.loading('Submitting your quote request...');
 
     try {
       const submission = {
@@ -138,7 +139,8 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
       });
 
       if (!res.ok) {
-        throw new Error('Failed to submit quote');
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to submit quote');
       }
 
       const data = await res.json();
@@ -152,11 +154,24 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
         });
       }
 
-      toast.success('Quote submitted successfully!');
+      // Clear form data
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        age: '',
+        gender: '',
+        insuranceType,
+      });
+      setCurrentStep(1);
+      setErrors({});
+
+      toast.success('Quote submitted successfully!', { id: toastId });
       router.push(`/thank-you/${insuranceType}`);
     } catch (error) {
       console.error('Quote submission error:', error);
-      toast.error('Failed to submit quote. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to submit quote. Please try again.', { id: toastId });
     } finally {
       setIsSubmitting(false);
     }

@@ -34,10 +34,12 @@ export async function sendConsumerConfirmationEmail(userEmail: string, data: Ema
   }
 
   try {
+    console.log(`Preparing consumer confirmation email for ${userEmail}`);
     const productTitle = getProductTitle(data.product_type);
     const specificFields = getProductSpecificFields(data);
     
-    await resendClient.emails.send({
+    console.log(`Sending consumer confirmation email for ${productTitle} quote to ${userEmail}`);
+    const result = await resendClient.emails.send({
       from: 'QuoteLinker <support@quotelinker.com>',
       to: userEmail,
       subject: `Your ${productTitle} Quote Request Received`,
@@ -56,8 +58,9 @@ export async function sendConsumerConfirmationEmail(userEmail: string, data: Ema
         </div>
       `,
     });
+    console.log(`Successfully sent consumer confirmation email to ${userEmail}`, result);
   } catch (error) {
-    console.error('Failed to send consumer confirmation email:', error);
+    console.error(`Failed to send consumer confirmation email to ${userEmail}:`, error);
     // Don't throw the error to prevent breaking the form submission flow
   }
 }
@@ -73,10 +76,12 @@ export async function sendAgentNotificationEmail(data: EmailData): Promise<void>
   }
 
   try {
+    console.log('Preparing agent notification email');
     const productTitle = getProductTitle(data.product_type);
     const specificFields = getProductSpecificFields(data);
     
-    await resendClient.emails.send({
+    console.log(`Sending agent notification email for ${productTitle} quote from ${data.first_name} ${data.last_name}`);
+    const result = await resendClient.emails.send({
       from: 'QuoteLinker <support@quotelinker.com>',
       to: 'newquote@quotelinker.com',
       subject: `New ${productTitle} Quote Inquiry - ${data.first_name} ${data.last_name}`,
@@ -97,6 +102,7 @@ export async function sendAgentNotificationEmail(data: EmailData): Promise<void>
         </div>
       `,
     });
+    console.log(`Successfully sent agent notification email for ${data.first_name} ${data.last_name}`, result);
   } catch (error) {
     console.error('Failed to send agent notification email:', error);
     // Don't throw the error to prevent breaking the form submission flow

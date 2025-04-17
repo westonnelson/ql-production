@@ -151,6 +151,36 @@ export async function POST(request: Request) {
       );
     }
 
+    // Send emails
+    try {
+      console.log('Sending confirmation email to consumer:', data.email);
+      await sendConsumerConfirmationEmail(data.email, {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        age: age,
+        gender: data.gender,
+        product_type: data.insuranceType,
+        utm_source: data.utm_source,
+      });
+
+      console.log('Sending notification email to agent');
+      await sendAgentNotificationEmail({
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        age: age,
+        gender: data.gender,
+        product_type: data.insuranceType,
+        utm_source: data.utm_source,
+      });
+    } catch (emailError) {
+      console.error('Failed to send emails:', emailError);
+      // Don't fail the request if emails fail, but log it
+    }
+
     // Return success response
     return NextResponse.json({
       success: true,
