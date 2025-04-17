@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import jsforce from 'jsforce';
 
 export async function GET() {
+  // Check if Salesforce credentials are available
+  if (!process.env.SALESFORCE_USERNAME || !process.env.SALESFORCE_PASSWORD || !process.env.SALESFORCE_SECURITY_TOKEN) {
+    console.warn('Salesforce credentials not configured');
+    return NextResponse.json({
+      success: false,
+      message: 'Salesforce integration not configured'
+    }, { status: 503 });
+  }
+
   try {
     // Initialize Salesforce connection
     const conn = new jsforce.Connection({
@@ -10,8 +19,8 @@ export async function GET() {
 
     // Test authentication
     await conn.login(
-      process.env.SALESFORCE_USERNAME!,
-      process.env.SALESFORCE_PASSWORD! + process.env.SALESFORCE_SECURITY_TOKEN!
+      process.env.SALESFORCE_USERNAME,
+      process.env.SALESFORCE_PASSWORD + process.env.SALESFORCE_SECURITY_TOKEN
     );
 
     // Test lead data
@@ -30,6 +39,10 @@ export async function GET() {
 
     // Create test lead
     const result = await conn.sobject('Lead').create(testLead);
+
+    if (!result.success) {
+      throw new Error(result.errors?.[0]?.message || 'Failed to create test lead');
+    }
 
     return NextResponse.json({
       success: true,
