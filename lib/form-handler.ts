@@ -3,10 +3,10 @@ import { sendConsumerConfirmationEmail, sendAgentNotificationEmail } from './sen
 import { logFormSubmission } from './analytics'
 import { createSalesforceOpportunity } from './salesforce'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// Initialize Supabase with placeholder values if not available
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_key';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export type FormSubmission = {
   insuranceType: 'auto' | 'life' | 'homeowners' | 'disability' | 'supplemental'
@@ -50,6 +50,12 @@ export type FormSubmission = {
 
 export async function handleFormSubmission(data: FormSubmission) {
   try {
+    // Check if required environment variables are available
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.warn('Supabase credentials not configured');
+      return { success: false, error: 'Database integration not configured' };
+    }
+
     // 1. Store in database
     const { data: lead, error: dbError } = await supabase
       .from('leads')
@@ -71,72 +77,95 @@ export async function handleFormSubmission(data: FormSubmission) {
     if (dbError) throw dbError
 
     // 2. Track conversion in analytics
-    await logFormSubmission({
-      insuranceType: data.insuranceType,
-      formData: {
-        firstName: data.firstName,
-        lastName: data.lastName,
+    try {
+      await logFormSubmission({
+        insuranceType: data.insuranceType,
+        formData: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+          age: data.age,
+          gender: data.gender,
+          zipCode: data.zipCode,
+          coverageAmount: data.coverageAmount,
+          termLength: data.termLength,
+          tobaccoUse: data.tobaccoUse,
+        },
+        utmParams: {
+          utm_source: data.utmSource,
+          utm_medium: data.utmMedium,
+          utm_campaign: data.utmCampaign,
+          utm_term: data.utmTerm,
+          utm_content: data.utmContent,
+        },
+        funnelName: 'default',
+        funnelStep: 'complete',
+        funnelVariant: 'control',
+      })
+    } catch (analyticsError) {
+      console.warn('Analytics tracking failed:', analyticsError);
+      // Continue execution even if analytics fails
+    }
+
+    // 3. Send confirmation email to the user
+    try {
+      await sendConsumerConfirmationEmail(data.email, {
+        first_name: data.firstName,
+        last_name: data.lastName,
         email: data.email,
         phone: data.phone,
         age: data.age,
         gender: data.gender,
-        zipCode: data.zipCode,
-        coverageAmount: data.coverageAmount,
-        termLength: data.termLength,
-        tobaccoUse: data.tobaccoUse,
-      },
-      utmParams: {
+        product_type: data.insuranceType,
+        coverage_amount: data.coverageAmount,
+        term_length: data.termLength,
+        tobacco_use: data.tobaccoUse,
         utm_source: data.utmSource,
-        utm_medium: data.utmMedium,
-        utm_campaign: data.utmCampaign,
-        utm_term: data.utmTerm,
-        utm_content: data.utmContent,
-      },
-      funnelName: 'default',
-      funnelStep: 'complete',
-      funnelVariant: 'control',
-    })
-
-    // 3. Send confirmation email to the user
-    await sendConsumerConfirmationEmail(data.email, {
-      first_name: data.firstName,
-      last_name: data.lastName,
-      email: data.email,
-      phone: data.phone,
-      age: data.age,
-      gender: data.gender,
-      product_type: data.insuranceType,
-      coverage_amount: data.coverageAmount,
-      term_length: data.termLength,
-      tobacco_use: data.tobaccoUse,
-      utm_source: data.utmSource,
-    })
+      })
+    } catch (emailError) {
+      console.warn('Consumer email sending failed:', emailError);
+      // Continue execution even if email fails
+    }
 
     // 4. Send notification email to the agent
-    await sendAgentNotificationEmail({
-      first_name: data.firstName,
-      last_name: data.lastName,
-      email: data.email,
-      phone: data.phone,
-      age: data.age,
-      gender: data.gender,
-      product_type: data.insuranceType,
-      coverage_amount: data.coverageAmount,
-      term_length: data.termLength,
-      tobacco_use: data.tobaccoUse,
-      utm_source: data.utmSource,
-    })
+    try {
+      await sendAgentNotificationEmail({
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        age: data.age,
+        gender: data.gender,
+        product_type: data.insuranceType,
+        coverage_amount: data.coverageAmount,
+        term_length: data.termLength,
+        tobacco_use: data.tobaccoUse,
+        utm_source: data.utmSource,
+      })
+    } catch (agentEmailError) {
+      console.warn('Agent notification email failed:', agentEmailError);
+      // Continue execution even if email fails
+    }
 
     // 5. Create Salesforce opportunity
-    await createSalesforceOpportunity({
-      ...data,
-      leadId: lead.id,
-    })
+    try {
+      await createSalesforceOpportunity({
+        ...data,
+        leadId: lead.id,
+      })
+    } catch (salesforceError) {
+      console.warn('Salesforce opportunity creation failed:', salesforceError);
+      // Continue execution even if Salesforce fails
+    }
 
     return { success: true, leadId: lead.id }
   } catch (error) {
     console.error('Form submission error:', error)
-    throw error
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
   }
 }
 

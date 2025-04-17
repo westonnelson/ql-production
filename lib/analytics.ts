@@ -1,4 +1,4 @@
-import { gtag } from './gtag';
+import { gtag, isGoogleAnalyticsConfigured, isGoogleAdsConfigured } from './gtag';
 
 interface FunnelStepData {
   step: number;
@@ -57,58 +57,90 @@ declare global {
 
 // Initialize Google Analytics
 export const initGA = () => {
-  if (typeof window !== 'undefined') {
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = function gtag() {
-      window.dataLayer.push(arguments);
-    };
-    window.gtag('js', new Date().toISOString(), {});
-    window.gtag('config', process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || '', {
-      page_path: window.location.pathname,
-    });
-    // Initialize Google Ads if ID is available
-    if (process.env.NEXT_PUBLIC_GOOGLE_ADS_ID) {
-      window.gtag('config', process.env.NEXT_PUBLIC_GOOGLE_ADS_ID, {});
-    }
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  // Check if Google Analytics is configured
+  if (!isGoogleAnalyticsConfigured()) {
+    console.warn('Google Analytics is not configured');
+    return;
+  }
+
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function gtag() {
+    window.dataLayer.push(arguments);
+  };
+  window.gtag('js', new Date().toISOString(), {});
+  window.gtag('config', process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID!, {
+    page_path: window.location.pathname,
+  });
+
+  // Initialize Google Ads if configured
+  if (isGoogleAdsConfigured()) {
+    window.gtag('config', process.env.NEXT_PUBLIC_GOOGLE_ADS_ID!, {});
   }
 };
 
 // Track page views
 export const trackPageView = (url: string) => {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('config', process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || '', {
-      page_path: url,
-    });
+  if (typeof window === 'undefined' || !window.gtag) {
+    return;
   }
+
+  // Check if Google Analytics is configured
+  if (!isGoogleAnalyticsConfigured()) {
+    console.warn('Google Analytics is not configured - skipping page view tracking');
+    return;
+  }
+
+  window.gtag('config', process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID!, {
+    page_path: url,
+  });
 };
 
 // Track events
 export function trackEvent(params: TrackEventParams) {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', params.action, {
-      event_category: params.category,
-      event_label: params.label,
-      value: params.value,
-      variant_id: params.variant_id,
-      variant_name: params.variant_name,
-      error_message: params.error_message,
-      time_spent: params.time_spent,
-      field_interactions: params.field_interactions,
-      errors: params.errors,
-    })
+  if (typeof window === 'undefined' || !window.gtag) {
+    return;
   }
+
+  // Check if Google Analytics is configured
+  if (!isGoogleAnalyticsConfigured()) {
+    console.warn('Google Analytics is not configured - skipping event tracking');
+    return;
+  }
+
+  window.gtag('event', params.action, {
+    event_category: params.category,
+    event_label: params.label,
+    value: params.value,
+    variant_id: params.variant_id,
+    variant_name: params.variant_name,
+    error_message: params.error_message,
+    time_spent: params.time_spent,
+    field_interactions: params.field_interactions,
+    errors: params.errors,
+  });
 }
 
 // Track form submissions
 export const trackFormSubmission = (formType: string, insuranceType: string) => {
-  trackEvent({
-    action: 'form_submission',
-    category: formType,
-    label: insuranceType,
-  });
+  if (typeof window === 'undefined' || !window.gtag) {
+    return;
+  }
 
-  // Track as conversion if Google Ads ID is available
-  if (process.env.NEXT_PUBLIC_GOOGLE_ADS_ID) {
+  // Track event in Google Analytics if configured
+  if (isGoogleAnalyticsConfigured()) {
+    trackEvent({
+      action: 'form_submission',
+      category: formType,
+      label: insuranceType,
+    });
+  }
+
+  // Track as conversion in Google Ads if configured
+  if (isGoogleAdsConfigured()) {
     window.gtag('event', 'conversion', {
       send_to: process.env.NEXT_PUBLIC_GOOGLE_ADS_ID,
       value: 1.0,
@@ -129,6 +161,16 @@ export const trackFunnelStep = ({
   variant?: string;
   abTestId?: string;
 }) => {
+  if (typeof window === 'undefined' || !window.gtag) {
+    return;
+  }
+
+  // Check if Google Analytics is configured
+  if (!isGoogleAnalyticsConfigured()) {
+    console.warn('Google Analytics is not configured - skipping funnel step tracking');
+    return;
+  }
+
   trackEvent({
     action: 'funnel_step',
     category: funnelName,
@@ -153,27 +195,41 @@ export async function logFunnelStep({
   abTestId,
   abTestVariant,
 }: FunnelStepData): Promise<void> {
-  // Log to Google Analytics
-  gtag('event', 'funnel_step', {
-    event_category: 'Quote Funnel',
-    event_label: `${insuranceType} Insurance - Step ${step}`,
-    value: step,
-    funnel_name: funnelName,
-    funnel_variant: funnelVariant,
-    ab_test_id: abTestId,
-    ab_test_variant: abTestVariant,
-  });
+  if (typeof window === 'undefined' || !window.gtag) {
+    return;
+  }
 
-  // Log to console in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Funnel Step:', {
-      step,
-      insuranceType,
-      funnelName,
-      funnelVariant,
-      abTestId,
-      abTestVariant,
+  // Check if Google Analytics is configured
+  if (!isGoogleAnalyticsConfigured()) {
+    console.warn('Google Analytics is not configured - skipping funnel step logging');
+    return;
+  }
+
+  try {
+    // Log to Google Analytics
+    gtag('event', 'funnel_step', {
+      event_category: 'Quote Funnel',
+      event_label: `${insuranceType} Insurance - Step ${step}`,
+      value: step,
+      funnel_name: funnelName,
+      funnel_variant: funnelVariant,
+      ab_test_id: abTestId,
+      ab_test_variant: abTestVariant,
     });
+
+    // Log to console in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Funnel Step:', {
+        step,
+        insuranceType,
+        funnelName,
+        funnelVariant,
+        abTestId,
+        abTestVariant,
+      });
+    }
+  } catch (error) {
+    console.warn('Failed to log funnel step:', error);
   }
 }
 
@@ -187,31 +243,45 @@ export async function logFormSubmission({
   abTestId,
   abTestVariant,
 }: FormSubmissionData): Promise<void> {
-  // Log to Google Analytics
-  gtag('event', 'form_submission', {
-    event_category: 'Quote Form',
-    event_label: `${insuranceType} Insurance Quote`,
-    value: 1,
-    ...formData,
-    ...utmParams,
-    funnel_name: funnelName,
-    funnel_step: funnelStep,
-    funnel_variant: funnelVariant,
-    ab_test_id: abTestId,
-    ab_test_variant: abTestVariant,
-  });
+  if (typeof window === 'undefined' || !window.gtag) {
+    return;
+  }
 
-  // Log to console in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Form Submission:', {
-      insuranceType,
-      formData,
-      utmParams,
-      funnelName,
-      funnelStep,
-      funnelVariant,
-      abTestId,
-      abTestVariant,
+  // Check if Google Analytics is configured
+  if (!isGoogleAnalyticsConfigured()) {
+    console.warn('Google Analytics is not configured - skipping form submission logging');
+    return;
+  }
+
+  try {
+    // Log to Google Analytics
+    gtag('event', 'form_submission', {
+      event_category: 'Quote Form',
+      event_label: `${insuranceType} Insurance Quote`,
+      value: 1,
+      ...formData,
+      ...utmParams,
+      funnel_name: funnelName,
+      funnel_step: funnelStep,
+      funnel_variant: funnelVariant,
+      ab_test_id: abTestId,
+      ab_test_variant: abTestVariant,
     });
+
+    // Log to console in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Form Submission:', {
+        insuranceType,
+        formData,
+        utmParams,
+        funnelName,
+        funnelStep,
+        funnelVariant,
+        abTestId,
+        abTestVariant,
+      });
+    }
+  } catch (error) {
+    console.warn('Failed to log form submission:', error);
   }
 } 

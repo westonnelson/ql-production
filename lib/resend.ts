@@ -1,7 +1,12 @@
 import { Resend } from 'resend';
 
-if (!process.env.RESEND_API_KEY) {
-  throw new Error('Missing RESEND_API_KEY environment variable');
-}
+// Initialize Resend with a placeholder key if not available
+const resendApiKey = process.env.RESEND_API_KEY || 'placeholder_key';
 
-export const resendClient = new Resend(process.env.RESEND_API_KEY as string); 
+// Create the Resend client
+export const resendClient = new Resend(resendApiKey);
+
+// Export a function to check if Resend is properly configured
+export function isResendConfigured(): boolean {
+  return !!process.env.RESEND_API_KEY;
+} 

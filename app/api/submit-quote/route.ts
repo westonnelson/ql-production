@@ -5,9 +5,9 @@ import { sendConsumerConfirmationEmail, sendAgentNotificationEmail } from '@/lib
 import { createSalesforceOpportunity } from '@/lib/salesforce';
 import { handleFormSubmission } from '@/lib/form-handler';
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Initialize Supabase client with placeholder values if not available
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_key';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // CORS headers

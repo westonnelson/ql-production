@@ -11,26 +11,26 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Initialize Supabase with placeholder values if not available
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_key';
 
-console.log('Environment check:', {
-  hasSupabaseUrl: !!supabaseUrl,
-  hasServiceKey: !!supabaseServiceKey,
-  nodeEnv: process.env.NODE_ENV
-});
-
-// Remove the global supabase client
-// let supabase: SupabaseClient | null = null;
+// Function to check if Supabase is properly configured
+function isSupabaseConfigured(): boolean {
+  const isConfigured = !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  if (!isConfigured) {
+    console.warn('Supabase is not properly configured:', {
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      nodeEnv: process.env.NODE_ENV
+    });
+  }
+  return isConfigured;
+}
 
 // Function to get Supabase client
-function getSupabaseClient() {
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error('Missing Supabase configuration:', {
-      url: supabaseUrl ? 'present' : 'missing',
-      key: supabaseServiceKey ? 'present' : 'missing'
-    });
+function getSupabaseClient(): SupabaseClient | null {
+  if (!isSupabaseConfigured()) {
     return null;
   }
 
@@ -94,8 +94,8 @@ export async function POST(request: Request) {
     const supabase = getSupabaseClient();
     if (!supabase) {
       return NextResponse.json(
-        { error: 'Failed to initialize database connection' },
-        { status: 500 }
+        { error: 'Database integration not configured or failed to initialize' },
+        { status: 503 }
       );
     }
 
@@ -118,20 +118,29 @@ export async function POST(request: Request) {
     }
 
     // Send confirmation email to the lead
-    await sendConfirmationEmail(lead);
+    try {
+      await sendConfirmationEmail(lead);
+    } catch (emailError) {
+      console.warn('Failed to send confirmation email:', emailError);
+      // Continue execution even if email fails
+    }
 
     // Send notification email to support and the submitting email
-    await sendLeadNotificationEmail(lead);
-
-    // TODO: Integrate with Salesforce
-    // This will be implemented in the next phase
-    // The lead data will be sent to Salesforce as an opportunity
+    try {
+      await sendLeadNotificationEmail(lead);
+    } catch (notificationError) {
+      console.warn('Failed to send notification email:', notificationError);
+      // Continue execution even if email fails
+    }
 
     return NextResponse.json({ success: true, data: lead });
   } catch (error) {
     console.error('Error processing lead:', error);
     return NextResponse.json(
-      { error: 'Failed to process lead', details: error },
+      { 
+        error: 'Failed to process lead', 
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
