@@ -29,9 +29,9 @@ export async function GET() {
       });
 
       // Test authentication
-      const username = process.env.SALESFORCE_USERNAME;
-      const password = process.env.SALESFORCE_PASSWORD;
-      const securityToken = process.env.SALESFORCE_SECURITY_TOKEN;
+      const username = process.env.SALESFORCE_USERNAME as string;
+      const password = process.env.SALESFORCE_PASSWORD as string;
+      const securityToken = process.env.SALESFORCE_SECURITY_TOKEN as string;
 
       if (!username || !password || !securityToken) {
         throw new Error('Missing Salesforce credentials');
