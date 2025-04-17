@@ -8,5 +8,10 @@
     "NEXT_PUBLIC_SITE_URL": "https://quotelinker.com",
     "NEXT_PUBLIC_VERCEL_URL": "quotelinker.com",
     "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "NODE_VERSION": "18.x"
+    }
   }
 } 
