@@ -69,10 +69,23 @@ export async function POST(request: Request) {
       loginUrl: process.env.SALESFORCE_LOGIN_URL || 'https://login.salesforce.com'
     });
 
+    // Get Salesforce credentials with type assertions
+    const username = process.env.SALESFORCE_USERNAME as string;
+    const password = process.env.SALESFORCE_PASSWORD as string;
+    const securityToken = process.env.SALESFORCE_SECURITY_TOKEN as string;
+
+    if (!username || !password || !securityToken) {
+      console.error('Missing Salesforce credentials');
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500, headers: corsHeaders }
+      );
+    }
+
     // Authenticate with Salesforce
     await conn.login(
-      process.env.SALESFORCE_USERNAME!,
-      process.env.SALESFORCE_PASSWORD! + process.env.SALESFORCE_SECURITY_TOKEN!
+      username,
+      password + securityToken
     );
 
     // Prepare lead data for Salesforce

@@ -2,17 +2,18 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripeSecret = process.env.STRIPE_SECRET_KEY;
+// Get environment variables with type assertions
+const stripeSecret = process.env.STRIPE_SECRET_KEY as string | undefined;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
 
 // Initialize Stripe client if secret is available
 const stripe = stripeSecret && stripeSecret !== 'placeholder' 
   ? new Stripe(stripeSecret, { apiVersion: '2025-03-31.basil' })
   : null;
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Initialize Supabase client
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(req: Request) {
   // If no real Stripe key is set, fallback to mock logic

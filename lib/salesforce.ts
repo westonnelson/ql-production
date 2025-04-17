@@ -2,11 +2,14 @@ import axios from 'axios';
 
 // Function to check if Salesforce is properly configured
 export function isSalesforceConfigured(): boolean {
-  return !!(process.env.SALESFORCE_TOKEN && process.env.SALESFORCE_INSTANCE_URL);
+  return !!(
+    process.env.SALESFORCE_TOKEN && 
+    process.env.SALESFORCE_INSTANCE_URL
+  );
 }
 
 async function getSalesforceToken(): Promise<string | null> {
-  const token = process.env.SALESFORCE_TOKEN;
+  const token = process.env.SALESFORCE_TOKEN as string | undefined;
   if (!token) {
     console.warn('SALESFORCE_TOKEN is not defined');
     return null;
@@ -22,7 +25,7 @@ export async function createSalesforceOpportunity(submission: Record<string, any
 
   try {
     const token = await getSalesforceToken();
-    const instanceUrl = process.env.SALESFORCE_INSTANCE_URL;
+    const instanceUrl = process.env.SALESFORCE_INSTANCE_URL as string | undefined;
     
     if (!token || !instanceUrl) {
       return { success: false, error: 'Missing Salesforce credentials' };

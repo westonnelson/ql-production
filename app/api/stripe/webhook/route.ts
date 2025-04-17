@@ -3,19 +3,22 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { headers } from 'next/headers';
 
+// Get environment variables with type assertions
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY as string | undefined;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string | undefined;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string | undefined;
+
 // Initialize Stripe with a placeholder key if not available
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
-const stripe = new Stripe(stripeSecretKey, {
+const stripe = new Stripe(stripeSecretKey || 'sk_test_placeholder', {
   apiVersion: '2025-03-31.basil',
 });
 
 // Initialize Supabase with placeholder values if not available
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_key';
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Use a placeholder webhook secret if not available
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_placeholder';
+const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseKey || 'placeholder_key'
+);
 
 export async function POST(req: Request) {
   try {
@@ -26,6 +29,15 @@ export async function POST(req: Request) {
     if (!signature || process.env.NODE_ENV === 'development') {
       console.log('Using mock Stripe event in development mode');
       return NextResponse.json({ received: true, mock: true });
+    }
+
+    // Ensure webhook secret is available
+    if (!webhookSecret) {
+      console.error('Missing webhook secret');
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      );
     }
 
     let event: Stripe.Event;
