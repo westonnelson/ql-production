@@ -3,26 +3,26 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FaEnvelope } from 'react-icons/fa';
 
-const Footer = () => {
+export default function Footer() {
   return (
-    <footer className="bg-white py-12 px-4 sm:px-6 lg:px-8 border-t border-gray-200">
-      <div className="max-w-7xl mx-auto">
+    <footer className="bg-white border-t border-gray-200">
+      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-center mb-8">
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/logo.svg"
+              alt="QuoteLinker"
+              width={32}
+              height={32}
+              className="w-8 h-8"
+            />
+            <span className="ml-2 text-lg font-semibold text-gray-900">QuoteLinker</span>
+          </Link>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 text-center md:text-left">
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <div className="relative w-8 h-8">
-                <Image
-                  src="/logo.svg"
-                  alt="QuoteLinker"
-                  fill
-                  sizes="(max-width: 32px) 100vw"
-                  className="object-contain"
-                />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">QuoteLinker</h3>
-            </div>
-            <div className="flex items-center justify-center md:justify-start space-x-2 text-gray-600">
               <FaEnvelope className="text-[#00E0FF]" />
               <a href="mailto:support@quotelinker.com" className="hover:text-[#00E0FF] transition-colors">
                 support@quotelinker.com
@@ -113,6 +113,4 @@ const Footer = () => {
       </div>
     </footer>
   );
-};
-
-export default Footer; 
+} 

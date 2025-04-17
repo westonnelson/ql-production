@@ -8,22 +8,22 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="relative w-8 h-8">
+    <header className="bg-white shadow-sm">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex">
+            <Link href="/" className="flex-shrink-0 flex items-center">
               <Image
                 src="/logo.svg"
                 alt="QuoteLinker"
-                fill
-                sizes="(max-width: 32px) 100vw"
-                className="object-contain"
+                width={40}
+                height={40}
+                className="w-10 h-10"
                 priority
               />
-            </div>
-            <span className="text-2xl font-bold text-gray-900">QuoteLinker</span>
-          </Link>
+              <span className="ml-3 text-xl font-semibold text-gray-900">QuoteLinker</span>
+            </Link>
+          </div>
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
@@ -88,7 +88,7 @@ export default function Header() {
             )}
           </button>
         </div>
-      </div>
+      </nav>
 
       {/* Mobile menu */}
       <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>

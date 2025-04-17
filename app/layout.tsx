@@ -9,22 +9,27 @@ import { Toaster } from 'react-hot-toast'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'QuoteLinker - Insurance Quotes Made Easy',
-  description: 'Get instant insurance quotes tailored to your needs',
-  metadataBase: new URL('https://quotelinker.com'),
+  title: {
+    template: '%s | QuoteLinker',
+    default: 'QuoteLinker - Compare Insurance Quotes',
+  },
+  description: 'Get competitive insurance quotes from top providers. Compare rates and find the best coverage for your needs.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://quotelinker.com'),
   openGraph: {
-    title: 'QuoteLinker - Insurance Quote Capture',
-    description: 'Get your personalized insurance quotes quickly and easily.',
-    type: 'website',
+    title: 'QuoteLinker - Compare Insurance Quotes',
+    description: 'Get competitive insurance quotes from top providers. Compare rates and find the best coverage for your needs.',
     url: 'https://quotelinker.com',
+    siteName: 'QuoteLinker',
     images: [
       {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'QuoteLinker - Insurance Quotes Made Easy',
+        url: '/logo.svg',
+        width: 512,
+        height: 512,
+        alt: 'QuoteLinker Logo',
       },
     ],
+    locale: 'en_US',
+    type: 'website',
   },
   icons: {
     icon: [

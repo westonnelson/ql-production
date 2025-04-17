@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="32" height="32" rx="8" fill="#00E0FF"/>
-  <path d="M8 16C8 11.5817 11.5817 8 16 8C20.4183 8 24 11.5817 24 16C24 20.4183 20.4183 24 16 24" stroke="white" stroke-width="2" stroke-linecap="round"/>
-  <path d="M16 24C13.7909 24 12 22.2091 12 20C12 17.7909 13.7909 16 16 16C18.2091 16 20 17.7909 20 20C20 22.2091 18.2091 24 16 24Z" fill="white"/>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer glow -->
+  <circle cx="256" cy="256" r="200" fill="url(#glow)" filter="url(#blur)"/>
+  
+  <!-- Main circle with indentation -->
+  <path d="M256 56C370.264 56 456 141.736 456 256C456 335.352 412.36 404.056 347.528 439.528C347.528 439.528 256 376 256 256C256 141.736 347.528 72.472 347.528 72.472C312.056 61.64 284.648 56 256 56Z" fill="#00E0FF"/>
+  
+  <!-- Definitions -->
+  <defs>
+    <!-- Glow gradient -->
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#00E0FF" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#00E0FF" stop-opacity="0"/>
+    </radialGradient>
+    
+    <!-- Blur filter -->
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="30"/>
+    </filter>
+  </defs>
 </svg> 
