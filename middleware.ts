@@ -2,8 +2,15 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // Skip authentication in production
-  if (process.env.VERCEL_ENV === 'production') {
+  // Log environment variables for debugging
+  console.log('Environment:', {
+    VERCEL_ENV: process.env.VERCEL_ENV,
+    NODE_ENV: process.env.NODE_ENV,
+    IS_PRODUCTION: process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production'
+  })
+
+  // Skip authentication in production or for specific routes
+  if (process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production') {
     return NextResponse.next()
   }
 
@@ -52,8 +59,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
+     * - public (public files)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],
 } 
