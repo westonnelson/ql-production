@@ -1,21 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFormAnalytics } from '../lib/hooks/useFormAnalytics';
 
 export default function LeadForm({ insuranceType = 'life' }: { insuranceType?: string }) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    // ... existing form data ...
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { setCurrentStep: updateFormStep, trackSubmission } = useFormAnalytics({
+    formId: 'lead-form',
+    insuranceType,
+    totalSteps: 3,
   });
 
-  const { trackStepCompletion, trackSuccess, trackError } = useFormAnalytics({
-    insuranceType,
-    currentStep,
-    totalSteps: 3,
-    formId: `lead_${insuranceType}`,
-  });
+  useEffect(() => {
+    updateFormStep(currentStep);
+  }, [currentStep, updateFormStep]);
 
   const handleStepComplete = () => {
-    trackStepCompletion();
+    trackSubmission();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,12 +27,12 @@ export default function LeadForm({ insuranceType = 'life' }: { insuranceType?: s
       // ... existing submission logic ...
 
       // Track successful submission
-      trackSuccess();
+      trackSubmission();
 
       // ... rest of success handling ...
     } catch (error) {
       if (error instanceof Error) {
-        trackError(error);
+        trackSubmission(error);
       }
       // ... existing error handling ...
     }
