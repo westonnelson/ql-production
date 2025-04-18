@@ -3,6 +3,13 @@ import { useFormAnalytics } from '../lib/hooks/useFormAnalytics';
 
 export default function LeadForm({ insuranceType = 'life' }: { insuranceType?: string }) {
   const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    insuranceType,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,21 +25,24 @@ export default function LeadForm({ insuranceType = 'life' }: { insuranceType?: s
   }, [currentStep, updateFormStep]);
 
   const handleStepComplete = () => {
-    trackSubmission();
+    trackSubmission(formData);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
     try {
       // ... existing submission logic ...
 
       // Track successful submission
-      trackSubmission();
+      await trackSubmission(formData);
 
-      // ... rest of success handling ...
+      setShowSuccess(true);
     } catch (error) {
       if (error instanceof Error) {
-        trackSubmission(error);
+        await trackSubmission({ ...formData, error: error.message });
       }
       // ... existing error handling ...
     }
