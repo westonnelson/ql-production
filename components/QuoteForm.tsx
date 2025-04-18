@@ -80,7 +80,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { setCurrentStep, trackSubmission } = useFormAnalytics({
+  const { setCurrentStep: updateFormStep, trackSubmission } = useFormAnalytics({
     formId: 'quote-form',
     insuranceType,
     totalSteps: 4,
@@ -100,8 +100,8 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
   }, []);
 
   useEffect(() => {
-    setCurrentStep(currentStep);
-  }, [currentStep, setCurrentStep]);
+    updateFormStep(currentStep);
+  }, [currentStep, updateFormStep]);
 
   // Track form abandonment on unmount
   useEffect(() => {
