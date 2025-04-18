@@ -20,10 +20,10 @@ fi
 
 # Deploy health check function
 echo "📦 Deploying salesforce-health-check function..."
-supabase functions deploy salesforce-health-check --project-ref $(grep NEXT_PUBLIC_SUPABASE_URL .env.local | cut -d '/' -f 4 | cut -d '.' -f 1)
+supabase functions deploy salesforce-health-check --no-verify-jwt --use-docker=false
 
 # Deploy create opportunity function
 echo "📦 Deploying create-salesforce-opportunity function..."
-supabase functions deploy create-salesforce-opportunity --project-ref $(grep NEXT_PUBLIC_SUPABASE_URL .env.local | cut -d '/' -f 4 | cut -d '.' -f 1)
+supabase functions deploy create-salesforce-opportunity --no-verify-jwt --use-docker=false
 
 echo "✅ Edge functions deployed successfully!" 

@@ -18,18 +18,8 @@ if ! supabase projects list &> /dev/null; then
   exit 1
 fi
 
-# Get project reference
-PROJECT_REF=$(grep NEXT_PUBLIC_SUPABASE_URL .env.local | cut -d '/' -f 4 | cut -d '.' -f 1)
-
-if [ -z "$PROJECT_REF" ]; then
-  echo "❌ Could not determine Supabase project reference. Please check your .env.local file."
-  exit 1
-fi
-
-echo "📦 Project reference: $PROJECT_REF"
-
 # Run migrations
 echo "🔄 Running migrations..."
-supabase db push --project-ref $PROJECT_REF
+supabase db push --linked
 
 echo "✅ Migrations completed successfully!" 
