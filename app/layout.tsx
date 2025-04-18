@@ -9,37 +9,12 @@ import { Toaster } from 'react-hot-toast'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: {
-    template: '%s | QuoteLinker',
-    default: 'QuoteLinker - Compare Insurance Quotes',
-  },
-  description: 'Get competitive insurance quotes from top providers. Compare rates and find the best coverage for your needs.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://quotelinker.com'),
-  openGraph: {
-    title: 'QuoteLinker - Compare Insurance Quotes',
-    description: 'Get competitive insurance quotes from top providers. Compare rates and find the best coverage for your needs.',
-    url: 'https://quotelinker.com',
-    siteName: 'QuoteLinker',
-    images: [
-      {
-        url: '/logo.svg',
-        width: 512,
-        height: 512,
-        alt: 'QuoteLinker Logo',
-      },
-    ],
-    locale: 'en_US',
-    type: 'website',
-  },
-  icons: {
-    icon: [
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
-    ],
-    shortcut: ['/favicon-32x32.png'],
-    apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
-    ]
-  },
+  title: 'Insurance Quote Platform',
+  description: 'Get personalized insurance quotes tailored to your needs. Compare coverage options and find the right plan for you.',
+  keywords: 'insurance, quotes, coverage, auto insurance, home insurance, life insurance, health insurance',
+  authors: [{ name: 'Insurance Quote Platform' }],
+  viewport: 'width=device-width, initial-scale=1',
+  themeColor: '#00B4D8',
 }
 
 export const dynamic = 'force-dynamic'
@@ -51,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="bg-white">
+    <html lang="en" className="h-full">
       <head>
         {/* Google Analytics */}
         <Script
@@ -72,7 +47,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} bg-white text-gray-900`}>
+      <body className={`${inter.className} min-h-full bg-background text-foreground antialiased`}>
         {/* Google Tag Manager */}
         <Script id="gtm" strategy="afterInteractive">
           {`
@@ -84,9 +59,47 @@ export default function RootLayout({
           `}
         </Script>
         <Toaster position="top-right" />
-        <Header />
-        <main className="min-h-screen bg-white">{children}</main>
-        <Footer />
+        <div className="relative flex min-h-screen flex-col">
+          <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container flex h-16 items-center">
+              <nav className="flex items-center space-x-6 text-sm font-medium">
+                <a href="/" className="text-xl font-bold text-primary">
+                  Insurance Quotes
+                </a>
+              </nav>
+            </div>
+          </header>
+          <main className="flex-1">{children}</main>
+          <footer className="border-t bg-background">
+            <div className="container py-8 md:py-12">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+                <div>
+                  <h3 className="text-lg font-semibold">About Us</h3>
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    We help you find the right insurance coverage for your needs. Our platform makes it easy to compare quotes and make informed decisions.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Contact</h3>
+                  <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                    <li>Email: support@insurancequotes.com</li>
+                    <li>Phone: (555) 123-4567</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Legal</h3>
+                  <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                    <li><a href="/privacy" className="hover:text-primary">Privacy Policy</a></li>
+                    <li><a href="/terms" className="hover:text-primary">Terms of Service</a></li>
+                  </ul>
+                </div>
+              </div>
+              <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
+                © {new Date().getFullYear()} Insurance Quote Platform. All rights reserved.
+              </div>
+            </div>
+          </footer>
+        </div>
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe

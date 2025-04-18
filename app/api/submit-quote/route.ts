@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 import { sendConsumerConfirmationEmail, sendAgentNotificationEmail } from '@/lib/sendEmail';
-import { createSalesforceOpportunity } from '@/lib/salesforce';
 import { handleFormSubmission } from '@/lib/form-handler';
 
 // Initialize Supabase client with placeholder values if not available
@@ -179,6 +178,76 @@ export async function POST(request: Request) {
     } catch (emailError) {
       console.error('Failed to send emails:', emailError);
       // Don't fail the request if emails fail, but log it
+    }
+
+    // Create Salesforce opportunity
+    try {
+      console.log('Creating Salesforce opportunity');
+      
+      // Prepare UTM parameters
+      const utmParams = {
+        source: data.utm_source || null,
+        medium: data.utm_medium || null,
+        campaign: data.utm_campaign || null,
+        term: data.utm_term || null,
+        content: data.utm_content || null
+      };
+      
+      // Call the Supabase Edge Function to create Salesforce opportunity
+      const salesforceResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-salesforce-opportunity`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+          },
+          body: JSON.stringify({
+            formData: {
+              firstName: data.firstName,
+              lastName: data.lastName,
+              email: data.email,
+              phone: data.phone,
+              age: age,
+              gender: data.gender,
+              insuranceType: data.insuranceType,
+              // Add insurance-specific fields
+              ...(data.insuranceType === 'life' && {
+                coverageAmount: data.coverageAmount,
+                termLength: data.termLength,
+                tobaccoUse: data.tobaccoUse
+              }),
+              ...(data.insuranceType === 'disability' && {
+                occupation: data.occupation,
+                employmentStatus: data.employmentStatus,
+                incomeRange: data.incomeRange
+              }),
+              ...(data.insuranceType === 'auto' && {
+                vehicleYear: data.vehicleYear,
+                vehicleMake: data.vehicleMake,
+                vehicleModel: data.vehicleModel
+              }),
+              ...(data.insuranceType === 'supplemental' && {
+                healthStatus: data.healthStatus,
+                preExistingConditions: data.preExistingConditions
+              })
+            },
+            formType: data.insuranceType,
+            utmParams
+          })
+        }
+      );
+      
+      if (!salesforceResponse.ok) {
+        const salesforceError = await salesforceResponse.json();
+        console.error('Salesforce integration error:', salesforceError);
+        // Don't fail the request if Salesforce integration fails, but log it
+      } else {
+        console.log('Salesforce opportunity created successfully');
+      }
+    } catch (salesforceError) {
+      console.error('Failed to create Salesforce opportunity:', salesforceError);
+      // Don't fail the request if Salesforce integration fails, but log it
     }
 
     // Return success response

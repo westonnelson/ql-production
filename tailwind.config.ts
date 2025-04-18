@@ -42,6 +42,10 @@ const config: Config = {
           DEFAULT: '#FFFFFF',
           foreground: '#111827',
         },
+        dark: {
+          DEFAULT: '#0F1218',
+          light: '#1A1F2B',
+        }
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

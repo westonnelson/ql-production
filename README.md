@@ -1,28 +1,36 @@
 # QuoteLinker
 
-A production-ready, scalable insurance quote capture application built with modern web technologies.
-
-## Tech Stack
-
-- **Framework**: Next.js 14 with TypeScript
-- **Styling**: Tailwind CSS with custom theme
-- **Database**: Supabase for lead storage
-- **Email**: Resend for transactional emails
-- **CRM**: Salesforce integration for lead management
-- **Analytics**: Google Analytics 4
-- **Deployment**: Vercel
+QuoteLinker is a modern insurance quote platform that connects consumers with insurance agents. The platform allows users to request quotes for various insurance products, including auto, life, home, disability, and supplemental health insurance.
 
 ## Features
 
-- 🎨 Modern, clean UI with consistent branding
-- 📱 Fully responsive design
-- 📝 Multi-step quote forms
-- 📧 Automated email notifications
-- 📊 Lead tracking and analytics
-- 🔒 Secure data handling
-- 🚀 Fast performance with Next.js
+- **Multi-step Quote Forms**: User-friendly forms for different insurance types
+- **Real-time Form Analytics**: Track form submissions, abandonments, and completions
+- **Email Notifications**: Automatic emails to consumers and agents
+- **Salesforce Integration**: Seamless lead-to-opportunity flow
+- **UTM Tracking**: Track marketing campaign performance
+- **Admin Dashboard**: Monitor form submissions and conversion rates
+- **Health Monitoring**: Check the status of various services
+
+## Tech Stack
+
+- **Frontend**: Next.js, React, Tailwind CSS
+- **Backend**: Next.js API Routes, Supabase Edge Functions
+- **Database**: Supabase (PostgreSQL)
+- **Email**: Resend
+- **CRM**: Salesforce
+- **Analytics**: Custom implementation with Supabase
 
 ## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- Supabase account
+- Salesforce account (for CRM integration)
+- Resend account (for email)
+
+### Installation
 
 1. Clone the repository:
    ```bash
@@ -39,52 +47,67 @@ A production-ready, scalable insurance quote capture application built with mode
    ```bash
    cp .env.example .env.local
    ```
-   Fill in the required environment variables in `.env.local`
+   Edit `.env.local` with your credentials.
 
-4. Run the development server:
+4. Run database migrations:
+   ```bash
+   ./scripts/run-migrations.sh
+   ```
+
+5. Deploy Supabase Edge Functions:
+   ```bash
+   ./scripts/deploy-edge-functions.sh
+   ```
+
+6. Start the development server:
    ```bash
    npm run dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
+## Project Structure
+
+```
+quotelinker/
+├── app/                  # Next.js app directory
+│   ├── api/              # API routes
+│   ├── quote/            # Quote form pages
+│   └── admin/            # Admin dashboard
+├── components/           # React components
+├── lib/                  # Utility functions
+├── public/               # Static assets
+├── supabase/             # Supabase configuration
+│   ├── functions/        # Edge Functions
+│   └── migrations/       # Database migrations
+├── scripts/              # Deployment scripts
+└── docs/                 # Documentation
+```
 
 ## Deployment
 
-1. Push your code to GitHub
+### Vercel Deployment
 
-2. Connect your repository to Vercel:
-   - Go to [Vercel](https://vercel.com)
-   - Create a new project
-   - Import your repository
-   - Configure environment variables
-   - Deploy
+1. Push your changes to GitHub
+2. Connect your repository to Vercel
+3. Configure environment variables in Vercel
+4. Deploy
 
-3. Set up custom domain (optional):
-   - Add your domain in Vercel project settings
-   - Configure DNS records
-   - Enable HTTPS
+### Manual Deployment
 
-## Environment Variables
+1. Build the project:
+   ```bash
+   npm run build
+   ```
 
-Required environment variables:
+2. Deploy to Vercel:
+   ```bash
+   vercel --prod
+   ```
 
-```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+## Documentation
 
-# Resend
-RESEND_API_KEY=
-
-# Salesforce
-SF_USERNAME=
-SF_PASSWORD=
-SF_SECURITY_TOKEN=
-
-# Google Analytics
-NEXT_PUBLIC_GA_MEASUREMENT_ID=
-```
+- [Salesforce Integration](docs/salesforce-integration.md)
+- [Form Analytics](docs/form-analytics.md)
+- [Email Templates](docs/email-templates.md)
 
 ## Contributing
 
@@ -96,4 +119,12 @@ NEXT_PUBLIC_GA_MEASUREMENT_ID=
 
 ## License
 
-This project is licensed under the ISC License. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- [Next.js](https://nextjs.org/)
+- [Supabase](https://supabase.io/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Salesforce](https://www.salesforce.com/)
+- [Resend](https://resend.com/) 
