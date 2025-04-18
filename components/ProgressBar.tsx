@@ -7,39 +7,50 @@ interface ProgressBarProps {
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalSteps }) => {
   const progress = (currentStep / totalSteps) * 100;
+
   return (
-    <div className="progress-container">
-      <div className="progress-bar" style={{ width: `${progress}%` }}></div>
-      <div className="progress-text">Step {currentStep} of {totalSteps}</div>
-      <style jsx>{`
-        .progress-container {
-          background: #e0e0e0;
-          border-radius: 5px;
-          position: relative;
-          width: 100%;
-          height: 20px;
-          margin-bottom: 1rem;
-        }
+    <div className="relative">
+      {/* Progress Bar */}
+      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-primary transition-all duration-300 ease-in-out rounded-full"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
 
-        .progress-bar {
-          background: #0055a4;
-          height: 100%;
-          border-radius: 5px;
-          transition: width 0.3s ease;
-        }
+      {/* Step Indicators */}
+      <div className="flex justify-between mt-2">
+        {Array.from({ length: totalSteps }).map((_, index) => {
+          const stepNumber = index + 1;
+          const isCompleted = currentStep > stepNumber;
+          const isCurrent = currentStep === stepNumber;
 
-        .progress-text {
-          position: absolute;
-          width: 100%;
-          text-align: center;
-          top: 0;
-          left: 0;
-          font-size: 0.875rem;
-          line-height: 20px;
-          color: #fff;
-          font-weight: bold;
-        }
-      `}</style>
+          return (
+            <div key={index} className="flex flex-col items-center">
+              <div
+                className={`
+                  w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
+                  transition-all duration-200
+                  ${isCompleted ? 'bg-primary text-white' : 
+                    isCurrent ? 'bg-primary text-white' : 
+                    'bg-gray-100 text-gray-500'}
+                `}
+              >
+                {isCompleted ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  stepNumber
+                )}
+              </div>
+              <span className={`text-xs mt-1 ${isCurrent ? 'text-primary font-medium' : 'text-gray-500'}`}>
+                Step {stepNumber}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

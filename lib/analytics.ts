@@ -39,6 +39,20 @@ interface TrackEventParams {
   errors?: string
 }
 
+interface TrackingData {
+  insuranceType: string;
+  step?: number;
+  timeSpent?: number;
+  totalTime?: number;
+  errorType?: string;
+  errorMessage?: string;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
+}
+
 // Google Analytics and Google Ads Integration
 declare global {
   interface Window {
@@ -125,27 +139,17 @@ export function trackEvent(params: TrackEventParams) {
 }
 
 // Track form submissions
-export const trackFormSubmission = (formType: string, insuranceType: string) => {
-  if (typeof window === 'undefined' || !window.gtag) {
-    return;
-  }
-
-  // Track event in Google Analytics if configured
-  if (isGoogleAnalyticsConfigured()) {
-    trackEvent({
-      action: 'form_submission',
-      category: formType,
-      label: insuranceType,
+export const trackFormSubmission = async (data: TrackingData) => {
+  try {
+    await fetch('/api/track-form-submission', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
     });
-  }
-
-  // Track as conversion in Google Ads if configured
-  if (isGoogleAdsConfigured()) {
-    window.gtag('event', 'conversion', {
-      send_to: process.env.NEXT_PUBLIC_GOOGLE_ADS_ID,
-      value: 1.0,
-      currency: 'USD',
-    });
+  } catch (error) {
+    console.error('Error tracking form submission:', error);
   }
 };
 
@@ -284,4 +288,85 @@ export async function logFormSubmission({
   } catch (error) {
     console.warn('Failed to log form submission:', error);
   }
+}
+
+// Track form abandonment
+export const trackFormAbandonment = async (data: TrackingData) => {
+  try {
+    await fetch('/api/track-form-abandonment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  } catch (error) {
+    console.error('Error tracking form abandonment:', error);
+  }
+};
+
+// Track successful form completion
+export const trackFormSuccess = async (data: TrackingData) => {
+  try {
+    await fetch('/api/track-form-success', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  } catch (error) {
+    console.error('Error tracking form success:', error);
+  }
+};
+
+// Track form errors
+export const trackFormError = async (data: TrackingData) => {
+  try {
+    await fetch('/api/track-form-error', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  } catch (error) {
+    console.error('Error tracking form error:', error);
+  }
+};
+
+// Initialize Google Tag Manager
+export function initializeGTM(gtmId: string) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  // Add GTM script
+  const script = document.createElement('script');
+  script.innerHTML = `
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','${gtmId}');
+  `;
+  document.head.appendChild(script);
+
+  // Initialize dataLayer
+  (window as any).dataLayer = (window as any).dataLayer || [];
+  (window as any).dataLayer.push({
+    'gtm.start': new Date().getTime(),
+    event: 'gtm.js'
+  });
+
+  // Add GTM noscript iframe
+  const noscript = document.createElement('noscript');
+  const iframe = document.createElement('iframe');
+  iframe.src = `https://www.googletagmanager.com/ns.html?id=${gtmId}`;
+  iframe.height = '0';
+  iframe.width = '0';
+  iframe.style.display = 'none';
+  iframe.style.visibility = 'hidden';
+  noscript.appendChild(iframe);
+  document.body.insertBefore(noscript, document.body.firstChild);
 } 

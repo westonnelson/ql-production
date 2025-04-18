@@ -1,7 +1,6 @@
 import type { Config } from 'tailwindcss'
 
 const config: Config = {
-  darkMode: 'class',
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -12,19 +11,19 @@ const config: Config = {
       colors: {
         border: '#E5E7EB',
         input: '#F3F4F6',
-        ring: '#00E0FF',
+        ring: '#1E3A8A',
         background: '#FFFFFF',
         foreground: '#111827',
         primary: {
-          DEFAULT: '#00E0FF',
+          DEFAULT: '#1E3A8A',
           foreground: '#FFFFFF',
         },
         secondary: {
-          DEFAULT: '#F3F4F6',
-          foreground: '#374151',
+          DEFAULT: '#DC2626',
+          foreground: '#FFFFFF',
         },
         destructive: {
-          DEFAULT: '#EF4444',
+          DEFAULT: '#DC2626',
           foreground: '#FFFFFF',
         },
         muted: {
@@ -32,7 +31,7 @@ const config: Config = {
           foreground: '#6B7280',
         },
         accent: {
-          DEFAULT: '#00E0FF',
+          DEFAULT: '#1E3A8A',
           foreground: '#FFFFFF',
         },
         popover: {
