@@ -4,13 +4,13 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   // Log environment variables for debugging
   console.log('Environment:', {
-    VERCEL_ENV: process.env.VERCEL_ENV,
+    SKIP_AUTH: process.env.SKIP_AUTH,
     NODE_ENV: process.env.NODE_ENV,
-    IS_PRODUCTION: process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production'
+    IS_PRODUCTION: process.env.SKIP_AUTH === 'true' || process.env.NODE_ENV === 'production'
   })
 
-  // Skip authentication in production or for specific routes
-  if (process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production') {
+  // Skip authentication if SKIP_AUTH is true or in production
+  if (process.env.SKIP_AUTH === 'true' || process.env.NODE_ENV === 'production') {
     return NextResponse.next()
   }
 
