@@ -15,8 +15,12 @@ export interface FunnelConfig {
   abTestVariant?: string;
 }
 
-export function useUtmParams(): UtmParams {
+export function getUtmParams(): UtmParams {
   const searchParams = useSearchParams();
+  
+  if (!searchParams) {
+    return {};
+  }
   
   return {
     source: searchParams.get('utm_source') || undefined,
@@ -24,6 +28,18 @@ export function useUtmParams(): UtmParams {
     campaign: searchParams.get('utm_campaign') || undefined,
     term: searchParams.get('utm_term') || undefined,
     content: searchParams.get('utm_content') || undefined,
+  };
+}
+
+export function getUtmParamsFromUrl(url: string): UtmParams {
+  const urlParams = new URLSearchParams(url.split('?')[1] || '');
+  
+  return {
+    source: urlParams.get('utm_source') || undefined,
+    medium: urlParams.get('utm_medium') || undefined,
+    campaign: urlParams.get('utm_campaign') || undefined,
+    term: urlParams.get('utm_term') || undefined,
+    content: urlParams.get('utm_content') || undefined,
   };
 }
 

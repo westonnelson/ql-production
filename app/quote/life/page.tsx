@@ -493,11 +493,13 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
 
 export default function LifeInsuranceQuote() {
   const searchParams = useSearchParams()
-  const utmSource = searchParams.get('utm_source')
+  const utmSource = searchParams?.get('utm_source') || null
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <QuoteForm utmSource={utmSource} />
+      <div className="min-h-screen bg-gray-50">
+        <QuoteForm utmSource={utmSource} />
+      </div>
     </Suspense>
   )
 } 

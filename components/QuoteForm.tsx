@@ -9,11 +9,13 @@ import RadioGroup from './RadioGroup';
 import ProgressBar from './ProgressBar';
 import { toast } from 'react-hot-toast';
 import { useFormAnalytics } from '../lib/hooks/useFormAnalytics';
+import { supabase } from '../lib/supabase';
 
 interface QuoteFormProps {
   insuranceType?: string;
   title?: string;
   subtitle?: string;
+  utmSource?: string | null;
 }
 
 const INSURANCE_TYPES = {
@@ -40,7 +42,8 @@ const BEST_TIME_TO_CALL = [
 const QuoteForm: React.FC<QuoteFormProps> = ({ 
   insuranceType = INSURANCE_TYPES.TERM_LIFE,
   title = 'Get Your Free Insurance Quote',
-  subtitle = 'Compare competitive rates - No obligation required'
+  subtitle = 'Compare competitive rates - No obligation required',
+  utmSource = null
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -74,12 +77,13 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { trackStepCompletion, trackSuccess, trackError } = useFormAnalytics({
+  const { setCurrentStep, trackSubmission } = useFormAnalytics({
+    formId: 'quote-form',
     insuranceType,
-    currentStep,
-    totalSteps: 3,
-    formId: `quote_${insuranceType}`,
+    totalSteps: 4,
   });
 
   // Track UTM parameters
@@ -95,22 +99,26 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
     }));
   }, []);
 
+  useEffect(() => {
+    setCurrentStep(currentStep);
+  }, [currentStep, setCurrentStep]);
+
   // Track form abandonment on unmount
   useEffect(() => {
     return () => {
       const timeSpent = Date.now() - startTime;
       if (currentStep < 3) { // Only track if form wasn't completed
-        trackFormAbandonment({
+        trackSubmission({
           insuranceType,
           step: currentStep,
           timeSpent,
-          utm_source: new URLSearchParams(window.location.search).get('utm_source') || undefined,
-          utm_medium: new URLSearchParams(window.location.search).get('utm_medium') || undefined,
-          utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign') || undefined,
+          utm_source: formData.utm_source,
+          utm_medium: formData.utm_medium,
+          utm_campaign: formData.utm_campaign
         });
       }
     };
-  }, [currentStep, insuranceType, startTime]);
+  }, [currentStep, insuranceType, startTime, formData]);
 
   // Form validation
   const validateStep = (step: number): boolean => {
@@ -171,63 +179,80 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
   };
 
   const handleStepComplete = () => {
-    trackStepCompletion();
+    setCurrentStep(prev => prev + 1);
   };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateStep(currentStep)) {
-      toast.error('Please fix the errors before proceeding');
-      return;
-    }
-
     setIsSubmitting(true);
-    const toastId = toast.loading('Submitting your quote request...');
+    setError(null);
 
     try {
-      const submission = {
-        ...formData,
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent,
-        platform: 'web',
-        source: 'Insurance Quote Form'
-      };
+      // Validate form data
+      if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
+        throw new Error('Please fill in all required fields');
+      }
 
-      const res = await fetch('/api/submit-quote', {
+      // Submit to Salesforce
+      const sfResponse = await fetch('/api/salesforce-opportunity', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submission)
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          insuranceType: insuranceType,
+          utm_source: utmSource,
+          utm_campaign: formData.utm_campaign,
+          utm_medium: formData.utm_medium,
+        }),
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to submit quote');
+      if (!sfResponse.ok) {
+        const sfError = await sfResponse.json();
+        throw new Error(sfError.error || 'Failed to submit to Salesforce');
       }
 
-      const data = await res.json();
-      
-      // Track conversion in GTM
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'quote_submission', {
-          ...data.gtmEvent,
-          'event_category': 'quote',
-          'event_label': insuranceType,
-          'value': 1
-        });
+      // Submit to Supabase
+      const { error: supabaseError } = await supabase
+        .from('quotes')
+        .insert([
+          {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            email: formData.email,
+            phone: formData.phone,
+            insurance_type: insuranceType,
+            utm_source: utmSource,
+            utm_campaign: formData.utm_campaign,
+            utm_medium: formData.utm_medium,
+            status: 'new',
+            source: 'QuoteLinker Quote Form'
+          }
+        ]);
+
+      if (supabaseError) {
+        throw new Error('Failed to save quote data');
       }
 
-      // Track successful submission
-      trackSuccess();
+      // Send confirmation email
+      await fetch('/api/send-quote-confirmation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          insuranceType,
+        }),
+      });
 
-      toast.success('Quote submitted successfully!', { id: toastId });
-      router.push(`/thank-you/${insuranceType}`);
-    } catch (error) {
-      if (error instanceof Error) {
-        trackError(error);
-      }
-      console.error('Quote submission error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to submit quote. Please try again.', { id: toastId });
+      setShowSuccess(true);
+      await trackSubmission(formData);
+    } catch (err) {
+      console.error('Form submission error:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsSubmitting(false);
     }

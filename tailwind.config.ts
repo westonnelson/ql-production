@@ -11,11 +11,11 @@ const config: Config = {
       colors: {
         border: '#E5E7EB',
         input: '#F3F4F6',
-        ring: '#1E3A8A',
+        ring: '#00BCD4',
         background: '#FFFFFF',
         foreground: '#111827',
         primary: {
-          DEFAULT: '#1E3A8A',
+          DEFAULT: '#00BCD4',
           foreground: '#FFFFFF',
         },
         secondary: {
@@ -31,7 +31,7 @@ const config: Config = {
           foreground: '#6B7280',
         },
         accent: {
-          DEFAULT: '#1E3A8A',
+          DEFAULT: '#00BCD4',
           foreground: '#FFFFFF',
         },
         popover: {

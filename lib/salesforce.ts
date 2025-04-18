@@ -16,66 +16,12 @@ interface SalesforceOpportunity {
   Description: string;
 }
 
-export async function createSalesforceOpportunity(formData: any) {
-  try {
-    const opportunity: SalesforceOpportunity = {
-      Name: `${formData.firstName} ${formData.lastName}`,
-      ProductType__c: formData.insuranceType,
-      ContactInfo__c: JSON.stringify({
-        email: formData.email,
-        phone: formData.phone,
-        zipCode: formData.zipCode
-      }),
-      SubmissionTimestamp__c: new Date().toISOString(),
-      LeadSource: 'Web Form',
-      StageName: 'New',
-      Amount: 0,
-      CloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-      Description: `Insurance Quote Request - ${formData.insuranceType}`
-    };
-
-    const response = await fetch(`${SALESFORCE_INSTANCE_URL}/services/data/v57.0/sobjects/Opportunity`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${SALESFORCE_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(opportunity)
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create Salesforce opportunity');
-    }
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('Salesforce integration error:', error);
-    // Send fallback notification
-    await sendEmail({
-      to: process.env.AGENT_EMAIL!,
-      subject: 'New Quote Request - Salesforce Integration Failed',
-      text: `A new quote request was received but failed to sync with Salesforce. Please check the system.\n\nForm Data: ${JSON.stringify(formData, null, 2)}`
-    });
-    throw error;
-  }
-}
-
 // Function to check if Salesforce is properly configured
 export function isSalesforceConfigured(): boolean {
   return !!(
     process.env.SALESFORCE_TOKEN && 
     process.env.SALESFORCE_INSTANCE_URL
   );
-}
-
-async function getSalesforceToken(): Promise<string | null> {
-  const token = process.env.SALESFORCE_TOKEN as string | undefined;
-  if (!token) {
-    console.warn('SALESFORCE_TOKEN is not defined');
-    return null;
-  }
-  return token;
 }
 
 // Map insurance types to Salesforce product types
@@ -154,15 +100,63 @@ export async function createSalesforceOpportunity(submission: Record<string, any
   }
 
   try {
-    const token = await getSalesforceToken();
-    const instanceUrl = process.env.SALESFORCE_INSTANCE_URL as string | undefined;
-    
-    if (!token || !instanceUrl) {
-      return { success: false, error: 'Missing Salesforce credentials' };
-    }
-    
-    // Map the submission data to Salesforce fields
     const opportunityData = mapFieldsToSalesforce(submission);
 
-    // Create the opportunity in Salesforce
-    const response = await fetch(`
+    const response = await fetch(`${SALESFORCE_INSTANCE_URL}/services/data/v57.0/sobjects/Opportunity`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SALESFORCE_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(opportunityData)
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create Salesforce opportunity');
+    }
+
+    const result = await response.json();
+
+    // Create a task for the assigned agent
+    if (result && result.id) {
+      await fetch(`${SALESFORCE_INSTANCE_URL}/services/data/v57.0/sobjects/Task`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SALESFORCE_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          WhoId: result.id,
+          Subject: `New ${INSURANCE_TYPE_MAP[submission.insuranceType as keyof typeof INSURANCE_TYPE_MAP]} Quote Request`,
+          Description: `New quote request from ${submission.firstName} ${submission.lastName}.\nPhone: ${submission.phone}\nEmail: ${submission.email}\nBest Time to Call: ${submission.bestTimeToCall}`,
+          Priority: 'High',
+          Status: 'New',
+          Type: 'Quote Request'
+        })
+      });
+    }
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('Salesforce integration error:', error);
+    // Send fallback notification
+    await sendEmail({
+      to: process.env.AGENT_EMAIL!,
+      subject: 'New Quote Request - Salesforce Integration Failed',
+      text: `A new quote request was received but failed to sync with Salesforce. Please check the system.\n\nForm Data: ${JSON.stringify(submission, null, 2)}`
+    });
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+async function getSalesforceToken(): Promise<string | null> {
+  const token = process.env.SALESFORCE_TOKEN as string | undefined;
+  if (!token) {
+    console.warn('SALESFORCE_TOKEN is not defined');
+    return null;
+  }
+  return token;
+}

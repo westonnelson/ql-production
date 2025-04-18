@@ -1,5 +1,7 @@
-import { resendClient } from './resend';
+import { Resend } from 'resend';
 import { sendConsumerConfirmationEmail, sendAgentNotificationEmail } from './sendEmail';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 interface LeadData {
   first_name: string;
@@ -83,5 +85,34 @@ export async function sendLeadNotificationEmail(data: LeadData) {
   } catch (error) {
     console.error('Error sending lead notification email:', error);
     return { success: false, error };
+  }
+}
+
+interface EmailOptions {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+}
+
+export async function sendEmail({ to, subject, text, html }: EmailOptions) {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'QuoteLinker <support@quotelinker.com>',
+      to,
+      subject,
+      text,
+      html: html || text,
+    });
+
+    if (error) {
+      console.error('Failed to send email:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Email service error:', error);
+    throw error;
   }
 } 
