@@ -186,312 +186,258 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0F1218] to-[#1A1F2B] py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-extrabold text-white sm:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-500">
-            Life Insurance Quote
-          </h1>
-          <p className="mt-4 text-xl text-gray-300">
-            Get your personalized life insurance quote in minutes
-          </p>
-        </div>
-
-        <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
-
-        {error && (
-          <div className="mt-4 p-4 bg-red-900/20 backdrop-blur-sm border border-red-500/20 rounded-md animate-fade-in">
-            <p className="text-sm text-red-400">{error}</p>
-          </div>
-        )}
-
-        {isSubmitting && (
-          <div className="mt-4 p-4 bg-blue-900/20 backdrop-blur-sm border border-blue-500/20 rounded-md animate-fade-in">
-            <p className="text-sm text-blue-400">Submitting your quote request...</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-8 backdrop-blur-sm bg-white/5 p-8 rounded-xl border border-gray-800">
-          {/* Progress Steps */}
-          <div className="mb-12">
-            <div className="flex justify-between mb-4">
-              {steps.map((step) => (
-                <div
-                  key={step.id}
-                  className={`flex-1 text-center transition-all duration-300 ${
-                    step.id === currentStep ? 'scale-110' : 'opacity-50'
-                  }`}
-                >
-                  <div className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center mb-2 border-2 ${
-                    step.id <= currentStep ? 'border-primary bg-primary/20' : 'border-gray-600 bg-gray-800'
-                  }`}>
-                    <span className="text-sm font-medium">{step.id}</span>
-                  </div>
-                  <div className={`text-sm font-medium ${
-                    step.id <= currentStep ? 'text-primary' : 'text-gray-500'
-                  }`}>
-                    {step.title}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="relative">
-              <div className="absolute top-0 h-1 bg-gray-800 w-full rounded-full"></div>
-              <div
-                className="absolute top-0 h-1 bg-gradient-to-r from-primary to-blue-500 rounded-full transition-all duration-300"
-                style={{ width: `${(currentStep / steps.length) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-
-          {/* Form Fields */}
+    <div className="container max-w-2xl py-8">
+      <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
+      
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8">
+        {/* Step content */}
+        {currentStep === 1 && (
           <div className="space-y-6">
-            {currentStep === 1 && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-300">
-                      First Name
-                    </label>
-                    <input
-                      type="text"
-                      id="firstName"
-                      {...register('firstName')}
-                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                      placeholder="John"
-                    />
-                    {errors.firstName && touchedFields.firstName && (
-                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.firstName.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-300">
-                      Last Name
-                    </label>
-                    <input
-                      type="text"
-                      id="lastName"
-                      {...register('lastName')}
-                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                      placeholder="Doe"
-                    />
-                    {errors.lastName && touchedFields.lastName && (
-                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.lastName.message}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="age" className="block text-sm font-medium text-gray-300">
-                      Age
-                    </label>
-                    <input
-                      type="number"
-                      id="age"
-                      {...register('age')}
-                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                      placeholder="35"
-                    />
-                    {errors.age && touchedFields.age && (
-                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.age.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="gender" className="block text-sm font-medium text-gray-300">
-                      Gender
-                    </label>
-                    <select
-                      id="gender"
-                      {...register('gender')}
-                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                    >
-                      <option value="">Select gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                    </select>
-                    {errors.gender && touchedFields.gender && (
-                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.gender.message}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {currentStep === 2 && (
-              <div className="space-y-6">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    {...register('email')}
-                    className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                    placeholder="john@example.com"
-                  />
-                  {errors.email && touchedFields.email && (
-                    <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.email.message}</p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-300">
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    {...register('phone')}
-                    className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                    placeholder="(555) 123-4567"
-                  />
-                  {errors.phone && touchedFields.phone && (
-                    <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.phone.message}</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {currentStep === 3 && (
-              <div className="space-y-6">
-                <div>
-                  <label htmlFor="insuranceType" className="block text-sm font-medium text-gray-300">
-                    Insurance Type
-                  </label>
-                  <select
-                    id="insuranceType"
-                    {...register('insuranceType')}
-                    className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                  >
-                    <option value="">Select insurance type</option>
-                    <option value="term">Term Life Insurance</option>
-                    <option value="permanent">Permanent Life Insurance</option>
-                  </select>
-                  {errors.insuranceType && touchedFields.insuranceType && (
-                    <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.insuranceType.message}</p>
-                  )}
-                </div>
-
-                {watch('insuranceType') === 'term' && (
-                  <div>
-                    <label htmlFor="termLength" className="block text-sm font-medium text-gray-300">
-                      Term Length
-                    </label>
-                    <select
-                      id="termLength"
-                      {...register('termLength')}
-                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                    >
-                      <option value="">Select term length</option>
-                      {termLengths.map((term) => (
-                        <option key={term} value={term}>
-                          {term} Years
-                        </option>
-                      ))}
-                    </select>
-                    {errors.termLength && touchedFields.termLength && (
-                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.termLength.message}</p>
-                    )}
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-300">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  id="firstName"
+                  {...register('firstName')}
+                  className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+                  placeholder="John"
+                />
+                {errors.firstName && touchedFields.firstName && (
+                  <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.firstName.message}</p>
                 )}
-
-                {watch('insuranceType') === 'permanent' && (
-                  <div>
-                    <label htmlFor="permanentType" className="block text-sm font-medium text-gray-300">
-                      Permanent Insurance Type
-                    </label>
-                    <select
-                      id="permanentType"
-                      {...register('permanentType')}
-                      className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                    >
-                      <option value="">Select permanent insurance type</option>
-                      <option value="whole-life">Whole Life Insurance</option>
-                      <option value="universal-life">Universal Life Insurance</option>
-                      <option value="limited-pay-10">Limited Pay 10</option>
-                      <option value="limited-pay-15">Limited Pay 15</option>
-                      <option value="limited-pay-20">Limited Pay 20</option>
-                    </select>
-                    {errors.permanentType && touchedFields.permanentType && (
-                      <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.permanentType.message}</p>
-                    )}
-                  </div>
+              </div>
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-300">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  id="lastName"
+                  {...register('lastName')}
+                  className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+                  placeholder="Doe"
+                />
+                {errors.lastName && touchedFields.lastName && (
+                  <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.lastName.message}</p>
                 )}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="age" className="block text-sm font-medium text-gray-300">
+                  Age
+                </label>
+                <input
+                  type="number"
+                  id="age"
+                  {...register('age')}
+                  className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+                  placeholder="35"
+                />
+                {errors.age && touchedFields.age && (
+                  <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.age.message}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="gender" className="block text-sm font-medium text-gray-300">
+                  Gender
+                </label>
+                <select
+                  id="gender"
+                  {...register('gender')}
+                  className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+                >
+                  <option value="">Select gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+                {errors.gender && touchedFields.gender && (
+                  <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.gender.message}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {currentStep === 2 && (
+          <div className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                {...register('email')}
+                className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+                placeholder="john@example.com"
+              />
+              {errors.email && touchedFields.email && (
+                <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.email.message}</p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-300">
+                Phone
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                {...register('phone')}
+                className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+                placeholder="(555) 123-4567"
+              />
+              {errors.phone && touchedFields.phone && (
+                <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.phone.message}</p>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {currentStep === 3 && (
+          <div className="space-y-6">
+            <div>
+              <label htmlFor="insuranceType" className="block text-sm font-medium text-gray-300">
+                Insurance Type
+              </label>
+              <select
+                id="insuranceType"
+                {...register('insuranceType')}
+                className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+              >
+                <option value="">Select insurance type</option>
+                <option value="term">Term Life Insurance</option>
+                <option value="permanent">Permanent Life Insurance</option>
+              </select>
+              {errors.insuranceType && touchedFields.insuranceType && (
+                <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.insuranceType.message}</p>
+              )}
+            </div>
 
-                <div>
-                  <label htmlFor="coverageAmount" className="block text-sm font-medium text-gray-300">
-                    Coverage Amount
-                  </label>
-                  <select
-                    id="coverageAmount"
-                    {...register('coverageAmount')}
-                    className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                  >
-                    <option value="">Select coverage amount</option>
-                    {coverageAmounts.map((amount) => (
-                      <option key={amount} value={amount}>
-                        ${amount.toLocaleString()}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.coverageAmount && touchedFields.coverageAmount && (
-                    <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.coverageAmount.message}</p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="tobaccoUse" className="block text-sm font-medium text-gray-300">
-                    Do you use tobacco products?
-                  </label>
-                  <select
-                    id="tobaccoUse"
-                    {...register('tobaccoUse')}
-                    className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
-                  >
-                    <option value="">Select tobacco use</option>
-                    <option value="no">No</option>
-                    <option value="yes">Yes</option>
-                  </select>
-                  {errors.tobaccoUse && touchedFields.tobaccoUse && isFormTouched && (
-                    <p className="mt-1 text-sm text-red-400 animate-fade-in">Please select yes or no</p>
-                  )}
-                </div>
+            {watch('insuranceType') === 'term' && (
+              <div>
+                <label htmlFor="termLength" className="block text-sm font-medium text-gray-300">
+                  Term Length
+                </label>
+                <select
+                  id="termLength"
+                  {...register('termLength')}
+                  className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+                >
+                  <option value="">Select term length</option>
+                  {termLengths.map((term) => (
+                    <option key={term} value={term}>
+                      {term} Years
+                    </option>
+                  ))}
+                </select>
+                {errors.termLength && touchedFields.termLength && (
+                  <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.termLength.message}</p>
+                )}
               </div>
             )}
-          </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-12">
-            {currentStep > 1 && (
-              <Button
-                label="Previous"
-                variant="secondary"
-                onClick={prevStep}
-                type="button"
-              />
+            {watch('insuranceType') === 'permanent' && (
+              <div>
+                <label htmlFor="permanentType" className="block text-sm font-medium text-gray-300">
+                  Permanent Insurance Type
+                </label>
+                <select
+                  id="permanentType"
+                  {...register('permanentType')}
+                  className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+                >
+                  <option value="">Select permanent insurance type</option>
+                  <option value="whole-life">Whole Life Insurance</option>
+                  <option value="universal-life">Universal Life Insurance</option>
+                  <option value="limited-pay-10">Limited Pay 10</option>
+                  <option value="limited-pay-15">Limited Pay 15</option>
+                  <option value="limited-pay-20">Limited Pay 20</option>
+                </select>
+                {errors.permanentType && touchedFields.permanentType && (
+                  <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.permanentType.message}</p>
+                )}
+              </div>
             )}
-            {currentStep < steps.length ? (
-              <Button
-                label="Next"
-                onClick={nextStep}
-                type="button"
-                className={currentStep === 1 ? 'ml-auto' : ''}
-              />
-            ) : (
-              <Button
-                label={isSubmitting ? 'Processing...' : 'Get Your Quote'}
-                type="submit"
-                disabled={isSubmitting}
-                className="ml-auto"
-              />
-            )}
+
+            <div>
+              <label htmlFor="coverageAmount" className="block text-sm font-medium text-gray-300">
+                Coverage Amount
+              </label>
+              <select
+                id="coverageAmount"
+                {...register('coverageAmount')}
+                className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+              >
+                <option value="">Select coverage amount</option>
+                {coverageAmounts.map((amount) => (
+                  <option key={amount} value={amount}>
+                    ${amount.toLocaleString()}
+                  </option>
+                ))}
+              </select>
+              {errors.coverageAmount && touchedFields.coverageAmount && (
+                <p className="mt-1 text-sm text-red-400 animate-fade-in">{errors.coverageAmount.message}</p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="tobaccoUse" className="block text-sm font-medium text-gray-300">
+                Do you use tobacco products?
+              </label>
+              <select
+                id="tobaccoUse"
+                {...register('tobaccoUse')}
+                className="mt-1 block w-full rounded-lg border-gray-700 bg-gray-800/50 text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-all duration-200 hover:bg-gray-800/70"
+              >
+                <option value="">Select tobacco use</option>
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+              {errors.tobaccoUse && touchedFields.tobaccoUse && isFormTouched && (
+                <p className="mt-1 text-sm text-red-400 animate-fade-in">Please select yes or no</p>
+              )}
+            </div>
           </div>
-        </form>
-      </div>
+        )}
+        
+        {/* Navigation Buttons */}
+        <div className="flex justify-between gap-4 mt-8">
+          {currentStep > 1 && (
+            <Button
+              variant="secondary"
+              onClick={prevStep}
+              type="button"
+            >
+              Previous
+            </Button>
+          )}
+          {currentStep < steps.length ? (
+            <Button
+              onClick={nextStep}
+              type="button"
+              className={currentStep === 1 ? 'ml-auto' : ''}
+            >
+              Next
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="ml-auto"
+            >
+              {isSubmitting ? 'Processing...' : 'Get Your Quote'}
+            </Button>
+          )}
+        </div>
+      </form>
     </div>
   )
 }
 
-export default function LifeInsuranceQuote() {
+export default function LifeQuotePage() {
   const searchParams = useSearchParams()
   const utmSource = searchParams?.get('utm_source') || null
 
