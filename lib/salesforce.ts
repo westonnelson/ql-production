@@ -1,19 +1,37 @@
 import { createClient } from '@supabase/supabase-js';
 import { sendEmail } from './email';
+import * as jsforce from 'jsforce';
 
 const SALESFORCE_INSTANCE_URL = process.env.SALESFORCE_INSTANCE_URL;
 const SALESFORCE_TOKEN = process.env.SALESFORCE_TOKEN;
 
+interface SalesforceConfig {
+  username: string;
+  password: string;
+  securityToken: string;
+  loginUrl: string;
+}
+
 interface SalesforceOpportunity {
   Name: string;
+  StageName: string;
+  CloseDate: string;
+  Amount: number;
+  Description: string;
   ProductType__c: string;
   ContactInfo__c: string;
   SubmissionTimestamp__c: string;
   LeadSource: string;
-  StageName: string;
-  Amount: number;
-  CloseDate: string;
-  Description: string;
+}
+
+interface SalesforceResult {
+  id: string;
+  success: boolean;
+  errors?: Array<{
+    statusCode: string;
+    message: string;
+    fields: string[];
+  }>;
 }
 
 // Function to check if Salesforce is properly configured
@@ -159,4 +177,80 @@ async function getSalesforceToken(): Promise<string | null> {
     return null;
   }
   return token;
+}
+
+export class SalesforceClient {
+  private connection: jsforce.Connection;
+  private config: SalesforceConfig;
+
+  constructor(config: SalesforceConfig) {
+    this.config = config;
+    this.connection = new jsforce.Connection({
+      loginUrl: config.loginUrl
+    });
+  }
+
+  async authenticate(): Promise<jsforce.UserInfo> {
+    try {
+      const userInfo = await this.connection.login(
+        this.config.username,
+        this.config.password + this.config.securityToken
+      );
+      return userInfo;
+    } catch (error) {
+      console.error('Salesforce authentication failed:', error);
+      throw new Error('Failed to authenticate with Salesforce');
+    }
+  }
+
+  async createOpportunity(opportunity: SalesforceOpportunity): Promise<SalesforceResult> {
+    try {
+      const result = await this.connection.sobject('Opportunity').create(opportunity) as SalesforceResult;
+      
+      if (!result.success) {
+        throw new Error(`Failed to create opportunity: ${result.errors?.[0].message}`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Failed to create opportunity:', error);
+      throw error;
+    }
+  }
+
+  async deleteOpportunity(id: string): Promise<void> {
+    try {
+      await this.connection.sobject('Opportunity').destroy(id);
+    } catch (error) {
+      console.error('Failed to delete opportunity:', error);
+      throw error;
+    }
+  }
+
+  async getOpportunity(id: string): Promise<any> {
+    try {
+      return await this.connection.sobject('Opportunity').retrieve(id);
+    } catch (error) {
+      console.error('Failed to retrieve opportunity:', error);
+      throw error;
+    }
+  }
+
+  async updateOpportunity(id: string, data: Partial<SalesforceOpportunity>): Promise<SalesforceResult> {
+    try {
+      const result = await this.connection.sobject('Opportunity').update({
+        Id: id,
+        ...data
+      }) as SalesforceResult;
+
+      if (!result.success) {
+        throw new Error(`Failed to update opportunity: ${result.errors?.[0].message}`);
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Failed to update opportunity:', error);
+      throw error;
+    }
+  }
 }

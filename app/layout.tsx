@@ -15,6 +15,10 @@ export const metadata: Metadata = {
   authors: [{ name: 'Insurance Quote Platform' }],
   viewport: 'width=device-width, initial-scale=1',
   themeColor: '#00B4D8',
+  icons: {
+    icon: '/favicon-32x32.png',
+    apple: '/apple-touch-icon.png',
+  }
 }
 
 export const dynamic = 'force-dynamic'
@@ -26,8 +30,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="light">
       <head>
+        <link rel="icon" href="/favicon-32x32.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         {/* Google Analytics */}
         <Script
           strategy="afterInteractive"

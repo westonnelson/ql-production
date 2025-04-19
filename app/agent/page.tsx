@@ -9,71 +9,82 @@ export const metadata: Metadata = {
 
 export default function AgentPage() {
   return (
-    <div className="min-h-screen bg-[#0F1218] text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Become a QuoteLinker Agent</h1>
-          <p className="text-xl text-gray-300">Join our network of successful insurance professionals</p>
+    <div className="min-h-screen bg-white text-gray-900">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-500">
+            Insurance Agent Portal
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-gray-600">
+            Access your agent dashboard to manage leads, track opportunities, and grow your business.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
-          <div className="bg-gray-800/50 p-8 rounded-lg">
-            <h2 className="text-2xl font-semibold mb-4">Why Join QuoteLinker?</h2>
-            <ul className="space-y-4 text-gray-300">
-              <li>• Access to high-quality insurance leads</li>
-              <li>• Advanced lead management system</li>
-              <li>• Competitive commission structure</li>
-              <li>• Marketing support and resources</li>
-              <li>• Real-time quote tracking</li>
-              <li>• Dedicated agent support team</li>
-            </ul>
-          </div>
-
-          <div className="bg-gray-800/50 p-8 rounded-lg">
-            <h2 className="text-2xl font-semibold mb-4">Requirements</h2>
-            <ul className="space-y-4 text-gray-300">
-              <li>• Valid insurance license</li>
-              <li>• Minimum 2 years of experience</li>
-              <li>• Clean background check</li>
-              <li>• Professional references</li>
-              <li>• E&O insurance coverage</li>
-              <li>• Commitment to customer service</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="text-center mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Ready to Get Started?</h2>
-          <div className="space-x-4">
-            <Link 
-              href="/agent/register" 
+        <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div className="rounded-2xl border border-gray-200 p-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Existing Agents</h2>
+            <p className="text-gray-600 mb-8">
+              Sign in to your agent portal to access your leads and manage your opportunities.
+            </p>
+            <Link
+              href="/agent/login"
               className="inline-block bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors"
             >
-              Register Now
+              Sign In
             </Link>
-            <Link 
-              href="/agent/login" 
-              className="inline-block bg-gray-700 text-white px-8 py-3 rounded-lg hover:bg-gray-600 transition-colors"
+          </div>
+
+          <div className="rounded-2xl border border-gray-200 p-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">New Agents</h2>
+            <p className="text-gray-600 mb-8">
+              Join our network of licensed insurance agents and start receiving qualified leads.
+            </p>
+            <Link
+              href="/agent/register"
+              className="inline-block bg-gray-100 text-gray-900 px-8 py-3 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              Agent Login
+              Apply Now
             </Link>
           </div>
         </div>
 
-        <div className="bg-gray-800/50 p-8 rounded-lg">
-          <h2 className="text-2xl font-semibold mb-4">Frequently Asked Questions</h2>
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-2">How does the lead system work?</h3>
-              <p className="text-gray-300">Our platform matches you with qualified leads based on your expertise and location. You'll receive real-time notifications when new leads are available.</p>
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Why Partner With Us?</h2>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="rounded-xl border border-gray-200 p-6">
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Quality Leads</h3>
+              <p className="text-gray-600">
+                Receive high-quality, verified leads matched to your expertise and target market.
+              </p>
             </div>
-            <div>
-              <h3 className="text-lg font-medium mb-2">What types of insurance can I sell?</h3>
-              <p className="text-gray-300">We offer opportunities in life insurance, disability insurance, supplemental health, and auto insurance. You can choose to specialize in one or multiple types.</p>
+
+            <div className="rounded-xl border border-gray-200 p-6">
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Grow Your Business</h3>
+              <p className="text-gray-600">
+                Access tools and resources to help you convert more leads and increase your revenue.
+              </p>
             </div>
-            <div>
-              <h3 className="text-lg font-medium mb-2">How are commissions structured?</h3>
-              <p className="text-gray-300">Commission rates vary by product type and are based on your performance and experience level. Our competitive structure rewards successful agents.</p>
+
+            <div className="rounded-xl border border-gray-200 p-6">
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Flexible Platform</h3>
+              <p className="text-gray-600">
+                Manage your leads and opportunities with our intuitive, mobile-friendly platform.
+              </p>
             </div>
           </div>
         </div>
