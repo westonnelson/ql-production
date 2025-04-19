@@ -5,16 +5,17 @@ import Script from 'next/script'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import { Toaster } from 'react-hot-toast'
+import Image from 'next/image'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Insurance Quote Platform',
+  title: 'QuoteLinker - Insurance Quote Platform',
   description: 'Get personalized insurance quotes tailored to your needs. Compare coverage options and find the right plan for you.',
   keywords: 'insurance, quotes, coverage, auto insurance, home insurance, life insurance, health insurance',
-  authors: [{ name: 'Insurance Quote Platform' }],
+  authors: [{ name: 'QuoteLinker' }],
   viewport: 'width=device-width, initial-scale=1',
-  themeColor: '#00B4D8',
+  themeColor: '#00E0FF',
   icons: {
     icon: '/favicon-32x32.png',
     apple: '/apple-touch-icon.png',
@@ -69,8 +70,9 @@ export default function RootLayout({
           <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-16 items-center">
               <nav className="flex items-center space-x-6 text-sm font-medium">
-                <a href="/" className="text-xl font-bold text-primary">
-                  Insurance Quotes
+                <a href="/" className="flex items-center space-x-2">
+                  <Image src="/logo.svg" alt="QuoteLinker Logo" width={32} height={32} className="h-8 w-8" />
+                  <span className="text-xl font-bold text-primary">QuoteLinker</span>
                 </a>
               </nav>
             </div>
@@ -80,7 +82,10 @@ export default function RootLayout({
             <div className="container py-8 md:py-12">
               <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
                 <div>
-                  <h3 className="text-lg font-semibold">About Us</h3>
+                  <div className="flex items-center space-x-2">
+                    <Image src="/logo.svg" alt="QuoteLinker Logo" width={24} height={24} className="h-6 w-6" />
+                    <h3 className="text-lg font-semibold">QuoteLinker</h3>
+                  </div>
                   <p className="mt-4 text-sm text-muted-foreground">
                     We help you find the right insurance coverage for your needs. Our platform makes it easy to compare quotes and make informed decisions.
                   </p>
@@ -88,7 +93,7 @@ export default function RootLayout({
                 <div>
                   <h3 className="text-lg font-semibold">Contact</h3>
                   <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                    <li>Email: support@insurancequotes.com</li>
+                    <li>Email: support@quotelinker.com</li>
                     <li>Phone: (555) 123-4567</li>
                   </ul>
                 </div>
@@ -101,7 +106,7 @@ export default function RootLayout({
                 </div>
               </div>
               <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-                © {new Date().getFullYear()} Insurance Quote Platform. All rights reserved.
+                © {new Date().getFullYear()} QuoteLinker. All rights reserved.
               </div>
             </div>
           </footer>

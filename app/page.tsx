@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { CheckCircleIcon, ShieldCheckIcon, ClockIcon, HeartIcon } from '@heroicons/react/24/outline'
+import { CheckCircleIcon, ShieldCheckIcon, UserGroupIcon, ClockIcon, HeartIcon } from '@heroicons/react/24/outline'
 
 export const dynamic = 'force-static'
 export const preferredRegion = 'auto'

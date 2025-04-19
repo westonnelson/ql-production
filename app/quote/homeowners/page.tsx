@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useSearchParams, useRouter } from 'next/navigation'
-import ProgressBar from '@/app/components/ProgressBar'
+import ProgressBar from '../../components/ProgressBar'
 
 const coverageTypes = [
   'dwelling',

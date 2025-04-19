@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer glow -->
+  <circle cx="90" cy="90" r="70" fill="url(#glow)" filter="url(#blur)"/>
+  
+  <!-- Main circle with indentation -->
+  <path d="M90 20C104.359 20 115 30.641 115 45C115 57.8963 108.845 69.3517 101.483 74.6638C101.483 74.6638 90 66.25 90 45C90 30.641 101.483 25.3362 101.483 25.3362C95.1719 22.2953 87.9473 20 90 20Z" fill="#00E0FF"/>
+  
+  <!-- Definitions -->
+  <defs>
+    <!-- Glow gradient -->
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#00E0FF" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#00E0FF" stop-opacity="0"/>
+    </radialGradient>
+    
+    <!-- Blur filter -->
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10.5"/>
+    </filter>
+  </defs>
+</svg> 

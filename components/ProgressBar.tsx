@@ -13,7 +13,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalSteps }) =>
       {/* Progress Bar */}
       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
         <div
-          className="h-full bg-primary transition-all duration-300 ease-in-out rounded-full"
+          className="h-full bg-primary transition-all duration-300 ease-in-out rounded-full shadow-neon"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -31,8 +31,8 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalSteps }) =>
                 className={`
                   w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
                   transition-all duration-200
-                  ${isCompleted ? 'bg-primary text-white' : 
-                    isCurrent ? 'bg-primary text-white' : 
+                  ${isCompleted ? 'bg-primary text-white shadow-neon' : 
+                    isCurrent ? 'bg-primary text-white shadow-neon' : 
                     'bg-gray-100 text-gray-500'}
                 `}
               >

@@ -11,15 +11,15 @@ const config: Config = {
       colors: {
         border: '#E5E7EB',
         input: '#F3F4F6',
-        ring: '#00BCD4',
+        ring: '#00E0FF',
         background: '#FFFFFF',
         foreground: '#111827',
         primary: {
-          DEFAULT: '#00BCD4',
+          DEFAULT: '#00E0FF',
           foreground: '#FFFFFF',
         },
         secondary: {
-          DEFAULT: '#DC2626',
+          DEFAULT: '#00E0FF',
           foreground: '#FFFFFF',
         },
         destructive: {
@@ -31,7 +31,7 @@ const config: Config = {
           foreground: '#6B7280',
         },
         accent: {
-          DEFAULT: '#00BCD4',
+          DEFAULT: '#00E0FF',
           foreground: '#FFFFFF',
         },
         popover: {
@@ -58,6 +58,7 @@ const config: Config = {
       boxShadow: {
         DEFAULT: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
         md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        neon: '0 0 5px rgba(0, 224, 255, 0.5), 0 0 10px rgba(0, 224, 255, 0.3), 0 0 15px rgba(0, 224, 255, 0.1)',
       },
     },
   },

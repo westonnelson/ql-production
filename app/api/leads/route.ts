@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { sendConfirmationEmail, sendLeadNotificationEmail } from '@/lib/email'
+import { sendEmail } from '../../../lib/email'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // CORS headers
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
 
     // Send confirmation email to the lead
     try {
-      await sendConfirmationEmail(lead);
+      await sendEmail(lead);
     } catch (emailError) {
       console.warn('Failed to send confirmation email:', emailError);
       // Continue execution even if email fails
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
 
     // Send notification email to support and the submitting email
     try {
-      await sendLeadNotificationEmail(lead);
+      await sendEmail(lead);
     } catch (notificationError) {
       console.warn('Failed to send notification email:', notificationError);
       // Continue execution even if email fails

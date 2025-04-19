@@ -7,8 +7,8 @@ import { z } from 'zod'
 import { LifeQuoteFormData, QuoteStep, Gender, TobaccoUse, CoverageAmount, TermLength, EmailData } from '@/types/quote'
 import { supabase } from '@/lib/supabaseClient'
 import { useSearchParams, useRouter } from 'next/navigation'
-import ProgressBar from '@/app/components/ProgressBar'
-import Button from '@/app/components/Button'
+import ProgressBar from '../../components/ProgressBar'
+import Button from '../../components/Button'
 
 const coverageAmounts = [150000, 250000, 500000, 700000, 1000000, 2000000] as const
 const termLengths = [10, 15, 20, 30] as const
