@@ -70,6 +70,10 @@ export async function POST(request: Request) {
 
     const result = await conn.sobject('Opportunity').create(opportunity);
 
+    if (!result.success) {
+      throw new Error('Failed to create opportunity in Salesforce');
+    }
+
     // Update lead with Salesforce opportunity ID
     await supabase
       .from('leads')
