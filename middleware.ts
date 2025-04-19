@@ -2,20 +2,23 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // Log environment variables for debugging
-  console.log('Environment:', {
+  // Log environment variables and request path for debugging
+  console.log('Middleware Debug:', {
+    path: request.nextUrl.pathname,
     SKIP_AUTH: process.env.SKIP_AUTH,
-    NODE_ENV: process.env.NODE_ENV,
-    IS_PRODUCTION: process.env.SKIP_AUTH === 'true' || process.env.NODE_ENV === 'production'
+    VERCEL_ENV: process.env.VERCEL_ENV,
+    IS_PRODUCTION: process.env.SKIP_AUTH === 'true' || process.env.VERCEL_ENV === 'production'
   })
 
-  // Skip authentication if SKIP_AUTH is true or in production
-  if (process.env.SKIP_AUTH === 'true' || process.env.NODE_ENV === 'production') {
+  // Always allow API routes
+  if (request.nextUrl.pathname.startsWith('/api/')) {
+    console.log('Allowing API route:', request.nextUrl.pathname)
     return NextResponse.next()
   }
 
-  // Exclude API routes from authentication
-  if (request.nextUrl.pathname.startsWith('/api/')) {
+  // Skip authentication if SKIP_AUTH is true or in production
+  if (process.env.SKIP_AUTH === 'true' || process.env.VERCEL_ENV === 'production') {
+    console.log('Skipping authentication in production')
     return NextResponse.next()
   }
 
@@ -38,6 +41,7 @@ export function middleware(request: NextRequest) {
   ]
 
   if (publicRoutes.includes(request.nextUrl.pathname)) {
+    console.log('Allowing public route:', request.nextUrl.pathname)
     return NextResponse.next()
   }
 
@@ -45,6 +49,7 @@ export function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/admin/') || request.nextUrl.pathname.startsWith('/agent/')) {
     const vercelToken = request.cookies.get('vercel-token')
     if (!vercelToken) {
+      console.log('Redirecting to login for protected route:', request.nextUrl.pathname)
       return NextResponse.redirect(new URL('/agent/login', request.url))
     }
   }

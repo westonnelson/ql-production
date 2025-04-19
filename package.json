@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "migrate:salesforce-logs": "ts-node scripts/migrate-salesforce-logs.ts"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.18",
@@ -52,7 +53,8 @@
     "@typescript-eslint/parser": "^7.0.2",
     "eslint": "^8",
     "eslint-config-next": "14.1.0",
-    "prettier": "^3.2.5"
+    "prettier": "^3.2.5",
+    "ts-node": "^10.9.2"
   },
   "description": "A production-ready, scalable insurance quote capture application built with Next.js 14, TypeScript, and Tailwind CSS.",
   "main": "postcss.config.js",
