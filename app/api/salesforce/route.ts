@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import jsforce from 'jsforce';
+import { createClient } from '@supabase/supabase-js';
 
 // CORS headers
 const corsHeaders = {
@@ -24,108 +25,63 @@ const leadSchema = z.object({
   utmSource: z.string().optional(),
 });
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders });
 }
 
 export async function POST(request: Request) {
   try {
-    // Validate environment variables
-    const requiredEnvVars = [
-      'SALESFORCE_CLIENT_ID',
-      'SALESFORCE_CLIENT_SECRET',
-      'SALESFORCE_USERNAME',
-      'SALESFORCE_PASSWORD',
-      'SALESFORCE_SECURITY_TOKEN',
-    ];
+    const data = await request.json();
+    const { leadId } = data;
 
-    const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
-    if (missingEnvVars.length > 0) {
-      console.error('Missing required environment variables:', missingEnvVars);
-      return NextResponse.json(
-        { error: 'Server configuration error' },
-        { status: 500, headers: corsHeaders }
-      );
+    // Get lead data from Supabase
+    const { data: lead, error } = await supabase
+      .from('leads')
+      .select('*')
+      .eq('id', leadId)
+      .single();
+
+    if (error) {
+      throw new Error(`Error fetching lead: ${error.message}`);
     }
 
-    // Parse and validate request data
-    const requestData = await request.json();
-    console.log('Received Salesforce lead data:', JSON.stringify(requestData, null, 2));
-
-    let validatedData;
-    try {
-      validatedData = leadSchema.parse(requestData);
-      console.log('Validated lead data:', JSON.stringify(validatedData, null, 2));
-    } catch (validationError) {
-      console.error('Validation error:', validationError);
-      return NextResponse.json(
-        { error: 'Validation error', details: validationError },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
-    // Initialize Salesforce connection
+    // Create Salesforce opportunity
     const conn = new jsforce.Connection({
       loginUrl: process.env.SALESFORCE_LOGIN_URL || 'https://login.salesforce.com'
     });
 
-    // Get Salesforce credentials with type assertions
-    const username = process.env.SALESFORCE_USERNAME as string;
-    const password = process.env.SALESFORCE_PASSWORD as string;
-    const securityToken = process.env.SALESFORCE_SECURITY_TOKEN as string;
-
-    if (!username || !password || !securityToken) {
-      console.error('Missing Salesforce credentials');
-      return NextResponse.json(
-        { error: 'Server configuration error' },
-        { status: 500, headers: corsHeaders }
-      );
-    }
-
-    // Authenticate with Salesforce
     await conn.login(
-      username,
-      password + securityToken
+      process.env.SALESFORCE_USERNAME!,
+      process.env.SALESFORCE_PASSWORD! + process.env.SALESFORCE_SECURITY_TOKEN!
     );
 
-    // Prepare lead data for Salesforce
-    const leadData = {
-      FirstName: validatedData.firstName,
-      LastName: validatedData.lastName,
-      Email: validatedData.email,
-      Phone: validatedData.phone,
-      Age__c: validatedData.age,
-      Gender__c: validatedData.gender,
-      Product_Type__c: validatedData.productType,
-      Coverage_Amount__c: validatedData.coverageAmount,
-      Term_Length__c: validatedData.termLength,
-      Tobacco_Use__c: validatedData.tobaccoUse,
-      LeadSource: validatedData.utmSource || 'Website',
-      Status: 'Open - Not Contacted',
-      Company: 'Individual'  // Required by Salesforce
+    const opportunity = {
+      Name: `${lead.first_name} ${lead.last_name} - ${lead.insurance_type} Quote`,
+      StageName: 'Prospecting',
+      CloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      Amount: lead.coverage_amount || 0,
+      Type: lead.insurance_type,
+      LeadSource: lead.utm_source || 'Website'
     };
 
-    // Create lead in Salesforce
-    const result = await conn.sobject('Lead').create(leadData);
+    const result = await conn.sobject('Opportunity').create(opportunity);
 
-    if (result.success) {
-      return NextResponse.json(
-        { 
-          success: true, 
-          message: 'Lead created successfully',
-          leadId: result.id 
-        },
-        { headers: corsHeaders }
-      );
-    } else {
-      throw new Error('Failed to create lead in Salesforce');
-    }
+    // Update lead with Salesforce opportunity ID
+    await supabase
+      .from('leads')
+      .update({ salesforce_opportunity_id: result.id })
+      .eq('id', leadId);
 
+    return NextResponse.json({ success: true, opportunityId: result.id });
   } catch (error) {
-    console.error('Salesforce API error:', error);
+    console.error('Error creating Salesforce opportunity:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500, headers: corsHeaders }
+      { error: 'Failed to create Salesforce opportunity' },
+      { status: 500 }
     );
   }
 } 
