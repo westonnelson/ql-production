@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --brand: #00E0FF;
+  --brand-light: #33E6FF;
+  --brand-dark: #00B3CC;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -75,7 +81,7 @@
   }
   
   .card {
-    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+    @apply rounded-lg border border-input bg-card text-card-foreground shadow-sm;
   }
   
   .card-header {
@@ -96,5 +102,37 @@
   
   .card-footer {
     @apply flex items-center p-6 pt-0;
+  }
+  
+  .btn-brand {
+    @apply bg-brand hover:bg-brand-dark text-white font-medium px-4 py-2 rounded-md transition-colors shadow-neon;
+  }
+  
+  .btn-brand-outline {
+    @apply border-2 border-brand hover:bg-brand hover:text-white text-brand font-medium px-4 py-2 rounded-md transition-colors;
+  }
+  
+  .input-brand {
+    @apply border border-input bg-background px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-brand focus:ring-1 focus:ring-brand rounded-md transition-colors;
+  }
+  
+  .form-input {
+    @apply w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .form-select {
+    @apply w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .form-textarea {
+    @apply w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .form-checkbox {
+    @apply h-4 w-4 rounded border-input text-brand focus:ring-brand;
+  }
+  
+  .form-radio {
+    @apply h-4 w-4 border-input text-brand focus:ring-brand;
   }
 } 

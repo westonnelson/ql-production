@@ -67,7 +67,11 @@ function getProductSpecificFields(data: LeadData): string {
 export async function sendConfirmationEmail(data: LeadData) {
   try {
     console.log('Sending confirmation email');
-    await sendConsumerConfirmationEmail(data.email, data);
+    await sendConsumerConfirmationEmail({
+      to: data.email,
+      firstName: data.first_name,
+      insuranceType: data.product_type
+    });
     console.log('Confirmation email sent successfully');
     return { success: true };
   } catch (error) {
@@ -79,7 +83,15 @@ export async function sendConfirmationEmail(data: LeadData) {
 export async function sendLeadNotificationEmail(data: LeadData) {
   try {
     console.log('Sending lead notification email');
-    await sendAgentNotificationEmail(data);
+    await sendAgentNotificationEmail({
+      to: process.env.NEW_LEAD_EMAIL || 'leads@quotelinker.com',
+      firstName: data.first_name,
+      lastName: data.last_name,
+      email: data.email,
+      phone: data.phone,
+      insuranceType: data.product_type,
+      estimatedAmount: data.coverage_amount?.toString()
+    });
     console.log('Lead notification email sent successfully');
     return { success: true };
   } catch (error) {

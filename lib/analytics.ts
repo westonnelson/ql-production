@@ -1,26 +1,11 @@
+/// <reference path="../types/gtag.d.ts" />
+
 import { gtag, isGoogleAnalyticsConfigured, isGoogleAdsConfigured } from './gtag';
 
 interface FunnelStepData {
   step: number;
   insuranceType: string;
   funnelName?: string;
-  funnelVariant?: string;
-  abTestId?: string;
-  abTestVariant?: string;
-}
-
-interface FormSubmissionData {
-  insuranceType: string;
-  formData: Record<string, any>;
-  utmParams: {
-    utm_source?: string;
-    utm_medium?: string;
-    utm_campaign?: string;
-    utm_content?: string;
-    utm_term?: string;
-  };
-  funnelName?: string;
-  funnelStep?: string;
   funnelVariant?: string;
   abTestId?: string;
   abTestVariant?: string;
@@ -62,6 +47,13 @@ declare global {
       params: {
         send_to?: string;
         value?: number;
+        currency?: string;
+        transaction_id?: string;
+        event_category?: string;
+        event_label?: string;
+        source?: string;
+        medium?: string;
+        campaign?: string;
         [key: string]: any;
       }
     ) => void;
@@ -237,58 +229,44 @@ export async function logFunnelStep({
   }
 }
 
-export async function logFormSubmission({
-  insuranceType,
-  formData,
-  utmParams,
-  funnelName = 'default',
-  funnelStep = 'complete',
-  funnelVariant = 'control',
-  abTestId,
-  abTestVariant,
-}: FormSubmissionData): Promise<void> {
-  if (typeof window === 'undefined' || !window.gtag) {
-    return;
-  }
+export interface FormSubmissionData {
+  insuranceType: string;
+  source?: {
+    source?: string;
+    medium?: string;
+    campaign?: string;
+  };
+}
 
-  // Check if Google Analytics is configured
-  if (!isGoogleAnalyticsConfigured()) {
-    console.warn('Google Analytics is not configured - skipping form submission logging');
-    return;
-  }
-
+export const logFormSubmission = async (data: FormSubmissionData) => {
   try {
     // Log to Google Analytics
-    gtag('event', 'form_submission', {
-      event_category: 'Quote Form',
-      event_label: `${insuranceType} Insurance Quote`,
-      value: 1,
-      ...formData,
-      ...utmParams,
-      funnel_name: funnelName,
-      funnel_step: funnelStep,
-      funnel_variant: funnelVariant,
-      ab_test_id: abTestId,
-      ab_test_variant: abTestVariant,
-    });
-
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Form Submission:', {
-        insuranceType,
-        formData,
-        utmParams,
-        funnelName,
-        funnelStep,
-        funnelVariant,
-        abTestId,
-        abTestVariant,
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'form_submission', {
+        event_category: 'lead',
+        event_label: data.insuranceType,
+        source: data.source?.source,
+        medium: data.source?.medium,
+        campaign: data.source?.campaign
       });
     }
+
+    // Log to Google Ads Conversion Tracking
+    if (typeof window !== 'undefined' && window.gtag && process.env.NEXT_PUBLIC_ADS_CONVERSION_ID) {
+      window.gtag('event', 'conversion', {
+        send_to: `${process.env.NEXT_PUBLIC_ADS_CONVERSION_ID}/form_submission`,
+        value: 1.0,
+        currency: 'USD',
+        transaction_id: ''
+      });
+    }
+
+    return true;
   } catch (error) {
-    console.warn('Failed to log form submission:', error);
+    console.error('Error logging form submission:', error);
+    return false;
   }
-}
+};
 
 // Track form abandonment
 export const trackFormAbandonment = async (data: TrackingData) => {

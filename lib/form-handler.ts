@@ -1,173 +1,145 @@
 import { createClient } from '@supabase/supabase-js'
 import { sendConsumerConfirmationEmail, sendAgentNotificationEmail } from './sendEmail'
 import { logFormSubmission } from './analytics'
-import { createSalesforceOpportunity } from './salesforce'
+import { createSalesforceLead, createSalesforceOpportunity } from './salesforce'
+import { createAircallContact, createAircallCall, sendAircallSMS, isAircallConfigured } from './aircall'
 
 // Initialize Supabase with placeholder values if not available
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_key';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export type FormSubmission = {
-  insuranceType: 'auto' | 'life' | 'homeowners' | 'disability' | 'supplemental'
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  age: number
-  gender: 'male' | 'female' | 'other'
-  zipCode?: string
-  utmSource?: string
-  utmMedium?: string
-  utmCampaign?: string
-  utmTerm?: string
-  utmContent?: string
-  // Auto specific fields
-  vehicleYear?: number
-  vehicleMake?: string
-  vehicleModel?: string
-  coverageTypes?: string[]
-  drivingHistory?: 'clean' | 'minor-violations' | 'major-violations'
-  // Life specific fields
-  coverageAmount?: number
-  termLength?: number
-  permanentType?: string
-  tobaccoUse?: boolean
-  // Homeowners specific fields
-  homeYearBuilt?: number
-  homeSquareFootage?: number
-  homeType?: string
-  claimsHistory?: 'none' | 'one' | 'multiple'
-  // Disability specific fields
-  occupation?: string
-  employmentStatus?: string
-  incomeRange?: string
-  preExistingConditions?: boolean
-  desiredCoverageType?: string
-  // Supplemental specific fields
-  healthStatus?: string
+interface FormSubmission {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  zipCode: string;
+  company?: string;
+  source?: string;
+  description?: string;
+  insuranceType: 'auto' | 'life' | 'homeowners' | 'disability' | 'supplemental';
+  estimatedAmount?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  preferredContactMethod?: string;
+  bestTimeToCall?: string;
 }
 
-export async function handleFormSubmission(data: FormSubmission) {
+export const handleFormSubmission = async (data: FormSubmission) => {
   try {
-    // Check if required environment variables are available
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.warn('Supabase credentials not configured');
-      return { success: false, error: 'Database integration not configured' };
-    }
+    // 1. Log form submission to analytics
+    await logFormSubmission({
+      insuranceType: data.insuranceType,
+      source: {
+        source: data.utmSource,
+        medium: data.utmMedium,
+        campaign: data.utmCampaign
+      }
+    });
 
-    // 1. Store in database
-    const { data: lead, error: dbError } = await supabase
+    // 2. Store in Supabase
+    const { error: supabaseError } = await supabase
       .from('leads')
       .insert([
         {
-          ...data,
-          status: 'new',
-          created_at: new Date().toISOString(),
-          source: data.utmSource || 'direct',
-          medium: data.utmMedium,
-          campaign: data.utmCampaign,
-          term: data.utmTerm,
-          content: data.utmContent,
-        },
-      ])
-      .select()
-      .single()
-
-    if (dbError) throw dbError
-
-    // 2. Track conversion in analytics
-    try {
-      await logFormSubmission({
-        insuranceType: data.insuranceType,
-        formData: {
-          firstName: data.firstName,
-          lastName: data.lastName,
+          first_name: data.firstName,
+          last_name: data.lastName,
           email: data.email,
           phone: data.phone,
-          age: data.age,
-          gender: data.gender,
-          zipCode: data.zipCode,
-          coverageAmount: data.coverageAmount,
-          termLength: data.termLength,
-          tobaccoUse: data.tobaccoUse,
-        },
-        utmParams: {
+          zip_code: data.zipCode,
+          insurance_type: data.insuranceType,
+          estimated_amount: data.estimatedAmount,
           utm_source: data.utmSource,
           utm_medium: data.utmMedium,
-          utm_campaign: data.utmCampaign,
-          utm_term: data.utmTerm,
-          utm_content: data.utmContent,
-        },
-        funnelName: 'default',
-        funnelStep: 'complete',
-        funnelVariant: 'control',
-      })
-    } catch (analyticsError) {
-      console.warn('Analytics tracking failed:', analyticsError);
-      // Continue execution even if analytics fails
+          utm_campaign: data.utmCampaign
+        }
+      ]);
+
+    if (supabaseError) {
+      console.warn('Supabase storage failed:', supabaseError);
     }
 
-    // 3. Send confirmation email to the user
+    // 3. Send confirmation email to consumer
     try {
-      await sendConsumerConfirmationEmail(data.email, {
-        first_name: data.firstName,
-        last_name: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        age: data.age,
-        gender: data.gender,
-        product_type: data.insuranceType,
-        coverage_amount: data.coverageAmount,
-        term_length: data.termLength,
-        tobacco_use: data.tobaccoUse,
-        utm_source: data.utmSource,
-      })
+      await sendConsumerConfirmationEmail({
+        to: data.email,
+        firstName: data.firstName,
+        insuranceType: data.insuranceType
+      });
     } catch (emailError) {
-      console.warn('Consumer email sending failed:', emailError);
-      // Continue execution even if email fails
+      console.warn('Consumer email failed:', emailError);
     }
 
-    // 4. Send notification email to the agent
+    // 4. Send notification to agent
     try {
       await sendAgentNotificationEmail({
-        first_name: data.firstName,
-        last_name: data.lastName,
+        to: process.env.NEW_LEAD_EMAIL || 'leads@quotelinker.com',
+        firstName: data.firstName,
+        lastName: data.lastName,
         email: data.email,
         phone: data.phone,
-        age: data.age,
-        gender: data.gender,
-        product_type: data.insuranceType,
-        coverage_amount: data.coverageAmount,
-        term_length: data.termLength,
-        tobacco_use: data.tobaccoUse,
-        utm_source: data.utmSource,
-      })
-    } catch (agentEmailError) {
-      console.warn('Agent notification email failed:', agentEmailError);
-      // Continue execution even if email fails
+        insuranceType: data.insuranceType,
+        estimatedAmount: data.estimatedAmount
+      });
+    } catch (emailError) {
+      console.warn('Agent notification failed:', emailError);
     }
 
-    // 5. Create Salesforce opportunity
-    try {
-      await createSalesforceOpportunity({
-        ...data,
-        leadId: lead.id,
-      })
-    } catch (salesforceError) {
-      console.warn('Salesforce opportunity creation failed:', salesforceError);
-      // Continue execution even if Salesforce fails
+    // 5. Create Salesforce lead
+    const lead = await createSalesforceLead(data);
+    
+    // 6. Create Salesforce opportunity
+    await createSalesforceOpportunity({
+      ...data,
+      leadId: lead.id,
+      stageName: 'New',
+      closeDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+    });
+
+    // 7. Handle Aircall integration if configured
+    if (isAircallConfigured()) {
+      const aircallContact = await createAircallContact({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        metadata: {
+          insuranceType: data.insuranceType,
+          estimatedAmount: data.estimatedAmount,
+          utmSource: data.utmSource,
+          utmMedium: data.utmMedium,
+          utmCampaign: data.utmCampaign,
+          leadId: lead.id
+        }
+      });
+
+      // Handle preferred contact method
+      if (data.preferredContactMethod === 'phone' && data.bestTimeToCall) {
+        await createAircallCall({
+          contactId: aircallContact.id,
+          direction: 'outbound',
+          scheduledAt: data.bestTimeToCall,
+          metadata: {
+            insuranceType: data.insuranceType,
+            estimatedAmount: data.estimatedAmount
+          }
+        });
+      } else if (data.preferredContactMethod === 'sms') {
+        await sendAircallSMS({
+          contactId: aircallContact.id,
+          message: `Hi ${data.firstName}, thank you for your interest in our insurance services. A representative will contact you shortly to discuss your needs.`
+        });
+      }
     }
 
-    return { success: true, leadId: lead.id }
+    return { success: true, leadId: lead.id };
   } catch (error) {
-    console.error('Form submission error:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }
+    console.error('Error handling form submission:', error);
+    throw error;
   }
-}
+};
 
 // Function to get conversion metrics
 export async function getConversionMetrics(timeframe: 'day' | 'week' | 'month' = 'day') {

@@ -1,90 +1,121 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import jsforce from 'jsforce';
-import { createClient } from '@supabase/supabase-js';
+import { createSalesforceLead, createSalesforceOpportunity, isSalesforceConfigured } from '@/lib/salesforce';
+import { createAircallContact, createAircallCall, sendAircallSMS, isAircallConfigured } from '@/lib/aircall';
 
-// CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
-
-// Validation schema for lead data
-const leadSchema = z.object({
+// Define the form schema for validation
+const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-  age: z.number().int().min(18).max(100),
-  gender: z.enum(['male', 'female', 'other']),
-  productType: z.enum(['life', 'disability', 'supplemental']),
-  coverageAmount: z.number().int().optional(),
-  termLength: z.number().int().optional(),
-  tobaccoUse: z.boolean().optional(),
+  phone: z.string().min(10, 'Phone number must have at least 10 digits'),
+  zipCode: z.string().min(5, 'ZIP code is required'),
+  company: z.string().optional(),
+  source: z.string().optional(),
+  description: z.string().optional(),
+  insuranceType: z.string().min(1, 'Insurance type is required'),
+  estimatedAmount: z.string().optional(),
   utmSource: z.string().optional(),
+  utmMedium: z.string().optional(),
+  utmCampaign: z.string().optional(),
+  bestTimeToCall: z.string().optional(),
+  preferredContactMethod: z.enum(['phone', 'sms']).optional()
 });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+// Salesforce API configuration
+const SALESFORCE_API_URL = process.env.SALESFORCE_API_URL || 'https://your-salesforce-instance.salesforce.com/services/data/v57.0/sobjects/Lead';
+const SALESFORCE_ACCESS_TOKEN = process.env.SALESFORCE_ACCESS_TOKEN;
 
-export async function OPTIONS() {
-  return NextResponse.json({}, { headers: corsHeaders });
-}
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const data = await request.json();
-    const { leadId } = data;
-
-    // Get lead data from Supabase
-    const { data: lead, error } = await supabase
-      .from('leads')
-      .select('*')
-      .eq('id', leadId)
-      .single();
-
-    if (error) {
-      throw new Error(`Error fetching lead: ${error.message}`);
+    // Parse the request body
+    const body = await request.json();
+    
+    // Validate the form data
+    const validatedData = formSchema.parse(body);
+    
+    // Check if Salesforce is configured
+    if (!isSalesforceConfigured()) {
+      console.warn('Salesforce is not configured');
+      return NextResponse.json(
+        { error: 'Salesforce integration is not configured' },
+        { status: 500 }
+      );
     }
 
-    // Create Salesforce opportunity
-    const conn = new jsforce.Connection({
-      loginUrl: process.env.SALESFORCE_LOGIN_URL || 'https://login.salesforce.com'
+    // Create lead in Salesforce
+    const leadResult = await createSalesforceLead(validatedData);
+    
+    // Create opportunity in Salesforce
+    const opportunityResult = await createSalesforceOpportunity({
+      ...validatedData,
+      stageName: 'New',
+      closeDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+      leadId: leadResult.id
     });
 
-    await conn.login(
-      process.env.SALESFORCE_USERNAME!,
-      process.env.SALESFORCE_PASSWORD! + process.env.SALESFORCE_SECURITY_TOKEN!
-    );
+    // Handle Aircall integration if configured
+    let aircallContactId;
+    if (isAircallConfigured()) {
+      // Create contact in Aircall
+      const aircallContact = await createAircallContact({
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        email: validatedData.email,
+        phone: validatedData.phone,
+        metadata: {
+          insuranceType: validatedData.insuranceType,
+          estimatedAmount: validatedData.estimatedAmount,
+          utmSource: validatedData.utmSource,
+          utmMedium: validatedData.utmMedium,
+          utmCampaign: validatedData.utmCampaign,
+          leadId: leadResult.id,
+          opportunityId: opportunityResult.id
+        }
+      });
 
-    const opportunity = {
-      Name: `${lead.first_name} ${lead.last_name} - ${lead.insurance_type} Quote`,
-      StageName: 'Prospecting',
-      CloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      Amount: lead.coverage_amount || 0,
-      Type: lead.insurance_type,
-      LeadSource: lead.utm_source || 'Website'
-    };
+      aircallContactId = aircallContact.id;
 
-    const result = await conn.sobject('Opportunity').create(opportunity);
-
-    if (!result.success) {
-      throw new Error('Failed to create opportunity in Salesforce');
+      // Handle preferred contact method
+      if (validatedData.preferredContactMethod === 'phone' && validatedData.bestTimeToCall) {
+        // Schedule a call
+        await createAircallCall({
+          contactId: aircallContactId,
+          direction: 'outbound',
+          scheduledAt: validatedData.bestTimeToCall,
+          metadata: {
+            insuranceType: validatedData.insuranceType,
+            estimatedAmount: validatedData.estimatedAmount
+          }
+        });
+      } else if (validatedData.preferredContactMethod === 'sms') {
+        // Send SMS
+        await sendAircallSMS({
+          contactId: aircallContactId,
+          message: `Hi ${validatedData.firstName}, thank you for your interest in our insurance services. A representative will contact you shortly to discuss your needs.`
+        });
+      }
     }
 
-    // Update lead with Salesforce opportunity ID
-    await supabase
-      .from('leads')
-      .update({ salesforce_opportunity_id: result.id })
-      .eq('id', leadId);
-
-    return NextResponse.json({ success: true, opportunityId: result.id });
+    // Return success response with all IDs
+    return NextResponse.json({
+      success: true,
+      leadId: leadResult.id,
+      opportunityId: opportunityResult.id,
+      aircallContactId
+    });
   } catch (error) {
-    console.error('Error creating Salesforce opportunity:', error);
+    console.error('Error processing form submission:', error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation error', details: error.errors },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to create Salesforce opportunity' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

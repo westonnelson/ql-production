@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Script from 'next/script'
-import Header from './components/Header'
-import Footer from './components/Footer'
+import { Header } from './components/Header'
+import { Footer } from './components/Footer'
 import { Toaster } from 'react-hot-toast'
 import Image from 'next/image'
 
@@ -17,9 +17,20 @@ export const metadata: Metadata = {
   viewport: 'width=device-width, initial-scale=1',
   themeColor: '#00E0FF',
   icons: {
-    icon: '/favicon-32x32.png',
-    apple: '/apple-touch-icon.png',
-  }
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' }
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ],
+    other: [
+      { rel: 'mask-icon', url: '/safari-pinned-tab.svg', color: '#00E0FF' }
+    ]
+  },
+  manifest: '/site.webmanifest'
 }
 
 export const dynamic = 'force-dynamic'
@@ -53,6 +64,19 @@ export default function RootLayout({
             `,
           }}
         />
+        {/* Google Ads Conversion Tracking */}
+        <Script
+          id="google-ads-conversion"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ADS_ID}', {
+                'send_page_view': true,
+                'conversion_linker': true
+              });
+            `,
+          }}
+        />
       </head>
       <body className={`${inter.className} min-h-full bg-background text-foreground antialiased`}>
         {/* Google Tag Manager */}
@@ -67,49 +91,9 @@ export default function RootLayout({
         </Script>
         <Toaster position="top-right" />
         <div className="relative flex min-h-screen flex-col">
-          <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-16 items-center">
-              <nav className="flex items-center space-x-6 text-sm font-medium">
-                <a href="/" className="flex items-center space-x-2">
-                  <Image src="/logo.svg" alt="QuoteLinker Logo" width={32} height={32} className="h-8 w-8" />
-                  <span className="text-xl font-bold text-primary">QuoteLinker</span>
-                </a>
-              </nav>
-            </div>
-          </header>
+          <Header />
           <main className="flex-1">{children}</main>
-          <footer className="border-t bg-background">
-            <div className="container py-8 md:py-12">
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <Image src="/logo.svg" alt="QuoteLinker Logo" width={24} height={24} className="h-6 w-6" />
-                    <h3 className="text-lg font-semibold">QuoteLinker</h3>
-                  </div>
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    We help you find the right insurance coverage for your needs. Our platform makes it easy to compare quotes and make informed decisions.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold">Contact</h3>
-                  <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                    <li>Email: support@quotelinker.com</li>
-                    <li>Phone: (555) 123-4567</li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold">Legal</h3>
-                  <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                    <li><a href="/privacy" className="hover:text-primary">Privacy Policy</a></li>
-                    <li><a href="/terms" className="hover:text-primary">Terms of Service</a></li>
-                  </ul>
-                </div>
-              </div>
-              <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-                © {new Date().getFullYear()} QuoteLinker. All rights reserved.
-              </div>
-            </div>
-          </footer>
+          <Footer />
         </div>
         {/* Google Tag Manager (noscript) */}
         <noscript>

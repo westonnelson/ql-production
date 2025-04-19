@@ -1,113 +1,71 @@
-import { resendClient, isResendConfigured } from './resend';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 interface EmailData {
-  first_name: string;
-  last_name: string;
+  to: string;
+  firstName: string;
+  insuranceType: string;
+}
+
+interface AgentEmailData {
+  to: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
-  age: number;
-  gender: string;
-  product_type: string;
-  coverage_amount?: number;
-  term_length?: number;
-  tobacco_use?: boolean;
-  occupation?: string;
-  employment_status?: string;
-  income_range?: string;
-  pre_existing_conditions?: string;
-  desired_coverage_type?: string;
-  utm_source?: string;
-  ab_test_variant?: string;
-  funnel_name?: string;
-  funnel_step?: string;
-  funnel_variant?: string;
-  ab_test_id?: string;
+  insuranceType: string;
+  estimatedAmount?: string;
 }
 
-/**
- * Sends a confirmation email to the consumer who requested a quote.
- */
-export async function sendConsumerConfirmationEmail(userEmail: string, data: EmailData): Promise<void> {
-  if (!isResendConfigured()) {
-    console.warn('Resend is not configured - skipping consumer confirmation email');
-    return;
-  }
-
+export const sendConsumerConfirmationEmail = async (data: EmailData) => {
   try {
-    console.log(`Preparing consumer confirmation email for ${userEmail}`);
-    const productTitle = getProductTitle(data.product_type);
-    const specificFields = getProductSpecificFields(data);
+    const { to, firstName, insuranceType } = data;
     
-    console.log(`Sending consumer confirmation email for ${productTitle} quote to ${userEmail}`);
-    const result = await resendClient.emails.send({
-      from: 'QuoteLinker <support@quotelinker.com>',
-      to: userEmail,
-      subject: `Your ${productTitle} Quote Request Received`,
+    await resend.emails.send({
+      from: 'QuoteLinker <noreply@quotelinker.com>',
+      to,
+      subject: `Thank you for your ${insuranceType} insurance quote request`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #00a0b0;">Thank You for Your Quote Request!</h1>
-          <p>Dear ${data.first_name},</p>
-          <p>We've received your request for a ${productTitle} insurance quote. Our team will review your information and contact you shortly.</p>
-          <h2>Your Quote Details:</h2>
-          <ul>
-            <li>Insurance Type: ${productTitle}</li>
-            ${specificFields}
-          </ul>
-          <p>If you have any questions, please don't hesitate to contact us at support@quotelinker.com.</p>
-          <p>Best regards,<br>The QuoteLinker Team</p>
-        </div>
-      `,
+        <h1>Thank you for your quote request, ${firstName}!</h1>
+        <p>We've received your request for ${insuranceType} insurance and one of our licensed agents will contact you shortly.</p>
+        <p>In the meantime, if you have any questions, please don't hesitate to contact us.</p>
+        <p>Best regards,<br>The QuoteLinker Team</p>
+      `
     });
-    console.log(`Successfully sent consumer confirmation email to ${userEmail}`, result);
+
+    return true;
   } catch (error) {
-    console.error(`Failed to send consumer confirmation email to ${userEmail}:`, error);
-    // Don't throw the error to prevent breaking the form submission flow
+    console.error('Error sending consumer confirmation email:', error);
+    return false;
   }
-}
+};
 
-/**
- * Sends a notification email to the agent when a new quote is submitted.
- * The agent notification is sent to newquote@quotelinker.com.
- */
-export async function sendAgentNotificationEmail(data: EmailData): Promise<void> {
-  if (!isResendConfigured()) {
-    console.warn('Resend is not configured - skipping agent notification email');
-    return;
-  }
-
+export const sendAgentNotificationEmail = async (data: AgentEmailData) => {
   try {
-    console.log('Preparing agent notification email');
-    const productTitle = getProductTitle(data.product_type);
-    const specificFields = getProductSpecificFields(data);
+    const { firstName, lastName, email, phone, insuranceType, estimatedAmount } = data;
     
-    console.log(`Sending agent notification email for ${productTitle} quote from ${data.first_name} ${data.last_name}`);
-    const result = await resendClient.emails.send({
-      from: 'QuoteLinker <support@quotelinker.com>',
-      to: 'newquote@quotelinker.com',
-      subject: `New ${productTitle} Quote Inquiry - ${data.first_name} ${data.last_name}`,
+    await resend.emails.send({
+      from: 'QuoteLinker <noreply@quotelinker.com>',
+      to: process.env.NEW_LEAD_EMAIL || 'leads@quotelinker.com',
+      subject: `New ${insuranceType} Insurance Lead: ${firstName} ${lastName}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #00a0b0;">New ${productTitle} Quote Request</h1>
-          <h2>Customer Information:</h2>
-          <ul>
-            <li>Name: ${data.first_name} ${data.last_name}</li>
-            <li>Email: ${data.email}</li>
-            <li>Phone: ${data.phone}</li>
-            <li>Age: ${data.age}</li>
-            <li>Gender: ${data.gender}</li>
-            ${specificFields}
-            ${data.utm_source ? `<li>Source: ${data.utm_source}</li>` : ''}
-          </ul>
-          <p><a href="https://app.supabase.com/project/_/editor/table/leads" style="display: inline-block; background-color: #00a0b0; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">View in Supabase</a></p>
-        </div>
-      `,
+        <h1>New Lead Details</h1>
+        <p><strong>Name:</strong> ${firstName} ${lastName}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone}</p>
+        <p><strong>Insurance Type:</strong> ${insuranceType}</p>
+        ${estimatedAmount ? `<p><strong>Estimated Amount:</strong> $${estimatedAmount}</p>` : ''}
+        <p>Please follow up with this lead as soon as possible.</p>
+      `
     });
-    console.log(`Successfully sent agent notification email for ${data.first_name} ${data.last_name}`, result);
+
+    return true;
   } catch (error) {
-    console.error('Failed to send agent notification email:', error);
-    // Don't throw the error to prevent breaking the form submission flow
+    console.error('Error sending agent notification email:', error);
+    return false;
   }
-}
+};
 
 function getProductTitle(productType: string): string {
   switch (productType) {
@@ -127,23 +85,23 @@ function getProductTitle(productType: string): string {
 }
 
 function getProductSpecificFields(data: EmailData): string {
-  switch (data.product_type) {
+  switch (data.insuranceType) {
     case 'life':
       return `
-        ${data.coverage_amount ? `<li>Coverage Amount: $${data.coverage_amount.toLocaleString()}</li>` : ''}
-        ${data.term_length ? `<li>Term Length: ${data.term_length} years</li>` : ''}
-        ${data.tobacco_use !== undefined ? `<li>Tobacco Use: ${data.tobacco_use ? 'Yes' : 'No'}</li>` : ''}
+        ${data.coverageAmount ? `<li>Coverage Amount: $${data.coverageAmount.toLocaleString()}</li>` : ''}
+        ${data.termLength ? `<li>Term Length: ${data.termLength} years</li>` : ''}
+        ${data.tobaccoUse !== undefined ? `<li>Tobacco Use: ${data.tobaccoUse ? 'Yes' : 'No'}</li>` : ''}
       `;
     case 'disability':
       return `
         ${data.occupation ? `<li>Occupation: ${data.occupation}</li>` : ''}
-        ${data.employment_status ? `<li>Employment Status: ${data.employment_status}</li>` : ''}
-        ${data.income_range ? `<li>Income Range: ${data.income_range}</li>` : ''}
+        ${data.employmentStatus ? `<li>Employment Status: ${data.employmentStatus}</li>` : ''}
+        ${data.incomeRange ? `<li>Income Range: ${data.incomeRange}</li>` : ''}
       `;
     case 'supplemental':
       return `
-        ${data.pre_existing_conditions ? `<li>Pre-existing Conditions: ${data.pre_existing_conditions}</li>` : ''}
-        ${data.desired_coverage_type ? `<li>Desired Coverage Type: ${data.desired_coverage_type}</li>` : ''}
+        ${data.preExistingConditions ? `<li>Pre-existing Conditions: ${data.preExistingConditions}</li>` : ''}
+        ${data.desiredCoverageType ? `<li>Desired Coverage Type: ${data.desiredCoverageType}</li>` : ''}
       `;
     default:
       return '';

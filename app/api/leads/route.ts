@@ -1,41 +1,29 @@
-import { NextResponse } from 'next/server';
-import jsforce from 'jsforce';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { createSalesforceLead } from '@/lib/salesforce';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-interface LeadData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  zipCode: string;
-  productType: string;
-}
+// Define the lead data schema
+const leadSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().min(10, 'Phone number must have at least 10 digits'),
+  insuranceType: z.enum(['auto', 'life', 'homeowners', 'disability', 'supplemental']),
+  estimatedAmount: z.string().optional()
+});
 
-async function createSalesforceLead(data: LeadData) {
-  const conn = new jsforce.Connection({
-    loginUrl: process.env.SF_INSTANCE_URL,
-  });
+type LeadData = z.infer<typeof leadSchema>;
 
+// Function to handle Salesforce lead creation with error handling
+async function handleSalesforceLead(data: LeadData) {
   try {
-    await conn.login(process.env.SF_USERNAME!, process.env.SF_PASSWORD! + process.env.SF_SECURITY_TOKEN);
-
-    const lead = {
-      FirstName: data.firstName,
-      LastName: data.lastName,
-      Email: data.email,
-      Phone: data.phone,
-      PostalCode: data.zipCode,
-      Product_Type__c: data.productType,
-      LeadSource: 'Website',
-      Status: 'New',
-    };
-
-    const result = await conn.sobject('Lead').create(lead);
-    return result;
+    const result = await createSalesforceLead(data);
+    return { success: true, leadId: result.id };
   } catch (error) {
-    console.error('Salesforce Error:', error);
+    console.error('Error creating Salesforce lead:', error);
     throw error;
   }
 }
@@ -55,8 +43,8 @@ async function sendEmailNotifications(data: LeadData) {
         <p><strong>Name:</strong> ${data.firstName} ${data.lastName}</p>
         <p><strong>Email:</strong> ${data.email}</p>
         <p><strong>Phone:</strong> ${data.phone}</p>
-        <p><strong>ZIP Code:</strong> ${data.zipCode}</p>
-        <p><strong>Product Type:</strong> ${data.productType}</p>
+        <p><strong>ZIP Code:</strong> ${data.estimatedAmount}</p>
+        <p><strong>Product Type:</strong> ${data.insuranceType}</p>
       `,
     });
 
@@ -68,7 +56,7 @@ async function sendEmailNotifications(data: LeadData) {
       html: `
         <h2>Thank You for Your Interest!</h2>
         <p>Dear ${data.firstName},</p>
-        <p>Thank you for your interest in ${data.productType} through QuoteLinker. A licensed insurance agent will contact you shortly to discuss your needs and provide personalized quotes.</p>
+        <p>Thank you for your interest in ${data.insuranceType} through QuoteLinker. A licensed insurance agent will contact you shortly to discuss your needs and provide personalized quotes.</p>
         <p>Best regards,<br>The QuoteLinker Team</p>
       `,
     });
@@ -78,30 +66,43 @@ async function sendEmailNotifications(data: LeadData) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const data: LeadData = await request.json();
+    // Parse and validate the request body
+    const body = await request.json();
+    const validatedData = leadSchema.parse(body);
 
-    // Validate required fields
-    if (!data.firstName || !data.lastName || !data.email || !data.phone || !data.zipCode || !data.productType) {
+    // Create lead in Salesforce
+    const result = await handleSalesforceLead(validatedData);
+
+    // Send email notifications
+    await sendEmailNotifications(validatedData);
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('Error processing lead:', error);
+
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Validation error', details: error.errors },
         { status: 400 }
       );
     }
 
-    // Create lead in Salesforce
-    await createSalesforceLead(data);
-
-    // Send email notifications
-    await sendEmailNotifications(data);
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('API Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
+}
+
+// Handle CORS preflight requests
+export async function OPTIONS() {
+  return NextResponse.json({}, { 
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    }
+  });
 } 

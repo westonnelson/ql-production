@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 import { sendConsumerConfirmationEmail, sendAgentNotificationEmail } from '@/lib/sendEmail';
@@ -16,249 +16,65 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-// Base schema for all insurance types
-const baseSchema = z.object({
+// Define the form schema for validation
+const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-  age: z.number().int().min(18).max(100),
-  gender: z.enum(['male', 'female', 'other']),
-  insuranceType: z.enum(['life', 'disability', 'auto', 'supplemental']),
-  funnelName: z.string().optional(),
-  funnelStep: z.string().optional(),
-  funnelVariant: z.string().optional(),
-  abTestId: z.string().optional(),
-  abTestVariant: z.string().optional(),
+  phone: z.string().min(10, 'Phone number must have at least 10 digits'),
+  zipCode: z.string().min(5, 'ZIP code is required'),
+  company: z.string().optional(),
+  source: z.string().optional(),
+  description: z.string().optional(),
+  insuranceType: z.enum(['auto', 'life', 'homeowners', 'disability', 'supplemental']),
+  estimatedAmount: z.string().optional(),
   utmSource: z.string().optional(),
   utmMedium: z.string().optional(),
   utmCampaign: z.string().optional(),
-  utmContent: z.string().optional(),
-  utmTerm: z.string().optional(),
+  bestTimeToCall: z.string().optional(),
+  preferredContactMethod: z.enum(['phone', 'sms']).optional()
 });
 
-// Insurance-specific schemas
-const lifeSchema = baseSchema.extend({
-  insuranceType: z.literal('life'),
-  coverageAmount: z.number().int().min(10000),
-  termLength: z.number().int().min(5).max(30),
-  tobaccoUse: z.boolean(),
-});
-
-const disabilitySchema = baseSchema.extend({
-  insuranceType: z.literal('disability'),
-  occupation: z.string().min(1, 'Occupation is required'),
-  employmentStatus: z.enum(['full-time', 'part-time', 'self-employed']),
-  incomeRange: z.string().min(1, 'Income range is required'),
-});
-
-const autoSchema = baseSchema.extend({
-  insuranceType: z.literal('auto'),
-  vehicleYear: z.number().int().min(1900).max(new Date().getFullYear() + 1),
-  vehicleMake: z.string().min(1, 'Vehicle make is required'),
-  vehicleModel: z.string().min(1, 'Vehicle model is required'),
-});
-
-const supplementalSchema = baseSchema.extend({
-  insuranceType: z.literal('supplemental'),
-  healthStatus: z.enum(['excellent', 'good', 'fair', 'poor']),
-  preExistingConditions: z.boolean(),
-});
-
-// Combined schema
-const formSchema = z.discriminatedUnion('insuranceType', [
-  lifeSchema,
-  disabilitySchema,
-  autoSchema,
-  supplementalSchema,
-]);
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const data = await request.json();
+    // Parse and validate the request body
+    const body = await request.json();
+    const validatedData = formSchema.parse(body);
 
-    // Validate required fields
-    const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'age', 'gender', 'insuranceType'];
-    const missingFields = requiredFields.filter(field => !data[field]);
-    
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        { error: `Missing required fields: ${missingFields.join(', ')}` },
-        { status: 400 }
-      );
-    }
+    // Handle form submission
+    const result = await handleFormSubmission(validatedData);
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
-      );
-    }
-
-    // Validate phone number
-    const phoneRegex = /^\+?[\d\s-()]{10,}$/;
-    if (!phoneRegex.test(data.phone)) {
-      return NextResponse.json(
-        { error: 'Invalid phone number format' },
-        { status: 400 }
-      );
-    }
-
-    // Validate age
-    const age = Number(data.age);
-    if (isNaN(age) || age < 18 || age > 100) {
-      return NextResponse.json(
-        { error: 'Age must be between 18 and 100' },
-        { status: 400 }
-      );
-    }
-
-    // Prepare quote data
-    const quoteData = {
-      first_name: data.firstName,
-      last_name: data.lastName,
-      email: data.email,
-      phone: data.phone,
-      age: age,
-      gender: data.gender,
-      insurance_type: data.insuranceType,
-      utm_source: data.utm_source || null,
-      utm_medium: data.utm_medium || null,
-      utm_campaign: data.utm_campaign || null,
-      utm_content: data.utm_content || null,
-      utm_term: data.utm_term || null,
-      user_agent: data.userAgent || null,
-      platform: data.platform || 'web',
-      created_at: new Date().toISOString(),
-      status: 'new'
-    };
-
-    // Insert into Supabase
-    const { data: quote, error: insertError } = await supabase
-      .from('quotes')
-      .insert([quoteData])
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error('Supabase insert error:', insertError);
-      return NextResponse.json(
-        { error: 'Failed to save quote' },
-        { status: 500 }
-      );
-    }
-
-    // Send emails
-    try {
-      console.log('Sending confirmation email to consumer:', data.email);
-      await sendConsumerConfirmationEmail(data.email, {
-        first_name: data.firstName,
-        last_name: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        age: age,
-        gender: data.gender,
-        product_type: data.insuranceType,
-        utm_source: data.utm_source,
-      });
-
-      console.log('Sending notification email to agent');
-      await sendAgentNotificationEmail({
-        first_name: data.firstName,
-        last_name: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        age: age,
-        gender: data.gender,
-        product_type: data.insuranceType,
-        utm_source: data.utm_source,
-      });
-    } catch (emailError) {
-      console.error('Failed to send emails:', emailError);
-      // Don't fail the request if emails fail, but log it
-    }
-
-    // Create Salesforce opportunity
-    try {
-      console.log('Creating Salesforce opportunity');
-      
-      // Prepare UTM parameters
-      const utmParams = {
-        source: data.utm_source || null,
-        medium: data.utm_medium || null,
-        campaign: data.utm_campaign || null,
-        term: data.utm_term || null,
-        content: data.utm_content || null
-      };
-      
-      // Call the Supabase Edge Function to create Salesforce opportunity
-      const salesforceResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-salesforce-opportunity`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
-          },
-          body: JSON.stringify({
-            formData: {
-              firstName: data.firstName,
-              lastName: data.lastName,
-              email: data.email,
-              phone: data.phone,
-              age: age,
-              gender: data.gender,
-              insuranceType: data.insuranceType,
-              // Add insurance-specific fields
-              ...(data.insuranceType === 'life' && {
-                coverageAmount: data.coverageAmount,
-                termLength: data.termLength,
-                tobaccoUse: data.tobaccoUse
-              }),
-              ...(data.insuranceType === 'disability' && {
-                occupation: data.occupation,
-                employmentStatus: data.employmentStatus,
-                incomeRange: data.incomeRange
-              }),
-              ...(data.insuranceType === 'auto' && {
-                vehicleYear: data.vehicleYear,
-                vehicleMake: data.vehicleMake,
-                vehicleModel: data.vehicleModel
-              }),
-              ...(data.insuranceType === 'supplemental' && {
-                healthStatus: data.healthStatus,
-                preExistingConditions: data.preExistingConditions
-              })
-            },
-            formType: data.insuranceType,
-            utmParams
-          })
-        }
-      );
-      
-      if (!salesforceResponse.ok) {
-        const salesforceError = await salesforceResponse.json();
-        console.error('Salesforce integration error:', salesforceError);
-        // Don't fail the request if Salesforce integration fails, but log it
-      } else {
-        console.log('Salesforce opportunity created successfully');
-      }
-    } catch (salesforceError) {
-      console.error('Failed to create Salesforce opportunity:', salesforceError);
-      // Don't fail the request if Salesforce integration fails, but log it
-    }
-
-    // Return success response
-    return NextResponse.json({
-      success: true,
-      message: 'Quote submitted successfully',
-      quoteId: quote.id
+    // Send confirmation email to consumer
+    await sendConsumerConfirmationEmail({
+      to: validatedData.email,
+      firstName: validatedData.firstName,
+      insuranceType: validatedData.insuranceType
     });
 
+    // Send notification to agent
+    await sendAgentNotificationEmail({
+      to: validatedData.email,
+      firstName: validatedData.firstName,
+      lastName: validatedData.lastName,
+      email: validatedData.email,
+      phone: validatedData.phone,
+      insuranceType: validatedData.insuranceType,
+      estimatedAmount: validatedData.estimatedAmount
+    });
+
+    return NextResponse.json({
+      ...result
+    });
   } catch (error) {
-    console.error('Quote submission error:', error);
+    console.error('Error processing quote submission:', error);
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation error', details: error.errors },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

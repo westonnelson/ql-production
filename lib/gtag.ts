@@ -1,43 +1,24 @@
-declare global {
-  interface Window {
-    gtag: (
-      command: string,
-      action: string,
-      params: {
-        send_to?: string;
-        value?: number;
-        [key: string]: any;
-      }
-    ) => void;
-  }
-}
+import { Gtag } from '@/types/gtag';
 
-// Function to check if Google Analytics is properly configured
-export function isGoogleAnalyticsConfigured(): boolean {
-  return !!process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-}
+// Google Analytics configuration
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
 
-// Function to check if Google Ads is properly configured
-export function isGoogleAdsConfigured(): boolean {
-  return !!process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
-}
+// Check if Google Analytics is configured
+export const isGoogleAnalyticsConfigured = () => {
+  return !!GA_MEASUREMENT_ID;
+};
 
-export const gtag = (
-  command: string,
-  action: string,
-  params: {
-    send_to?: string;
-    value?: number;
-    [key: string]: any;
-  } = {}
-) => {
+// Check if Google Ads is configured
+export const isGoogleAdsConfigured = () => {
+  return !!GOOGLE_ADS_ID;
+};
+
+// Initialize Google Analytics
+export const gtag: Gtag = (command, action, params) => {
   if (typeof window === 'undefined' || !window.gtag) {
     return;
   }
 
-  try {
-    window.gtag(command, action, params);
-  } catch (error) {
-    console.warn('Failed to send Google Analytics event:', error);
-  }
+  window.gtag(command, action, params);
 }; 
