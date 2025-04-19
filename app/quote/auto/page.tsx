@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useSearchParams, useRouter } from 'next/navigation'
-import ProgressBar from '../../components/ProgressBar'
+import ProgressBar from '@/components/ProgressBar'
 
 const currentYear = new Date().getFullYear()
 const vehicleYears = Array.from(
