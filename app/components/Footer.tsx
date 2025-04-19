@@ -3,114 +3,26 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FaEnvelope } from 'react-icons/fa';
 
-export default function Footer() {
+export const Footer: React.FC = () => {
+  const currentYear = new Date().getFullYear();
+  
   return (
-    <footer className="bg-white border-t border-gray-200">
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-center mb-8">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/logo.svg"
-              alt="QuoteLinker"
-              width={32}
-              height={32}
-              className="w-8 h-8"
-            />
-            <span className="ml-2 text-lg font-semibold text-gray-900">QuoteLinker</span>
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 text-center md:text-left">
-          {/* Company Info */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <FaEnvelope className="text-[#00E0FF]" />
-              <a href="mailto:support@quotelinker.com" className="hover:text-[#00E0FF] transition-colors">
-                support@quotelinker.com
-              </a>
-            </div>
+    <footer className="w-full py-6 px-6 bg-gray-50">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="text-gray-600 text-sm">
+            © {currentYear} QuoteLinker. All rights reserved.
           </div>
-
-          {/* Insurance */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Insurance</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/quote/life" className="text-gray-600 hover:text-[#00E0FF] transition-colors">
-                  Life Insurance
-                </Link>
-              </li>
-              <li>
-                <Link href="/quote/disability" className="text-gray-600 hover:text-[#00E0FF] transition-colors">
-                  Disability Insurance
-                </Link>
-              </li>
-              <li>
-                <Link href="/quote/supplemental" className="text-gray-600 hover:text-[#00E0FF] transition-colors">
-                  Supplemental Health
-                </Link>
-              </li>
-            </ul>
+          <div className="flex gap-6 text-sm">
+            <Link href="/privacy" className="text-gray-600 hover:text-[#06B6D4]">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="text-gray-600 hover:text-[#06B6D4]">
+              Terms of Service
+            </Link>
           </div>
-
-          {/* Resources */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Resources</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/benefits" className="text-gray-600 hover:text-[#00E0FF] transition-colors">
-                  Benefits
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="text-gray-600 hover:text-[#00E0FF] transition-colors">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="/education" className="text-gray-600 hover:text-[#00E0FF] transition-colors">
-                  Insurance Education
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Trust & Legal */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Trust & Legal</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/privacy" className="text-gray-600 hover:text-[#00E0FF] transition-colors">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="text-gray-600 hover:text-[#00E0FF] transition-colors">
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link href="/licensing" className="text-gray-600 hover:text-[#00E0FF] transition-colors">
-                  Licensing
-                </Link>
-              </li>
-              <li>
-                <Link href="/agent" className="text-gray-600 hover:text-[#00E0FF] transition-colors">
-                  Agent Access
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="mt-12 pt-8 border-t border-gray-200 text-center">
-          <p className="text-gray-600">
-            © {new Date().getFullYear()} QuoteLinker. All rights reserved.
-          </p>
-          <p className="mt-2 text-sm text-gray-500">
-            Powered by QuoteLinker and AI
-          </p>
         </div>
       </div>
     </footer>
   );
-} 
+}; 
