@@ -16,6 +16,7 @@ interface LeadData {
   phone: string;
   zipCode: string;
   age: string;
+  gender: string;
   insuranceType: string;
   estimatedAmount?: string;
   utmSource?: string;

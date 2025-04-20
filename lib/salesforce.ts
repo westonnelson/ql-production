@@ -22,6 +22,7 @@ export interface LeadData {
   phone: string;
   zipCode: string;
   age: string;
+  gender: string;
   insuranceType: string;
   estimatedAmount?: string;
   utmSource?: string;
@@ -193,6 +194,7 @@ export const createSalesforceLead = async (data: LeadData) => {
       Phone: data.phone,
       PostalCode: data.zipCode,
       Age__c: data.age,
+      Gender__c: data.gender,
       Insurance_Type__c: data.insuranceType,
       Company: data.company || 'Not provided',
       LeadSource: data.source || 'Website',
