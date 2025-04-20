@@ -13,22 +13,21 @@ export function Logo({ className = '' }: LogoProps) {
         viewBox="0 0 32 32"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="text-primary"
+        className="text-[#00E0FF]"
       >
         <path
-          d="M16 2C8.268 2 2 8.268 2 16s6.268 14 14 14 14-6.268 14-14S23.732 2 16 2zm0 25.2c-6.188 0-11.2-5.012-11.2-11.2S9.812 4.8 16 4.8 27.2 9.812 27.2 16 22.188 27.2 16 27.2z"
+          d="M16 0C7.163 0 0 7.163 0 16s7.163 16 16 16 16-7.163 16-16S24.837 0 16 0zm0 28c-6.627 0-12-5.373-12-12S9.373 4 16 4s12 5.373 12 12-5.373 12-12 12z"
           fill="currentColor"
         />
         <path
-          d="M16 7.6c-4.631 0-8.4 3.769-8.4 8.4 0 4.631 3.769 8.4 8.4 8.4 4.631 0 8.4-3.769 8.4-8.4 0-4.631-3.769-8.4-8.4-8.4zm0 14c-3.077 0-5.6-2.523-5.6-5.6s2.523-5.6 5.6-5.6 5.6 2.523 5.6 5.6-2.523 5.6-5.6 5.6z"
-          fill="currentColor"
-        />
-        <path
-          d="M16 13.2c-1.544 0-2.8 1.256-2.8 2.8 0 1.544 1.256 2.8 2.8 2.8 1.544 0 2.8-1.256 2.8-2.8 0-1.544-1.256-2.8-2.8-2.8z"
+          d="M16 8c4.418 0 8 3.582 8 8 0 4.418-3.582 8-8 8V8z"
           fill="currentColor"
         />
       </svg>
-      <span className="text-xl font-bold text-primary">QuoteLinker</span>
+      <span className="text-2xl font-bold">
+        <span className="text-[#00E0FF]">Quote</span>
+        <span className="text-gray-900">Linker</span>
+      </span>
     </div>
   );
 } 
