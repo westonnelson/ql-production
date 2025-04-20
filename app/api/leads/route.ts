@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createSalesforceLead } from '@/lib/salesforce';
+import { createSalesforceLead } from '@/lib';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -11,8 +11,15 @@ const leadSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
   phone: z.string().min(10, 'Phone number must have at least 10 digits'),
+  zipCode: z.string().min(5, 'ZIP code is required'),
+  age: z.string().min(1, 'Age is required'),
   insuranceType: z.enum(['auto', 'life', 'homeowners', 'disability', 'supplemental']),
-  estimatedAmount: z.string().optional()
+  estimatedAmount: z.string().optional(),
+  utmSource: z.string().optional(),
+  utmMedium: z.string().optional(),
+  utmCampaign: z.string().optional(),
+  bestTimeToCall: z.string().optional(),
+  preferredContactMethod: z.enum(['phone', 'sms']).optional()
 });
 
 type LeadData = z.infer<typeof leadSchema>;
@@ -20,7 +27,20 @@ type LeadData = z.infer<typeof leadSchema>;
 // Function to handle Salesforce lead creation with error handling
 async function handleSalesforceLead(data: LeadData) {
   try {
-    const result = await createSalesforceLead(data);
+    const result = await createSalesforceLead({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      zipCode: data.zipCode,
+      age: data.age,
+      insuranceType: data.insuranceType,
+      utmSource: data.utmSource,
+      utmMedium: data.utmMedium,
+      utmCampaign: data.utmCampaign,
+      bestTimeToCall: data.bestTimeToCall,
+      preferredContactMethod: data.preferredContactMethod
+    });
     return { success: true, leadId: result.id };
   } catch (error) {
     console.error('Error creating Salesforce lead:', error);
@@ -43,8 +63,13 @@ async function sendEmailNotifications(data: LeadData) {
         <p><strong>Name:</strong> ${data.firstName} ${data.lastName}</p>
         <p><strong>Email:</strong> ${data.email}</p>
         <p><strong>Phone:</strong> ${data.phone}</p>
-        <p><strong>ZIP Code:</strong> ${data.estimatedAmount}</p>
+        <p><strong>ZIP Code:</strong> ${data.zipCode}</p>
+        <p><strong>Age:</strong> ${data.age}</p>
         <p><strong>Product Type:</strong> ${data.insuranceType}</p>
+        ${data.estimatedAmount ? `<p><strong>Estimated Amount:</strong> ${data.estimatedAmount}</p>` : ''}
+        ${data.bestTimeToCall ? `<p><strong>Best Time to Call:</strong> ${data.bestTimeToCall}</p>` : ''}
+        ${data.preferredContactMethod ? `<p><strong>Preferred Contact Method:</strong> ${data.preferredContactMethod}</p>` : ''}
+        ${data.utmSource ? `<p><strong>Source:</strong> ${data.utmSource}</p>` : ''}
       `,
     });
 
@@ -56,7 +81,8 @@ async function sendEmailNotifications(data: LeadData) {
       html: `
         <h2>Thank You for Your Interest!</h2>
         <p>Dear ${data.firstName},</p>
-        <p>Thank you for your interest in ${data.insuranceType} through QuoteLinker. A licensed insurance agent will contact you shortly to discuss your needs and provide personalized quotes.</p>
+        <p>Thank you for your interest in ${data.insuranceType} insurance through QuoteLinker. A licensed insurance agent will contact you shortly to discuss your needs and provide personalized quotes.</p>
+        ${data.bestTimeToCall ? `<p>We'll make sure to contact you during your preferred time: ${data.bestTimeToCall}</p>` : ''}
         <p>Best regards,<br>The QuoteLinker Team</p>
       `,
     });

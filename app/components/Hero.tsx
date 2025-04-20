@@ -10,7 +10,7 @@ export const Hero: React.FC = () => {
             <div className="sm:text-center lg:text-left">
               <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
                 <span className="block">Find Your Perfect</span>
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#06B6D4] to-[#0891B2]">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#00E0FF] to-[#00E0FF]">
                   Insurance Match
                 </span>
               </h1>
@@ -21,7 +21,7 @@ export const Hero: React.FC = () => {
                 <div className="rounded-md shadow">
                   <Link
                     href="/quote"
-                    className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#06B6D4] hover:bg-[#0891B2] md:py-4 md:text-lg md:px-10"
+                    className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#00E0FF] hover:bg-opacity-90 md:py-4 md:text-lg md:px-10"
                   >
                     Get Your Quote
                   </Link>

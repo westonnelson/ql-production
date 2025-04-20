@@ -6,6 +6,14 @@ interface EmailData {
   to: string;
   firstName: string;
   insuranceType: string;
+  coverageAmount?: number;
+  termLength?: number;
+  tobaccoUse?: boolean;
+  occupation?: string;
+  employmentStatus?: string;
+  incomeRange?: string;
+  preExistingConditions?: string;
+  desiredCoverageType?: string;
 }
 
 interface AgentEmailData {

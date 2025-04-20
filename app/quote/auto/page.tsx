@@ -66,7 +66,7 @@ const stepFields: Record<number, FormFields[]> = {
   3: ['coverageTypes', 'drivingHistory'],
 }
 
-function QuoteForm({ utmSource }: { utmSource: string | null }) {
+function QuoteForm({ utmSource, insuranceType }: { utmSource: string | null, insuranceType: string }) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -97,7 +97,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
         },
         body: JSON.stringify({
           ...data,
-          insuranceType: 'auto',
+          insuranceType,
         }),
       })
 
@@ -391,7 +391,7 @@ export default function AutoInsuranceQuote() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <div className="min-h-screen bg-gray-50">
-        <QuoteForm utmSource={utmSource} />
+        <QuoteForm utmSource={utmSource} insuranceType="auto" />
       </div>
     </Suspense>
   )

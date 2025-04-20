@@ -12,18 +12,18 @@ export const Header: React.FC = () => {
           <Logo />
         </Link>
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/about" className="text-gray-600 hover:text-[#06B6D4]">
+          <Link href="/about" className="text-gray-600 hover:text-[#00E0FF]">
             About
           </Link>
-          <Link href="/insurance" className="text-gray-600 hover:text-[#06B6D4]">
+          <Link href="/insurance" className="text-gray-600 hover:text-[#00E0FF]">
             Insurance
           </Link>
-          <Link href="/faq" className="text-gray-600 hover:text-[#06B6D4]">
+          <Link href="/faq" className="text-gray-600 hover:text-[#00E0FF]">
             FAQ
           </Link>
           <Link
             href="/quote"
-            className="bg-[#06B6D4] text-white px-4 py-2 rounded-md hover:bg-[#0891B2] transition-colors"
+            className="bg-[#00E0FF] text-white px-4 py-2 rounded-md hover:bg-opacity-90 transition-colors"
           >
             Get Your Quote
           </Link>

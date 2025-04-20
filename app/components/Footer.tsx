@@ -14,10 +14,10 @@ export const Footer: React.FC = () => {
             © {currentYear} QuoteLinker. All rights reserved.
           </div>
           <div className="flex gap-6 text-sm">
-            <Link href="/privacy" className="text-gray-600 hover:text-[#06B6D4]">
+            <Link href="/privacy" className="text-gray-600 hover:text-[#00E0FF]">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="text-gray-600 hover:text-[#06B6D4]">
+            <Link href="/terms" className="text-gray-600 hover:text-[#00E0FF]">
               Terms of Service
             </Link>
           </div>

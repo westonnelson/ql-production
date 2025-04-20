@@ -20,15 +20,18 @@ export interface LeadData {
   lastName: string;
   email: string;
   phone: string;
-  zipCode?: string;
-  company?: string;
-  source?: string;
-  description?: string;
-  insuranceType?: string;
+  zipCode: string;
+  age: string;
+  insuranceType: string;
   estimatedAmount?: string;
   utmSource?: string;
   utmMedium?: string;
   utmCampaign?: string;
+  bestTimeToCall?: string;
+  preferredContactMethod?: 'phone' | 'sms';
+  company?: string;
+  source?: string;
+  description?: string;
 }
 
 interface AccountData {
@@ -57,6 +60,15 @@ export interface OpportunityData {
   stageName?: string;
   closeDate?: string;
   leadId?: string;
+  type?: string;
+}
+
+interface SalesforceQueryResult {
+  totalSize: number;
+  records: Array<{
+    Id: string;
+    [key: string]: any;
+  }>;
 }
 
 // Initialize Salesforce connection
@@ -114,7 +126,7 @@ export const createOrUpdateSalesforceAccount = async (data: AccountData) => {
     // Check if account already exists by email
     const existingAccounts = await conn.query(
       `SELECT Id FROM Account WHERE PersonEmail = '${data.email}' OR PersonContact.Email = '${data.email}'`
-    );
+    ) as SalesforceQueryResult;
     
     if (existingAccounts.totalSize > 0) {
       // Account exists, update it
@@ -169,36 +181,38 @@ export const createOrUpdateSalesforceAccount = async (data: AccountData) => {
   }
 };
 
-// Create a lead in Salesforce
+// Create a Lead in Salesforce
 export const createSalesforceLead = async (data: LeadData) => {
   try {
     const conn = await connectToSalesforce();
     
-    const lead = {
+    const leadData = {
       FirstName: data.firstName,
       LastName: data.lastName,
       Email: data.email,
       Phone: data.phone,
-      PostalCode: data.zipCode || '',
+      PostalCode: data.zipCode,
+      Age__c: data.age,
+      Insurance_Type__c: data.insuranceType,
       Company: data.company || 'Not provided',
       LeadSource: data.source || 'Website',
       Description: data.description || '',
-      Insurance_Type__c: data.insuranceType || '',
       Estimated_Amount__c: data.estimatedAmount || '',
       UTM_Source__c: data.utmSource || '',
       UTM_Medium__c: data.utmMedium || '',
       UTM_Campaign__c: data.utmCampaign || '',
-      Status: 'New'
+      Best_Time_to_Call__c: data.bestTimeToCall || '',
+      Preferred_Contact_Method__c: data.preferredContactMethod || 'phone'
     };
 
-    const result = await conn.sobject('Lead').create(lead);
+    const result = await conn.sobject('Lead').create(leadData);
     
     if (!result.success) {
       throw new Error(result.errors?.[0]?.message || 'Failed to create lead');
     }
-
+    
     console.log('Lead created successfully:', result.id);
-    return result;
+    return { success: true, id: result.id };
   } catch (error) {
     console.error('Error creating Salesforce lead:', error);
     throw error;
@@ -210,7 +224,7 @@ export const createSalesforceOpportunity = async (data: OpportunityData) => {
   try {
     const conn = await connectToSalesforce();
     
-    // First create or update the account
+    // Create or update account first
     const accountResult = await createOrUpdateSalesforceAccount({
       firstName: data.firstName,
       lastName: data.lastName,
@@ -220,8 +234,8 @@ export const createSalesforceOpportunity = async (data: OpportunityData) => {
       company: data.company
     });
     
-    // Then create the opportunity
     const opportunity = {
+      AccountId: accountResult.id,
       Name: `${data.firstName} ${data.lastName} - ${data.insuranceType || 'Insurance'} Quote`,
       StageName: data.stageName || 'New',
       CloseDate: data.closeDate || new Date().toISOString().split('T')[0],
@@ -229,8 +243,6 @@ export const createSalesforceOpportunity = async (data: OpportunityData) => {
       Description: `Quote request for ${data.insuranceType || 'insurance'}\nUTM Source: ${data.utmSource}\nUTM Medium: ${data.utmMedium}\nUTM Campaign: ${data.utmCampaign}`,
       LeadSource: data.source || 'Website',
       Contact_Email__c: data.email,
-      Contact_Phone__c: data.phone,
-      AccountId: accountResult.id,
       Insurance_Type__c: data.insuranceType || '',
       Estimated_Amount__c: data.estimatedAmount || '',
       UTM_Source__c: data.utmSource || '',
@@ -285,13 +297,21 @@ export const updateSalesforceOpportunity = async (id: string, data: Partial<Oppo
   }
 };
 
-// Get an opportunity from Salesforce
-export const getSalesforceOpportunity = async (id: string) => {
+// Define the Salesforce record type
+interface SalesforceRecord {
+  Id: string;
+  Name: string;
+  [key: string]: any;
+}
+
+// Get an Opportunity from Salesforce
+export const getSalesforceOpportunity = async (id: string): Promise<SalesforceRecord> => {
   try {
     const conn = await connectToSalesforce();
-    return await conn.sobject('Opportunity').retrieve(id);
+    const opportunity = await conn.sobject('Opportunity').retrieve(id) as SalesforceRecord;
+    return opportunity;
   } catch (error) {
-    console.error('Error retrieving Salesforce opportunity:', error);
+    console.error('Error retrieving opportunity from Salesforce:', error);
     throw error;
   }
 };

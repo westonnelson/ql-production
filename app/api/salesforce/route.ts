@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createSalesforceLead, createSalesforceOpportunity, isSalesforceConfigured } from '@/lib/salesforce';
+import { createSalesforceLead, createSalesforceOpportunity, isSalesforceConfigured } from '@/lib';
 import { createAircallContact, createAircallCall, sendAircallSMS, isAircallConfigured } from '@/lib/aircall';
 
 // Define the form schema for validation
@@ -10,6 +10,7 @@ const formSchema = z.object({
   email: z.string().email('Invalid email address'),
   phone: z.string().min(10, 'Phone number must have at least 10 digits'),
   zipCode: z.string().min(5, 'ZIP code is required'),
+  age: z.string().min(1, 'Age is required'),
   company: z.string().optional(),
   source: z.string().optional(),
   description: z.string().optional(),

@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { sendConsumerConfirmationEmail, sendAgentNotificationEmail } from './sendEmail'
 import { logFormSubmission } from './analytics'
-import { createSalesforceLead, createSalesforceOpportunity } from './salesforce'
+import { createSalesforceLead, createSalesforceOpportunity } from '.'
 import { createAircallContact, createAircallCall, sendAircallSMS, isAircallConfigured } from './aircall'
 
 // Initialize Supabase with placeholder values if not available
@@ -15,16 +15,17 @@ interface FormSubmission {
   email: string;
   phone: string;
   zipCode: string;
-  company?: string;
-  source?: string;
-  description?: string;
-  insuranceType: 'auto' | 'life' | 'homeowners' | 'disability' | 'supplemental';
+  age: string;
+  insuranceType: string;
   estimatedAmount?: string;
   utmSource?: string;
   utmMedium?: string;
   utmCampaign?: string;
-  preferredContactMethod?: string;
   bestTimeToCall?: string;
+  preferredContactMethod?: 'phone' | 'sms';
+  company?: string;
+  source?: string;
+  description?: string;
 }
 
 export const handleFormSubmission = async (data: FormSubmission) => {

@@ -64,7 +64,7 @@ const stepFields: Record<number, FormFields[]> = {
   3: ['insuranceType', 'coverageAmount', 'termLength', 'permanentType', 'tobaccoUse'],
 }
 
-function QuoteForm({ utmSource }: { utmSource: string | null }) {
+function QuoteForm({ utmSource, insuranceType }: { utmSource: string | null, insuranceType: string }) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -444,7 +444,7 @@ export default function LifeQuotePage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <div className="min-h-screen bg-gray-50">
-        <QuoteForm utmSource={utmSource} />
+        <QuoteForm utmSource={utmSource} insuranceType="life" />
       </div>
     </Suspense>
   )

@@ -67,7 +67,7 @@ const stepFields: Record<number, FormFields[]> = {
   3: ['desiredCoverageType', 'preExistingConditions'],
 }
 
-function QuoteForm({ utmSource }: { utmSource: string | null }) {
+function QuoteForm({ utmSource, insuranceType }: { utmSource: string | null, insuranceType: string }) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -100,7 +100,7 @@ function QuoteForm({ utmSource }: { utmSource: string | null }) {
         body: JSON.stringify({
           ...data,
           age: Number(data.age),
-          insuranceType: 'disability',
+          insuranceType,
         }),
       })
 
@@ -438,7 +438,7 @@ export default function DisabilityInsuranceQuote() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <div className="min-h-screen bg-gray-50">
-        <QuoteForm utmSource={utmSource} />
+        <QuoteForm utmSource={utmSource} insuranceType="disability" />
       </div>
     </Suspense>
   )

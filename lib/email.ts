@@ -3,24 +3,34 @@ import { sendConsumerConfirmationEmail, sendAgentNotificationEmail } from './sen
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+interface EmailData {
+  to: string;
+  firstName: string;
+  insuranceType: string;
+}
+
 interface LeadData {
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
-  age: number;
-  gender: string;
-  product_type: 'life' | 'disability' | 'supplemental';
-  coverage_amount?: number;
-  term_length?: number;
-  tobacco_use?: boolean;
+  zipCode: string;
+  age: string;
+  insuranceType: string;
+  estimatedAmount?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  bestTimeToCall?: string;
+  preferredContactMethod?: 'phone' | 'sms';
+  coverageAmount?: string | number;
+  termLength?: string | number;
+  tobaccoUse?: boolean;
   occupation?: string;
-  employment_status?: string;
-  income_range?: string;
-  pre_existing_conditions?: string;
-  desired_coverage_type?: string;
-  utm_source?: string;
-  ab_test_variant?: string;
+  employmentStatus?: string;
+  incomeRange?: string;
+  preExistingConditions?: string;
+  desiredCoverageType?: string;
 }
 
 function getProductTitle(productType: string): string {
@@ -41,36 +51,36 @@ function getProductTitle(productType: string): string {
 }
 
 function getProductSpecificFields(data: LeadData): string {
-  switch (data.product_type) {
+  switch (data.insuranceType) {
     case 'life':
       return `
-        ${data.coverage_amount ? `<p><strong>Coverage Amount:</strong> $${data.coverage_amount.toLocaleString()}</p>` : ''}
-        ${data.term_length ? `<p><strong>Term Length:</strong> ${data.term_length} years</p>` : ''}
-        ${data.tobacco_use !== undefined ? `<p><strong>Tobacco Use:</strong> ${data.tobacco_use ? 'Yes' : 'No'}</p>` : ''}
+        ${data.coverageAmount ? `<p><strong>Coverage Amount:</strong> $${Number(data.coverageAmount).toLocaleString()}</p>` : ''}
+        ${data.termLength ? `<p><strong>Term Length:</strong> ${data.termLength} years</p>` : ''}
+        ${data.tobaccoUse !== undefined ? `<p><strong>Tobacco Use:</strong> ${data.tobaccoUse ? 'Yes' : 'No'}</p>` : ''}
       `;
     case 'disability':
       return `
         ${data.occupation ? `<p><strong>Occupation:</strong> ${data.occupation}</p>` : ''}
-        ${data.employment_status ? `<p><strong>Employment Status:</strong> ${data.employment_status}</p>` : ''}
-        ${data.income_range ? `<p><strong>Income Range:</strong> ${data.income_range}</p>` : ''}
+        ${data.employmentStatus ? `<p><strong>Employment Status:</strong> ${data.employmentStatus}</p>` : ''}
+        ${data.incomeRange ? `<p><strong>Income Range:</strong> ${data.incomeRange}</p>` : ''}
       `;
     case 'supplemental':
       return `
-        ${data.pre_existing_conditions ? `<p><strong>Pre-existing Conditions:</strong> ${data.pre_existing_conditions}</p>` : ''}
-        ${data.desired_coverage_type ? `<p><strong>Desired Coverage Type:</strong> ${data.desired_coverage_type}</p>` : ''}
+        ${data.preExistingConditions ? `<p><strong>Pre-existing Conditions:</strong> ${data.preExistingConditions}</p>` : ''}
+        ${data.desiredCoverageType ? `<p><strong>Desired Coverage Type:</strong> ${data.desiredCoverageType}</p>` : ''}
       `;
     default:
       return '';
   }
 }
 
-export async function sendConfirmationEmail(data: LeadData) {
+export async function sendConfirmationEmail(data: EmailData) {
   try {
     console.log('Sending confirmation email');
     await sendConsumerConfirmationEmail({
-      to: data.email,
-      firstName: data.first_name,
-      insuranceType: data.product_type
+      to: data.to,
+      firstName: data.firstName,
+      insuranceType: data.insuranceType
     });
     console.log('Confirmation email sent successfully');
     return { success: true };
@@ -85,12 +95,12 @@ export async function sendLeadNotificationEmail(data: LeadData) {
     console.log('Sending lead notification email');
     await sendAgentNotificationEmail({
       to: process.env.NEW_LEAD_EMAIL || 'leads@quotelinker.com',
-      firstName: data.first_name,
-      lastName: data.last_name,
+      firstName: data.firstName,
+      lastName: data.lastName,
       email: data.email,
       phone: data.phone,
-      insuranceType: data.product_type,
-      estimatedAmount: data.coverage_amount?.toString()
+      insuranceType: data.insuranceType,
+      estimatedAmount: data.estimatedAmount
     });
     console.log('Lead notification email sent successfully');
     return { success: true };
