@@ -101,6 +101,8 @@ export async function sendLeadNotificationEmail(data: LeadData) {
       email: data.email,
       phone: data.phone,
       insuranceType: data.insuranceType,
+      age: parseInt(data.age),
+      gender: data.gender,
       estimatedAmount: data.estimatedAmount
     });
     console.log('Lead notification email sent successfully');

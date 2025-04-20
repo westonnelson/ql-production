@@ -23,6 +23,8 @@ interface AgentEmailData {
   email: string;
   phone: string;
   insuranceType: string;
+  age: number;
+  gender: string;
   estimatedAmount?: string;
 }
 
@@ -51,7 +53,7 @@ export const sendConsumerConfirmationEmail = async (data: EmailData) => {
 
 export const sendAgentNotificationEmail = async (data: AgentEmailData) => {
   try {
-    const { firstName, lastName, email, phone, insuranceType, estimatedAmount } = data;
+    const { firstName, lastName, email, phone, insuranceType, estimatedAmount, age, gender } = data;
     
     await resend.emails.send({
       from: 'QuoteLinker <noreply@quotelinker.com>',
@@ -62,6 +64,8 @@ export const sendAgentNotificationEmail = async (data: AgentEmailData) => {
         <p><strong>Name:</strong> ${firstName} ${lastName}</p>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Phone:</strong> ${phone}</p>
+        <p><strong>Age:</strong> ${age}</p>
+        <p><strong>Gender:</strong> ${gender}</p>
         <p><strong>Insurance Type:</strong> ${insuranceType}</p>
         ${estimatedAmount ? `<p><strong>Estimated Amount:</strong> $${estimatedAmount}</p>` : ''}
         <p>Please follow up with this lead as soon as possible.</p>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createSalesforceLead } from '@/lib';
+import { createSalesforceLead } from '@/lib/salesforce';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);

@@ -16,6 +16,7 @@ interface FormSubmission {
   phone: string;
   zipCode: string;
   age: string;
+  gender: string;
   insuranceType: string;
   estimatedAmount?: string;
   utmSource?: string;
@@ -82,6 +83,8 @@ export const handleFormSubmission = async (data: FormSubmission) => {
         email: data.email,
         phone: data.phone,
         insuranceType: data.insuranceType,
+        age: parseInt(data.age),
+        gender: data.gender,
         estimatedAmount: data.estimatedAmount
       });
     } catch (emailError) {

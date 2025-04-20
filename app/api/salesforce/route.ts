@@ -11,6 +11,7 @@ const formSchema = z.object({
   phone: z.string().min(10, 'Phone number must have at least 10 digits'),
   zipCode: z.string().min(5, 'ZIP code is required'),
   age: z.string().min(1, 'Age is required'),
+  gender: z.string().min(1, 'Gender is required'),
   company: z.string().optional(),
   source: z.string().optional(),
   description: z.string().optional(),

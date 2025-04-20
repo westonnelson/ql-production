@@ -23,6 +23,7 @@ const formSchema = z.object({
 });
 
 type FormData = z.infer<typeof formSchema>;
+type FormFields = keyof FormData;
 
 const steps = [
   {
@@ -42,7 +43,7 @@ const steps = [
   },
 ];
 
-const stepFields = {
+const stepFields: Record<number, FormFields[]> = {
   1: ['firstName', 'lastName', 'age', 'gender'],
   2: ['email', 'phone'],
   3: ['insuranceType'],
@@ -126,7 +127,7 @@ export default function QuoteForm({
       setError(null);
     } else {
       const currentErrors = Object.entries(errors)
-        .filter(([key]) => fields.includes(key))
+        .filter(([key]) => fields.includes(key as FormFields))
         .map(([_, value]) => value.message)
         .filter(Boolean);
       

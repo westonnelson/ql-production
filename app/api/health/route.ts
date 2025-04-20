@@ -71,25 +71,27 @@ async function checkSalesforce() {
 
 export async function GET() {
   try {
-    const [database, email, salesforce] = await Promise.all([
-      checkDatabase(),
-      checkEmail(),
-      checkSalesforce(),
-    ]);
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error('Missing Supabase credentials');
+    }
 
-    const status = {
-      database,
-      email,
-      salesforce,
-      timestamp: new Date().toISOString(),
-      overall: database && email && salesforce,
-    };
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    
+    // Test the connection by making a simple query
+    const { data, error } = await supabase.from('health_check').select('*').limit(1);
+    
+    if (error) {
+      throw error;
+    }
 
-    return NextResponse.json(status);
+    return NextResponse.json({ status: 'healthy', timestamp: new Date().toISOString() });
   } catch (error) {
     console.error('Health check failed:', error);
     return NextResponse.json(
-      { error: 'Health check failed' },
+      { status: 'unhealthy', error: 'Database connection failed' },
       { status: 500 }
     );
   }
