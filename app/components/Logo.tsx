@@ -13,7 +13,7 @@ export function Logo({ className = '' }: LogoProps) {
         viewBox="0 0 32 32"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="text-[#00E0FF]"
+        className="text-primary"
       >
         <path
           d="M16 0C7.163 0 0 7.163 0 16s7.163 16 16 16 16-7.163 16-16S24.837 0 16 0zm0 28c-6.627 0-12-5.373-12-12S9.373 4 16 4s12 5.373 12 12-5.373 12-12 12z"
@@ -25,8 +25,8 @@ export function Logo({ className = '' }: LogoProps) {
         />
       </svg>
       <span className="text-2xl font-bold">
-        <span className="text-[#00E0FF]">Quote</span>
-        <span className="text-gray-900">Linker</span>
+        <span className="text-primary">Quote</span>
+        <span className="text-foreground">Linker</span>
       </span>
     </div>
   );

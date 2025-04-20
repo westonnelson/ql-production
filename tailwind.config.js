@@ -15,6 +15,8 @@ module.exports = {
         },
         primary: {
           DEFAULT: '#00E0FF',
+          light: '#33E6FF',
+          dark: '#00B3CC',
           foreground: '#FFFFFF',
         },
         border: {
@@ -36,6 +38,10 @@ module.exports = {
           DEFAULT: '#FFFFFF',
           foreground: '#111827',
         },
+        gradient: {
+          start: '#0F1218',
+          end: '#1A1F2B',
+        }
       },
       boxShadow: {
         neon: '0 0 5px rgba(0, 224, 255, 0.5), 0 0 10px rgba(0, 224, 255, 0.3), 0 0 15px rgba(0, 224, 255, 0.1)',
