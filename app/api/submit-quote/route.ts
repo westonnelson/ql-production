@@ -15,18 +15,16 @@ const corsHeaders = {
 
 // Define the form schema for validation
 const quoteFormSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
+  firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Phone number must have at least 10 digits'),
-  zipCode: z.string().min(5, 'ZIP code is required'),
-  age: z.string().min(1, 'Age is required'),
-  insuranceType: z.enum(['auto', 'life', 'homeowners', 'disability', 'health', 'supplemental']),
+  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
+  age: z.coerce.number().min(18, 'Must be at least 18 years old').max(85, 'Must be under 85 years old'),
+  gender: z.enum(['male', 'female']),
+  insuranceType: z.string(),
   utmSource: z.string().optional(),
   utmMedium: z.string().optional(),
   utmCampaign: z.string().optional(),
-  bestTimeToCall: z.string().optional(),
-  preferredContactMethod: z.enum(['phone', 'sms']).optional()
 });
 
 export async function POST(request: Request) {
@@ -40,14 +38,12 @@ export async function POST(request: Request) {
       lastName: validatedData.lastName,
       email: validatedData.email,
       phone: validatedData.phone,
-      zipCode: validatedData.zipCode,
-      age: validatedData.age,
+      age: validatedData.age.toString(),
+      gender: validatedData.gender,
       insuranceType: validatedData.insuranceType,
       utmSource: validatedData.utmSource,
       utmMedium: validatedData.utmMedium,
       utmCampaign: validatedData.utmCampaign,
-      bestTimeToCall: validatedData.bestTimeToCall,
-      preferredContactMethod: validatedData.preferredContactMethod
     });
 
     if (!salesforceResponse.success) {
@@ -63,14 +59,12 @@ export async function POST(request: Request) {
           last_name: validatedData.lastName,
           email: validatedData.email,
           phone: validatedData.phone,
-          zip_code: validatedData.zipCode,
           age: validatedData.age,
+          gender: validatedData.gender,
           insurance_type: validatedData.insuranceType,
           utm_source: validatedData.utmSource,
           utm_medium: validatedData.utmMedium,
           utm_campaign: validatedData.utmCampaign,
-          best_time_to_call: validatedData.bestTimeToCall,
-          preferred_contact_method: validatedData.preferredContactMethod,
           status: 'new',
           source: 'QuoteLinker Form'
         }
@@ -88,12 +82,32 @@ export async function POST(request: Request) {
       insuranceType: validatedData.insuranceType
     });
 
+    // Send notification to agent
+    await sendAgentNotificationEmail({
+      to: process.env.NEW_LEAD_EMAIL || 'leads@quotelinker.com',
+      firstName: validatedData.firstName,
+      lastName: validatedData.lastName,
+      email: validatedData.email,
+      phone: validatedData.phone,
+      insuranceType: validatedData.insuranceType,
+      age: validatedData.age,
+      gender: validatedData.gender
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Quote submission error:', error);
+    console.error('Error processing quote submission:', error);
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation error', details: error.errors },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to submit quote' },
-      { status: 400 }
+      { error: 'Internal server error' },
+      { status: 500 }
     );
   }
 }

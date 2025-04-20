@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 
 interface ProgressBarProps {
@@ -5,54 +7,38 @@ interface ProgressBarProps {
   totalSteps: number;
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalSteps }) => {
+export default function ProgressBar({ currentStep, totalSteps }: ProgressBarProps) {
   const progress = (currentStep / totalSteps) * 100;
 
   return (
     <div className="relative">
-      {/* Progress Bar */}
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
         <div
-          className="h-full bg-primary transition-all duration-300 ease-in-out rounded-full shadow-neon"
           style={{ width: `${progress}%` }}
+          className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-[#06B6D4] transition-all duration-500"
         />
       </div>
-
-      {/* Step Indicators */}
-      <div className="flex justify-between mt-2">
-        {Array.from({ length: totalSteps }).map((_, index) => {
-          const stepNumber = index + 1;
-          const isCompleted = currentStep > stepNumber;
-          const isCurrent = currentStep === stepNumber;
-
-          return (
-            <div key={index} className="flex flex-col items-center">
-              <div
-                className={`
-                  w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                  transition-all duration-200
-                  ${isCompleted ? 'bg-primary text-white shadow-neon' : 
-                    isCurrent ? 'bg-primary text-white shadow-neon' : 
-                    'bg-gray-100 text-gray-500'}
-                `}
-              >
-                {isCompleted ? (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  stepNumber
-                )}
-              </div>
-              <span className={`text-xs mt-1 ${isCurrent ? 'text-primary font-medium' : 'text-gray-500'}`}>
-                Step {stepNumber}
-              </span>
+      <div className="flex justify-between">
+        {Array.from({ length: totalSteps }, (_, i) => (
+          <div
+            key={i}
+            className={`flex flex-col items-center ${
+              i + 1 <= currentStep ? 'text-[#06B6D4]' : 'text-gray-400'
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                i + 1 <= currentStep
+                  ? 'bg-[#06B6D4] text-white'
+                  : 'bg-gray-200 text-gray-400'
+              }`}
+            >
+              {i + 1}
             </div>
-          );
-        })}
+            <span className="text-xs mt-1">Step {i + 1}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
-};
-
-export default ProgressBar; 
+} 
